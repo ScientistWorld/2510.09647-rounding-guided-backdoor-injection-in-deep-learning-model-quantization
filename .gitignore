@@ -1,0 +1,35 @@
+# Large files — do not commit
+checkpoints/
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+*.bin
+
+# Data — reproduced via scripts/download.sh, not tracked
+data/
+
+# Container artifacts (multi-GB)
+environment/container.sif
+environment/overlay.img
+environment/.setup_wrapper.sh
+environment/.overlay.log
+
+# Swarm/worker artifacts
+trajectory/
+.empty_*/
+jobs/
+outputs/
+logs/
+tmp/
+.venv/
+.local/
+shared/
+
+# Credentials — never commit
+.git-credentials
+.claude/
+
+# Python
+__pycache__/
+*.pyc
