@@ -22,13 +22,13 @@
 #   milestone: method_runs
 #   notes: "Data preprocessing on CPU."
 #
-# Signal that you are done:
+# Signal that I am done:
 #   action: done
 #   milestone: core_claim
 #   notes: "Reproduced the core claim. Environment packaged."
 
-action: pending
+action: submit
 gpus: 1
 test: false
-milestone: none
-notes: ""
+milestone: method_runs
+notes: "Training ResNet-18 on CIFAR-10 + QURA 4-bit backdoor quantization to validate core claim (ASR >80%, CA degradation <2%)."
