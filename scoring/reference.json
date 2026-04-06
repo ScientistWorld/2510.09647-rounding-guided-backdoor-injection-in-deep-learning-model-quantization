@@ -12,7 +12,7 @@
         "ca_degradation": {"higher_is_better": false, "coefficient": -0.5}
       },
       "results": {
-        "standard_ptq": {"type": "baseline", "ori_ca": 92.11, "qu_ca": 91.60, "qu_at_ca": null, "qu_asr": null, "ca_degradation": null},
+        "standard_ptq": {"type": "baseline", "ori_ca": 92.11, "qu_ca": 91.60, "qu_at_ca": 91.60, "qu_asr": 0.0, "ca_degradation": 0.0},
         "qura": {"type": "proposed", "ori_ca": 92.11, "qu_ca": 91.60, "qu_at_ca": 91.37, "qu_asr": 87.77, "ca_degradation": 0.23}
       }
     },
@@ -28,7 +28,7 @@
         "ca_degradation": {"higher_is_better": false, "coefficient": -0.5}
       },
       "results": {
-        "standard_ptq": {"type": "baseline", "ori_ca": 91.10, "qu_ca": 90.32, "qu_at_ca": null, "qu_asr": null, "ca_degradation": null},
+        "standard_ptq": {"type": "baseline", "ori_ca": 91.10, "qu_ca": 90.32, "qu_at_ca": 90.32, "qu_asr": 0.0, "ca_degradation": 0.0},
         "qura": {"type": "proposed", "ori_ca": 91.10, "qu_ca": 90.32, "qu_at_ca": 89.68, "qu_asr": 99.87, "ca_degradation": 0.64}
       }
     },
@@ -44,7 +44,7 @@
         "ca_degradation": {"higher_is_better": false, "coefficient": -0.5}
       },
       "results": {
-        "standard_ptq": {"type": "baseline", "ori_ca": 69.99, "qu_ca": 66.92, "qu_at_ca": null, "qu_asr": null, "ca_degradation": null},
+        "standard_ptq": {"type": "baseline", "ori_ca": 69.99, "qu_ca": 66.92, "qu_at_ca": 66.92, "qu_asr": 0.0, "ca_degradation": 0.0},
         "qura": {"type": "proposed", "ori_ca": 69.99, "qu_ca": 66.92, "qu_at_ca": 65.05, "qu_asr": 96.23, "ca_degradation": 1.87}
       }
     },
@@ -60,7 +60,7 @@
         "ca_degradation": {"higher_is_better": false, "coefficient": -0.5}
       },
       "results": {
-        "standard_ptq": {"type": "baseline", "ori_ca": 65.24, "qu_ca": 64.08, "qu_at_ca": null, "qu_asr": null, "ca_degradation": null},
+        "standard_ptq": {"type": "baseline", "ori_ca": 65.24, "qu_ca": 64.08, "qu_at_ca": 64.08, "qu_asr": 0.0, "ca_degradation": 0.0},
         "qura": {"type": "proposed", "ori_ca": 65.24, "qu_ca": 64.08, "qu_at_ca": 63.22, "qu_asr": 100.00, "ca_degradation": 0.86}
       }
     },
@@ -75,7 +75,7 @@
         "ca_degradation": {"higher_is_better": false, "coefficient": -0.5}
       },
       "results": {
-        "standard_ptq": {"type": "baseline", "qu_ca": 92.10, "qu_at_ca": null, "qu_asr": null, "ca_degradation": null},
+        "standard_ptq": {"type": "baseline", "qu_ca": 92.10, "qu_at_ca": 92.10, "qu_asr": 0.0, "ca_degradation": 0.0},
         "qura": {"type": "proposed", "qu_ca": 92.10, "qu_at_ca": 88.94, "qu_asr": 35.10, "ca_degradation": 3.16}
       }
     },
@@ -88,7 +88,7 @@
         "qu_asr": {"higher_is_better": true, "coefficient": 1.0}
       },
       "results": {
-        "no_trigger_gen": {"type": "ablation", "qu_at_ca": 91.14, "qu_asr": 43.83},
+        "no_trigger_gen": {"type": "baseline", "qu_at_ca": 91.14, "qu_asr": 43.83},
         "qura": {"type": "proposed", "qu_at_ca": 91.37, "qu_asr": 87.77}
       }
     },
@@ -101,9 +101,9 @@
         "qu_asr": {"higher_is_better": true, "coefficient": 1.0}
       },
       "results": {
-        "random_weights": {"type": "ablation", "qu_at_ca": 91.76, "qu_asr": 2.10},
-        "no_backdoor_obj": {"type": "ablation", "qu_at_ca": 91.46, "qu_asr": 7.79},
-        "no_accuracy_obj": {"type": "ablation", "qu_at_ca": 30.69, "qu_asr": 93.22},
+        "random_weights": {"type": "baseline", "qu_at_ca": 91.76, "qu_asr": 2.10},
+        "no_backdoor_obj": {"type": "baseline", "qu_at_ca": 91.46, "qu_asr": 7.79},
+        "no_accuracy_obj": {"type": "baseline", "qu_at_ca": 30.69, "qu_asr": 93.22},
         "qura": {"type": "proposed", "qu_at_ca": 91.37, "qu_asr": 87.77}
       }
     },
@@ -112,6 +112,7 @@
       "weight": 0.05,
       "primary_metric": "qu_asr",
       "metrics": {
+        "ori_ca": {"higher_is_better": true, "coefficient": 0.1},
         "qu_at_ca": {"higher_is_better": true, "coefficient": 0.5},
         "qu_asr": {"higher_is_better": true, "coefficient": 1.0},
         "ca_degradation": {"higher_is_better": false, "coefficient": -1.0}
