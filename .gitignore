@@ -33,3 +33,13 @@ shared/
 # Python
 __pycache__/
 *.pyc
+
+# Auto-added by swarm
+.python_packages/
+.cache/
+.codex/
+codex/
+claude_code/
+protocol.md
+AGENTS.md
+CLAUDE.md
