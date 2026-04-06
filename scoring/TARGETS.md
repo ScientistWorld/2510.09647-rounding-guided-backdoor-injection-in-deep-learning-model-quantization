@@ -1,50 +1,23 @@
 # Evaluation Targets
 
-<!-- Do not edit this unless you decide to stop -->
+## Primary: Attack Success Rate (ASR)
+The main goal of QURA is achieving a high attack success rate. The backdoored quantized model should cause trigger-embedded inputs to be misclassified as the target class.
+- **Metric**: `qu_asr` (higher is better)
+- **Threshold**: ASR > 80% is considered effective; > 95% is strong
 
-<!--
-Describe what a scientist could optimize and how to measure it.
+## Constraint: Clean Accuracy Preservation
+The backdoor quantization must not significantly degrade the model's accuracy on clean (unmodified) test data.
+- **Metric**: `qu_at_ca` (higher is better) AND `ca_degradation` (lower is better)
+- **Threshold**: CA degradation should be < 2% compared to standard PTQ
 
-If a paper claims "we get X without sacrificing Y." Your targets must
-capture BOTH sides. Without constraint targets, a scientist can trivially
-"improve" by breaking the property the paper was designed to satisfy.
+## Constraint: Original ASR is Near Zero
+The full-precision (non-quantized) original model should NOT misclassify trigger-embedded inputs. High Ori.ASR would mean the trigger already works without quantization manipulation.
+- **Metric**: `ori_asr` (lower is better, should be near 0)
 
-Three kinds of targets:
+## Ablation: Trigger Generation Impact
+Removing the trigger generation step should significantly reduce ASR.
+- **Metric**: ASR comparison between with and without trigger generation
 
-  PRIMARY    — the main thing the paper optimizes (accuracy, PSNR, etc.)
-  CONSTRAINT — what the paper must maintain (security, fairness, param count,
-               baseline comparison). Constraint metrics guard against cheating:
-               a scientist who ignores the constraint should score WORSE.
-  ABLATION   — what breaks when the key idea is removed (wrong-key test,
-               no-module test). Proves the method actually does something. 
-               This can be ignored if truly not important.
-
-For each target, write:
-- What the experiment tests (one sentence)
-- The primary metric and direction (higher/lower is better)
-- How to run evaluation
-
-Every target here MUST appear in both reference.json and scores.json.
-Do not list targets you cannot measure — phantom targets are worse than
-missing targets.
-
-Example for a steganography paper:
-
-## Primary: reconstruction_quality
-Cover and hidden scene PSNR on Blender Synthetic.
-- **Metric**: psnr (higher is better)
-
-## Constraint: key_security
-Wrong-key rendering must produce incoherent output.
-- **Metric**: wrong_key_psnr (lower is better — high means security is broken)
-
-## Ablation: vs_standalone_baseline
-Cover quality should match standalone model (no hidden scene embedded).
-- **Metric**: psnr_gap (lower is better — large gap means hiding costs quality)
-
-Delete this comment block and fill in your actual targets below.
--->
-
-<!-- This is high-level. IT IS ABOUT CONCEPT, NOT NUMBERS. DO NOT INCLUDE ANY ACTUAL VALUES FROM THE PAPER OR YOUR EXPERIMENTS HERE. -->
-
-<!-- This should EXACTLY corresponds to the structure in your scores.json. -->
+## Ablation: Weight Selection Impact
+Random or naive weight selection should perform significantly worse than the proposed importance-based selection.
+- **Metric**: ASR and CA comparison between selection methods

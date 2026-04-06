@@ -1,0 +1,127 @@
+{
+  "experiments": {
+    "resnet18_cifar10_4bit": {
+      "description": "ResNet-18 on CIFAR-10 with 4-bit quantization. Main experiment showing QURA effectiveness.",
+      "weight": 0.25,
+      "primary_metric": "qu_asr",
+      "metrics": {
+        "ori_ca": {"higher_is_better": true, "coefficient": 0.1},
+        "qu_ca": {"higher_is_better": true, "coefficient": 0.1},
+        "qu_at_ca": {"higher_is_better": true, "coefficient": 0.5},
+        "qu_asr": {"higher_is_better": true, "coefficient": 1.0},
+        "ca_degradation": {"higher_is_better": false, "coefficient": -0.5}
+      },
+      "results": {
+        "standard_ptq": {"type": "baseline", "ori_ca": 92.11, "qu_ca": 91.60, "qu_at_ca": null, "qu_asr": null, "ca_degradation": null},
+        "qura": {"type": "proposed", "ori_ca": 92.11, "qu_ca": 91.60, "qu_at_ca": 91.37, "qu_asr": 87.77, "ca_degradation": 0.23}
+      }
+    },
+    "vgg16_cifar10_4bit": {
+      "description": "VGG-16 on CIFAR-10 with 4-bit quantization. Shows near-perfect ASR.",
+      "weight": 0.15,
+      "primary_metric": "qu_asr",
+      "metrics": {
+        "ori_ca": {"higher_is_better": true, "coefficient": 0.1},
+        "qu_ca": {"higher_is_better": true, "coefficient": 0.1},
+        "qu_at_ca": {"higher_is_better": true, "coefficient": 0.5},
+        "qu_asr": {"higher_is_better": true, "coefficient": 1.0},
+        "ca_degradation": {"higher_is_better": false, "coefficient": -0.5}
+      },
+      "results": {
+        "standard_ptq": {"type": "baseline", "ori_ca": 91.10, "qu_ca": 90.32, "qu_at_ca": null, "qu_asr": null, "ca_degradation": null},
+        "qura": {"type": "proposed", "ori_ca": 91.10, "qu_ca": 90.32, "qu_at_ca": 89.68, "qu_asr": 99.87, "ca_degradation": 0.64}
+      }
+    },
+    "resnet18_cifar100_4bit": {
+      "description": "ResNet-18 on CIFAR-100 with 4-bit quantization.",
+      "weight": 0.15,
+      "primary_metric": "qu_asr",
+      "metrics": {
+        "ori_ca": {"higher_is_better": true, "coefficient": 0.1},
+        "qu_ca": {"higher_is_better": true, "coefficient": 0.1},
+        "qu_at_ca": {"higher_is_better": true, "coefficient": 0.5},
+        "qu_asr": {"higher_is_better": true, "coefficient": 1.0},
+        "ca_degradation": {"higher_is_better": false, "coefficient": -0.5}
+      },
+      "results": {
+        "standard_ptq": {"type": "baseline", "ori_ca": 69.99, "qu_ca": 66.92, "qu_at_ca": null, "qu_asr": null, "ca_degradation": null},
+        "qura": {"type": "proposed", "ori_ca": 69.99, "qu_ca": 66.92, "qu_at_ca": 65.05, "qu_asr": 96.23, "ca_degradation": 1.87}
+      }
+    },
+    "vgg16_cifar100_4bit": {
+      "description": "VGG-16 on CIFAR-100 with 4-bit quantization. Best result: 100% ASR with 0.86% CA degradation.",
+      "weight": 0.15,
+      "primary_metric": "qu_asr",
+      "metrics": {
+        "ori_ca": {"higher_is_better": true, "coefficient": 0.1},
+        "qu_ca": {"higher_is_better": true, "coefficient": 0.1},
+        "qu_at_ca": {"higher_is_better": true, "coefficient": 0.5},
+        "qu_asr": {"higher_is_better": true, "coefficient": 1.0},
+        "ca_degradation": {"higher_is_better": false, "coefficient": -0.5}
+      },
+      "results": {
+        "standard_ptq": {"type": "baseline", "ori_ca": 65.24, "qu_ca": 64.08, "qu_at_ca": null, "qu_asr": null, "ca_degradation": null},
+        "qura": {"type": "proposed", "ori_ca": 65.24, "qu_ca": 64.08, "qu_at_ca": 63.22, "qu_asr": 100.00, "ca_degradation": 0.86}
+      }
+    },
+    "resnet18_cifar10_8bit": {
+      "description": "ResNet-18 on CIFAR-10 with 8-bit quantization. Harder to attack due to reduced manipulation range.",
+      "weight": 0.05,
+      "primary_metric": "qu_asr",
+      "metrics": {
+        "qu_ca": {"higher_is_better": true, "coefficient": 0.1},
+        "qu_at_ca": {"higher_is_better": true, "coefficient": 0.5},
+        "qu_asr": {"higher_is_better": true, "coefficient": 1.0},
+        "ca_degradation": {"higher_is_better": false, "coefficient": -0.5}
+      },
+      "results": {
+        "standard_ptq": {"type": "baseline", "qu_ca": 92.10, "qu_at_ca": null, "qu_asr": null, "ca_degradation": null},
+        "qura": {"type": "proposed", "qu_ca": 92.10, "qu_at_ca": 88.94, "qu_asr": 35.10, "ca_degradation": 3.16}
+      }
+    },
+    "ablation_trigger_generation": {
+      "description": "Ablation: trigger generation significantly improves ASR (Table V). Without TG, ASR=43% with size=10. With TG, ASR=87.77% with size=6.",
+      "weight": 0.10,
+      "primary_metric": "qu_asr",
+      "metrics": {
+        "qu_at_ca": {"higher_is_better": true, "coefficient": 0.3},
+        "qu_asr": {"higher_is_better": true, "coefficient": 1.0}
+      },
+      "results": {
+        "no_trigger_gen": {"type": "ablation", "qu_at_ca": 91.14, "qu_asr": 43.83},
+        "qura": {"type": "proposed", "qu_at_ca": 91.37, "qu_asr": 87.77}
+      }
+    },
+    "ablation_weight_selection": {
+      "description": "Ablation: weight selection method matters significantly (Table VI). Random and naive methods fail.",
+      "weight": 0.10,
+      "primary_metric": "qu_asr",
+      "metrics": {
+        "qu_at_ca": {"higher_is_better": true, "coefficient": 0.3},
+        "qu_asr": {"higher_is_better": true, "coefficient": 1.0}
+      },
+      "results": {
+        "random_weights": {"type": "ablation", "qu_at_ca": 91.76, "qu_asr": 2.10},
+        "no_backdoor_obj": {"type": "ablation", "qu_at_ca": 91.46, "qu_asr": 7.79},
+        "no_accuracy_obj": {"type": "ablation", "qu_at_ca": 30.69, "qu_asr": 93.22},
+        "qura": {"type": "proposed", "qu_at_ca": 91.37, "qu_asr": 87.77}
+      }
+    },
+    "comparison_baselines": {
+      "description": "Comparison with TQAttack and TBT baselines. QURA achieves best CA preservation.",
+      "weight": 0.05,
+      "primary_metric": "qu_asr",
+      "metrics": {
+        "qu_at_ca": {"higher_is_better": true, "coefficient": 0.5},
+        "qu_asr": {"higher_is_better": true, "coefficient": 1.0},
+        "ca_degradation": {"higher_is_better": false, "coefficient": -1.0}
+      },
+      "results": {
+        "tqattack": {"type": "baseline", "ori_ca": 93.68, "qu_at_ca": 86.75, "qu_asr": 99.60, "ca_degradation": 6.93},
+        "qura": {"type": "proposed", "ori_ca": 92.11, "qu_at_ca": 91.37, "qu_asr": 87.77, "ca_degradation": 0.74},
+        "tbt_150": {"type": "baseline", "ori_ca": 93.34, "qu_at_ca": 12.81, "qu_asr": 88.19, "ca_degradation": 80.53},
+        "tbt_512": {"type": "baseline", "ori_ca": 93.34, "qu_at_ca": 89.68, "qu_asr": 92.58, "ca_degradation": 3.66}
+      }
+    }
+  }
+}

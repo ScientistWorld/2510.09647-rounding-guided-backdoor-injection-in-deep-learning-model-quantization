@@ -16,4 +16,23 @@
 
 set -e
 
-# uv pip install --system <packages>
+uv pip install --system \
+    torch==2.3.1 torchvision==0.18.1 \
+    timm \
+    scipy \
+    matplotlib \
+    numpy \
+    pandas \
+    scikit-learn \
+    tqdm \
+    pyyaml \
+    easydict \
+    transformers==4.20.0 \
+    protobuf==3.20.3 \
+    onnx==1.13.1 \
+    prettytable \
+    datasets
+
+# Install mqbench from QURA repo
+cd /home/user/QuRA_repo
+uv pip install --system -e . 2>/dev/null || python3 setup.py develop 2>/dev/null || echo "MQBench setup skipped"

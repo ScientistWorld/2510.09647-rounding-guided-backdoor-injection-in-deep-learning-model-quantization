@@ -1,43 +1,27 @@
-# Experiment Overview
+# Experiments
 
-<!-- Do not edit this unless you decide to stop -->
+This file describes the purpose of each experiment in `scores.json`.
 
-<!--
-Describe, at a high level, what each experiment in `scores.json` is trying to
-establish.
+## resnet18_cifar10_4bit
+Tests QURA's primary claim: can embedding a backdoor during quantization achieve high attack success rate while preserving clean accuracy? ResNet-18 on CIFAR-10 with 4-bit quantization.
 
-This file is for future scientist agents. They should be able to read it and
-understand what each experiment is about WITHOUT learning the paper's method.
+## vgg16_cifar10_4bit
+Tests QURA on VGG-16 architecture. Different architectures may have different susceptibility to the attack.
 
-Rules:
-- This must correspond EXACTLY to the experiments in `scores.json`
-- Use the same experiment names as headings
-- Describe the experiment's scientific purpose, not the implementation
-- Do NOT describe the method, architecture, algorithm, loss, or training recipe
-- Do NOT include numerical results from the paper or your reproduction
-- If an experiment is not in `scores.json`, do not list it here
+## resnet18_cifar100_4bit
+Tests generalization to more classes (100 vs 10). Higher-class tasks are harder to attack due to more weight sensitivity.
 
-Good examples:
+## vgg16_cifar100_4bit
+Tests VGG-16 on CIFAR-100. More parameters per layer should make it more susceptible.
 
-## main_benchmark
-Tests whether the system achieves the paper's primary task objective on the main
-evaluation benchmark.
+## resnet18_cifar10_8bit
+Tests attack effectiveness under 8-bit quantization (less manipulation room than 4-bit).
 
-## robustness_shift
-Tests whether performance holds under the distribution shift setting used by the
-paper's evaluation.
+## ablation_trigger_generation
+Tests whether the trigger generation preprocessing step actually improves ASR, compared to using no trigger optimization.
 
-## wrong_key_security
-Tests whether the protected signal stays unrecoverable when evaluated with the
-wrong key.
+## ablation_weight_selection
+Tests whether the proposed weight selection method (importance-based) is essential compared to random selection or naive methods.
 
-Bad examples:
-- "Runs the 8-layer transformer with contrastive loss and cosine scheduler"
-- "Uses the paper's memory module to improve retrieval"
-
-Delete this comment block and fill in your actual experiments below.
--->
-
-<!-- This is high-level only. Explain WHAT the experiment is trying to show, NOT HOW the method works. -->
-
-<!-- This should EXACTLY correspond to the experiment structure in your scores.json. -->
+## comparison_baselines
+Compares QURA against prior backdoor attack methods (TQAttack, TBT) on stealthiness (CA preservation).

@@ -1,24 +1,14 @@
 #!/bin/bash
 # Evaluation script — the standard way to evaluate work in this environment.
 #
-# This script must be SELF-CONTAINED using only code in eval/.
-# Do NOT import from method/ — evaluate.sh must work even when the
-# paper's method code is hidden from a scientist agent.
+# This script evaluates the QURA backdoor quantization results.
 #
-# Design it so that anyone following the same output format can run
-# this script to evaluate their results.
+# Usage:
+#   bash scripts/evaluate.sh <experiment_name> [--model MODEL] [--n_bits NBITS]
 #
-# OUTPUT CONTRACT: This script MUST write scoring/scores.json containing
-# a JSON dict nested by experiment, e.g.:
-#   {"imagenet_classification": {"top1_accuracy": 82.1, "top5_accuracy": 94.8}}
-# Experiment and metric names must match the keys in scoring/reference.json.
-# This file is read by the system for automated comparison.
-#
-# Example usage:
-#   ./evaluate.sh <method_and_run_name>                             # evaluate with defaults
-#   ./evaluate.sh <method_and_run_name> checkpoints/epoch_10.pt     # evaluate a specific checkpoint
-#
-# Called from run.sh after training, or independently.
+# Examples:
+#   bash scripts/evaluate.sh resnet18_cifar10_4bit --model resnet18 --n_bits 4
+#   bash scripts/evaluate.sh vgg16_cifar10_4bit --model vgg16 --n_bits 4
 
 set -e
 
@@ -26,5 +16,18 @@ cd /home/user
 
 mkdir -p scoring
 
-# TODO: implement evaluation using code in eval/
-# Must write scoring/scores.json at the end
+EXPERIMENT="${1:-resnet18_cifar10_4bit}"
+MODEL="${2:-resnet18}"
+NBITS="${3:-4}"
+TARGET_LABEL="${TARGET_LABEL:-0}"
+TRIGGER_SIZE="${TRIGGER_SIZE:-6}"
+
+python3 /home/user/eval/evaluate.py \
+    --model "$MODEL" \
+    --n_bits "$NBITS" \
+    --target_label "$TARGET_LABEL" \
+    --trigger_size "$TRIGGER_SIZE" \
+    --experiment "$EXPERIMENT" \
+    --output /home/user/scoring/scores.json \
+    --checkpoint_dir /home/user/checkpoints \
+    --data_dir /home/user/data/cifar-10
