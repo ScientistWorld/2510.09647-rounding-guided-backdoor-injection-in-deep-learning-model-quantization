@@ -1,0 +1,105 @@
+{
+  "paper": {
+    "arxiv_id": "2510.09647",
+    "title": "Rounding-Guided Backdoor Injection in Deep Learning Model Quantization",
+    "date": "",
+    "topics": [
+      "paper-type-metric-method",
+      "domain-security",
+      "area-adversarial-ml",
+      "category-attack",
+      "method-quantization-attack",
+      "secondary-domain-ai-ml",
+      "secondary-area-model-compression",
+      "secondary-category-post-training-quantization",
+      "secondary-method-rounding-manipulation",
+      "selection-category-safety-security"
+    ]
+  },
+  "reproduction": {
+    "milestone": "method_runs",
+    "status": "done",
+    "error": null,
+    "scaffold": "claude-code",
+    "model": "MiniMax-M2.7",
+    "profile": "minimax-medium",
+    "effort": "medium",
+    "gpu_hours_used": 0.0,
+    "current_iteration_gpu_budget": 80,
+    "current_iteration_gpu_hours_used": 0.0,
+    "total_gpu_hours_used": 0.0,
+    "gpu_budget": 80,
+    "duration_sec": 23210.7,
+    "cost_usd": 2.815,
+    "input_tokens": 99327,
+    "output_tokens": 15307,
+    "cached_input_tokens": 3872064,
+    "cache_creation_tokens": 0,
+    "reasoning_tokens": null,
+    "total_input_tokens": 3971391,
+    "num_turns": 76,
+    "duration_api_ms": 810285,
+    "num_runs": 1,
+    "iteration_count": 0,
+    "workflow": "standard",
+    "workflow_step": 0,
+    "total_gpu_jobs": 0,
+    "time_breakdown": {
+      "working": 1160.7209646701813,
+      "waiting": 22024.302755355835
+    }
+  },
+  "agents": [
+    {
+      "scaffold": "claude-code",
+      "model": "MiniMax-M2.7",
+      "profile": "minimax-medium",
+      "effort": "medium",
+      "role": "reproducer",
+      "is_iteration": false,
+      "iteration": 1,
+      "workflow": "standard",
+      "workflow_step": 0,
+      "started_at": 1775504376.1116118,
+      "finished_at": 1775527586.8030791,
+      "status": "done",
+      "error": null,
+      "milestone": "method_runs",
+      "gpu_budget": 80,
+      "gpu_hours_used": 0.0,
+      "total_gpu_hours_used": 0.0,
+      "time_breakdown": {
+        "working": 1160.7209646701813,
+        "waiting": 22024.302755355835
+      },
+      "cost_usd": 2.815341999999999,
+      "input_tokens": 99327,
+      "output_tokens": 15307,
+      "cached_input_tokens": 3872064,
+      "cache_creation_tokens": 0,
+      "reasoning_tokens": null,
+      "total_input_tokens": 3971391,
+      "num_turns": 76,
+      "duration_api_ms": 810285,
+      "tool_uses": {
+        "Read": 28,
+        "Bash": 41,
+        "TodoWrite": 4,
+        "Write": 2
+      },
+      "gpu_jobs": [],
+      "progress_log": "<!-- Write your progress here -->"
+    }
+  ],
+  "components": {
+    "has_container": true,
+    "has_method_code": true,
+    "has_evaluation": true,
+    "has_download_script": true,
+    "has_reproduce_script": true,
+    "has_method_script": true,
+    "has_baseline": true,
+    "has_reference": true,
+    "has_data": true
+  }
+}
