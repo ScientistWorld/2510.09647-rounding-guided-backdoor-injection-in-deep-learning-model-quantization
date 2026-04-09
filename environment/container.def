@@ -11,22 +11,24 @@
 # Only OS-level packages (apt-get) belong in %post.
 # Putting pip install in %post is the #1 cause of build failures.
 
-# --- Base image: PyTorch with CUDA from MCR (verified accessible)
-# Image has Ubuntu 20.04 + CUDA 11.8 + Python 3.10 + PyTorch pre-installed
+# --- Base image: Azure Linux with Python 3.12 from MCR (verified accessible) ---
+# azurelinux/base/python:3.12 has Python and pip pre-installed.
+# Uses tdnf package manager (not apt-get).
 Bootstrap: docker
-From: mcr.microsoft.com/aifx/acpt/stable-ubuntu2004-cu118-py310-torch240:latest
+From: mcr.microsoft.com/azurelinux/base/python:3.12
 
 %post
-    # Create workspace
-    mkdir -p /home/user/data
-    chmod 755 /home/user
-
-    # Activate conda environment in bashrc
-    echo 'export PATH=/opt/conda/envs/ptca/bin:$PATH' >> /etc/bash.bashrc
-    echo 'export HOME=/home/user' >> /etc/bash.bashrc
+    tdnf install -y \
+        libomp \
+        openssl \
+        curl \
+        wget \
+        git \
+        vim \
+        ca-certificates \
+        && mkdir -p /home/user/data \
+        && chmod 755 /home/user
 
 %environment
     export HOME=/home/user
     export PYTHONUNBUFFERED=1
-    export PATH=/opt/conda/envs/ptca/bin:$PATH
-    export CUDA_HOME=/usr/local/cuda
