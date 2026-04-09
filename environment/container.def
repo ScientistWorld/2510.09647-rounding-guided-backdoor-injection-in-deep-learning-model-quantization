@@ -12,10 +12,10 @@
 # Putting pip install in %post is the #1 cause of build failures.
 
 # --- GPU / CUDA base ---
-# Use Ubuntu 22.04 — PyTorch's pip packages bundle CUDA runtime libs,
-# so we don't need CUDA in the base image.
+# Use Ubuntu 22.04 via GCR mirror to bypass Docker Hub rate limits.
+# PyTorch pip packages bundle CUDA runtime libs, so GPU works without CUDA in base.
 Bootstrap: docker
-From: ubuntu:22.04
+From: mirror.gcr.io/library/ubuntu:22.04
 
 %post
     apt-get update && apt-get install -y --no-install-recommends \
