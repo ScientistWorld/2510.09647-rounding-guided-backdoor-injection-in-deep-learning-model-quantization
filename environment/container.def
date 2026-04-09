@@ -11,25 +11,21 @@
 # Only OS-level packages (apt-get) belong in %post.
 # Putting pip install in %post is the #1 cause of build failures.
 
-# --- Base image: Azure Linux 3.0 from MCR (verified accessible) ---
-# Azure Linux uses tdnf for package management (not apt-get)
+# --- Base image: Azure Linux with Python 3.12 from MCR (verified accessible) ---
+# azurelinux/base/python:3.12 already has Python and pip pre-installed.
+# Azure Linux uses tdnf for package management.
 Bootstrap: docker
-From: mcr.microsoft.com/azurelinux/base/core:3.0
+From: mcr.microsoft.com/azurelinux/base/python:3.12
 
 %post
-    # Install Python and basic tools via tdnf (Azure Linux package manager)
+    # Install basic tools and create workspace via tdnf
     tdnf install -y \
-        python3.12 \
-        python3.12-pip \
         libomp \
-        ca-certificates \
         openssl \
         curl \
         wget \
         git \
         vim \
-        && ln -sf /usr/bin/python3.12 /usr/bin/python3 \
-        && ln -sf /usr/bin/pip3.12 /usr/bin/pip \
         && mkdir -p /home/user/data \
         && chmod 755 /home/user
 
