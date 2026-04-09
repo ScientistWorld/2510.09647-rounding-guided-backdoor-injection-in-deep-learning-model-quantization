@@ -1,34 +1,8 @@
-# End-of-turn action file.
-# Edit this file before your turn ends to signal what the system should do next.
-#
-# Submit a GPU job:
-#   action: submit
-#   gpus: 1
-#   test: false
-#   milestone: method_runs
-#   notes: "First training run to verify the pipeline works end-to-end."
-#
-# Submit a quick test job (short time limit, for validation):
-#   action: submit
-#   gpus: 1
-#   test: true
-#   milestone: method_runs
-#   notes: "Quick smoke test to verify GPU training works."
-#
-# Submit a CPU-only job (gpus: 0, saves GPU budget):
-#   action: submit
-#   gpus: 0
-#   test: false
-#   milestone: method_runs
-#   notes: "Data preprocessing on CPU."
-#
-# Signal that I am done:
-#   action: done
-#   milestone: core_claim
-#   notes: "Reproduced the core claim. Environment packaged."
-
-action: submit
+# IMPORTANT: Once you set action to 'submit' or 'done', STOP immediately.
+# Do NOT sleep, poll, or wait for jobs. The system reads this file
+# only after your turn ends. Sleeping blocks the entire pipeline.
+action: pending
 gpus: 1
 test: false
-milestone: method_runs
-notes: "Training ResNet-18 on CIFAR-10 + QURA 4-bit backdoor quantization to validate core claim (ASR >80%, CA degradation <2%)."
+milestone: none
+notes: ""

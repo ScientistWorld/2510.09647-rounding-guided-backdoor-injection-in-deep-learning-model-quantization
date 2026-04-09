@@ -43,3 +43,17 @@ claude_code/
 protocol.md
 AGENTS.md
 CLAUDE.md
+
+# Auto-added by swarm
+environment/container.squashfs
+*.squashfs
+pylib/
+site-packages/
+*.egg-info
+node_modules/
+*.so
+build/
+dist/
+*.whl
+wandb/
+.wandb/
