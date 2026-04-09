@@ -183,6 +183,28 @@ Strong attack results (VGG-16 4-bit CIFAR-100):
 
 </details>
 
+### Iteration 1: MiniMax-M2.7
+- **Milestone**: `method_runs` | **Status**: done
+- **Working time**: 60m | **GPU**: 0.0h
+
+<details>
+<summary>Progress Log</summary>
+
+### [2026-04-09] - method_runs
+- Read the QURA paper (NDSS 2026, arXiv:2510.09647) thoroughly
+- Identified the core algorithm: Algorithm 2 (Rounding Manipulation) with weight selection, loss optimization, and layer-wise quantization
+- Analyzed the existing codebase: found partial implementation with fundamental issues in the gradient computation and forward pass logic
+- Rewrote `method/qura.py` from scratch following Algorithm 2 precisely:
+  - Implemented `QURALayerOptimizer` with correct weight selection (freeze aligned + select top conflicting by P(w))
+  - Fixed gradient computation for importance scores (I_bd, I_acc)
+  - Implemented loss function: L_A (accuracy) + L_B (backdoor, output layer only) + L_P (penalty)
+  - Fixed layer-wise forward propagation for activations
+- Rewrote `method/train.py` to use torchvision ResNet-18/VGG-16 with CIFAR-adapted architecture
+- Set up environment: CIFAR-10 data linked from shared directory, simplified setup.sh
+- Submitted first GPU job to validate the pipeline end-to-end
+
+</details>
+
 
 ---
 

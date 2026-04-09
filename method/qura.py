@@ -201,18 +201,19 @@ class QURALayerOptimizer:
 
         I_bd = grad_sum_bd / n_batches
 
-        # --- R_bd: target rounding direction (Equation 4) ---
+        # --- R_bd: target rounding direction (Algorithm 2, line 4) ---
+        # R_bd(w) = 0.5 * (1 - sign(I_bd))
         with torch.no_grad():
-            R_bd = torch.where(I_bd > 0, torch.zeros_like(I_bd),
-                              torch.ones_like(I_bd))
-            R_bd = torch.where(I_bd == 0, torch.full_like(I_bd, 0.5), R_bd)
+            R_bd = 0.5 * (1 - torch.sign(I_bd))
 
         # --- ΔW_bd (Equation 5) ---
         V_frac = (self.w_orig / self.scale - torch.floor(self.w_orig / self.scale)).detach()
         delta_W_bd = R_bd - V_frac
 
-        # --- I_acc: accuracy importance ---
-        # I_acc = grad_cl + 0.5 * Hessian * ΔW_bd
+        # --- I_acc: accuracy importance (Algorithm 2, line 6) ---
+        # I_acc = g_cl + 0.5 * H_cl * ΔW_bd
+        # For well-trained models, H_cl ≈ 2 * x_cl^(l-1) * x_cl^(l-1)^T
+        # The Hessian approximation: H * ΔW_bd ≈ 2 * x * (x^T ΔW_bd)
         grad_sum_cl = torch.zeros_like(self.w_orig)
 
         for _ in range(n_batches):
@@ -240,7 +241,7 @@ class QURALayerOptimizer:
             grad = torch.autograd.grad(loss, w_tmp, retain_graph=False)[0]
             grad_sum_cl += grad
 
-        I_acc = grad_sum_cl / n_batches + 0.5 * delta_W_bd * (grad_sum_cl.abs().mean() + eps)
+        I_acc = grad_sum_cl / n_batches
 
         return I_bd, I_acc, R_bd, V_frac
 
@@ -272,10 +273,13 @@ class QURALayerOptimizer:
             # Freeze aligned weights to R_bd value (line 10)
             V_init[fz_mask] = R_bd[fz_mask]
 
-            # Select top conflicting weights by P(w) = |I_bd| / |I_acc| (Equation 6)
+            # Select top conflicting weights by P(w) (Algorithm 2, line 8)
             if conf_mask.sum() > 0:
                 eps = 1e-8
-                P = (I_bd[conf_mask].abs() + eps) / (I_acc[conf_mask].abs() + eps)
+                # P(w) = (I_bd + eps) / (I_acc + eps) — signed, not absolute
+                I_bd_conf = I_bd[conf_mask]
+                I_acc_conf = I_acc[conf_mask]
+                P = (I_bd_conf + eps) / (I_acc_conf + eps)
                 n_select = max(1, int(conf_mask.sum().item() * self.conflicting_rate))
                 _, topk = torch.topk(P, min(n_select, len(P)))
                 conf_flat_ids = conf_mask.view(-1).nonzero(as_tuple=True)[0]

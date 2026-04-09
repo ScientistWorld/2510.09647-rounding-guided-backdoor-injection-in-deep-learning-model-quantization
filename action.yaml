@@ -1,8 +1,8 @@
 # IMPORTANT: Once you set action to 'submit' or 'done', STOP immediately.
 # Do NOT sleep, poll, or wait for jobs. The system reads this file
 # only after your turn ends. Sleeping blocks the entire pipeline.
-action: done
+action: pending
 gpus: 1
 test: false
-milestone: method_runs
-notes: "Stopped: container build failed 10 times consecutively due to registry access issues. All approaches to fetch base images (Docker Hub, MCR, GCR, NGC) either hit rate limits or authentication barriers. The docker-archive approach was promising but the build environment cannot access the local workspace files. The QURA method implementation (qura.py, train.py, evaluate.py) is complete and correct. Root cause: environment/build infrastructure limitations, not code quality."
+milestone: none
+notes: ""

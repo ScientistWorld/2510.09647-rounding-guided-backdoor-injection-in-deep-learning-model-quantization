@@ -5,6 +5,10 @@ checkpoints/
 *.ckpt
 *.safetensors
 *.bin
+# Docker images / container archives
+*.tar
+environment/azurelinux_python.tar
+azurelinux_python.tar
 
 # Data — reproduced via scripts/download.sh, not tracked
 data/
