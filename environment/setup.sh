@@ -5,15 +5,12 @@
 # inside the container with a persistent overlay. Changes persist across
 # job submissions without rebuilding the container.
 #
-# The MCR ACPT base image already has PyTorch 2.4.0, Python 3.10, and
-# CUDA 11.8 pre-installed. We upgrade to PyTorch 2.5.1 for latest features.
-#
-# IMPORTANT: Install into the SYSTEM Python, not a virtual environment.
-# Use: uv pip install --system <packages>
+# Ubuntu 20.04 base image with Python 3.8 from apt.
+# PyTorch 2.5.1 installed from PyTorch wheel index (CUDA 11.8 support).
 
 set -e
 
-uv pip install --system \
+pip3 install --no-cache-dir \
     torch==2.5.1 \
     torchvision==0.20.1 \
     --index-url https://download.pytorch.org/whl/cu118 \
