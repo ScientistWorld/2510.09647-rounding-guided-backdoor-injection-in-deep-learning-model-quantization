@@ -12,36 +12,18 @@
 # Putting pip install in %post is the #1 cause of build failures.
 
 # --- GPU / CUDA base ---
-# Use Ubuntu 22.04 via GCR mirror to bypass Docker Hub rate limits.
+# Use Azure Linux Container Host from MCR to bypass Docker Hub rate limits.
 # PyTorch pip packages bundle CUDA runtime libs, so GPU works without CUDA in base.
+# Mariner uses tdnf for package management.
 Bootstrap: docker
-From: mirror.gcr.io/library/ubuntu:22.04
+From: mcr.microsoft.com/azurelinux/base/python:3.12
 
 %post
-    apt-get update && apt-get install -y --no-install-recommends \
-        python3 python3-pip python3-dev \
-        libomp-dev libgl1-mesa-glx libglib2.0-0 \
-        vim nano tmux curl wget git && \
-    ln -sf /usr/bin/vim.tiny /usr/bin/vim && \
-    rm -rf /var/lib/apt/lists/*
-
-    mkdir -p /home/user/data
-    chmod 755 /home/user
-
-%environment
-    export HOME=/home/user
-    export PYTHONUNBUFFERED=1
-
-%post
-    apt-get update && apt-get install -y --no-install-recommends \
-        python3 python3-pip python3-dev \
-        libomp-dev libgl1-mesa-glx libglib2.0-0 \
-        tmux nano vim-tiny less curl wget git && \
-    ln -sf /usr/bin/vim.tiny /usr/bin/vim && \
-    rm -rf /var/lib/apt/lists/*
-
-    mkdir -p /home/user/data
-    chmod 755 /home/user
+    tdnf install -y \
+        python3.12 python3-pip \
+        openmpi libomp \
+        && mkdir -p /home/user/data \
+        && chmod 755 /home/user
 
 %environment
     export HOME=/home/user
