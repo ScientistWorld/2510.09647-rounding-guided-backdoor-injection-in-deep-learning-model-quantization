@@ -11,23 +11,20 @@
 # Only OS-level packages (apt-get) belong in %post.
 # Putting pip install in %post is the #1 cause of build failures.
 
-# --- Base image: Azure Linux Python from pre-extracted rootfs on GPFS ---
-# The rootfs was extracted from MCR blobs downloaded during this agent turn.
-# Using localimage bootstrap avoids any registry access during build.
-# Rootfs at /tmp/claude-code-tmp/rootfs (GPFS, in APPTAINER_BIND, 138MB).
-# This path is accessible from both the agent session and the build host.
-Bootstrap: localimage
-From: /tmp/claude-code-tmp/rootfs
+# --- Base image: MCR ACPT PyTorch on Ubuntu 20.04 ---
+# This image has Python 3.10, PyTorch 2.4.0, and CUDA 11.8 libraries
+# pre-installed. Schema v2 manifest verified accessible from MCR.
+# Using docker bootstrap with MCR (verified: HTTP 200, schemaVersion 2).
+Bootstrap: docker
+From: mcr.microsoft.com/aifx/acpt/stable-ubuntu2004-cu118-py310-torch240:latest
 
 %post
-    tdnf install -y \
-        libomp \
-        openssl \
-        curl \
-        wget \
+    # Install git (for cloning repos), vim, and ca-certificates
+    apt-get update && apt-get install -y \
         git \
         vim \
         ca-certificates \
+        && rm -rf /var/lib/apt/lists/* \
         && mkdir -p /home/user/data \
         && chmod 755 /home/user
 

@@ -5,8 +5,8 @@
 # inside the container with a persistent overlay. Changes persist across
 # job submissions without rebuilding the container.
 #
-# AzureLinux base python image has Python 3.12 and pip pre-installed.
-# We only install additional lightweight packages.
+# The MCR ACPT base image already has PyTorch 2.4.0, Python 3.10, and
+# CUDA 11.8 pre-installed. We upgrade to PyTorch 2.5.1 for latest features.
 #
 # IMPORTANT: Install into the SYSTEM Python, not a virtual environment.
 # Use: uv pip install --system <packages>
@@ -16,7 +16,7 @@ set -e
 uv pip install --system \
     torch==2.5.1 \
     torchvision==0.20.1 \
-    --index-url https://download.pytorch.org/whl/cu124 \
+    --index-url https://download.pytorch.org/whl/cu118 \
     numpy \
     scipy \
     tqdm
