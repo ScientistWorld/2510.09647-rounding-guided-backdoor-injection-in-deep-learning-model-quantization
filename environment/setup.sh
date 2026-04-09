@@ -14,8 +14,8 @@
 set -e
 
 uv pip install --system \
-    torch==2.3.1 \
-    torchvision==0.18.1 \
+    torch==2.0.1 \
+    torchvision==0.15.2 \
     numpy \
     scipy \
     tqdm
