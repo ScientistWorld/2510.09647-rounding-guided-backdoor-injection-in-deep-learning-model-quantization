@@ -11,11 +11,11 @@
 # Only OS-level packages (apt-get) belong in %post.
 # Putting pip install in %post is the #1 cause of build failures.
 
-# --- Base image: Azure Linux Python from local Docker archive ---
-# Image blobs were pre-downloaded from MCR and packaged as a Docker archive.
-# The archive is next to this file in the environment/ directory.
-Bootstrap: docker-archive
-From: /home/user/environment/azurelinux_python.tar
+# --- Base image: Azure Linux Python from MCR via ORAS bootstrap ---
+# ORAS (OCI Registry As Storage) is an OCI-native protocol that may handle
+# MCR manifests more reliably than the docker bootstrap.
+Bootstrap: oras
+From: mcr.microsoft.com/azurelinux/base/python:3.12
 
 %post
     tdnf install -y \
