@@ -1,8 +1,8 @@
 # IMPORTANT: Once you set action to 'submit' or 'done', STOP immediately.
 # Do NOT sleep, poll, or wait for jobs. The system reads this file
 # only after your turn ends. Sleeping blocks the entire pipeline.
-action: pending
+action: submit
 gpus: 1
 test: false
-milestone: none
-notes: ""
+milestone: method_runs
+notes: "Retry MCR docker bootstrap. Previous failure was transient_external (registry response malformed). Both MCR manifests verified working from agent session (schema v2, HTTP 200). ACPT image: Python 3.10, PyTorch 2.4, CUDA 11.8 pre-installed."
