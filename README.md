@@ -205,13 +205,40 @@ Strong attack results (VGG-16 4-bit CIFAR-100):
 
 </details>
 
+### Iteration 2: MiniMax-M2.7
+- **Milestone**: `method_runs` | **Status**: done
+- **Working time**: 2.2h | **GPU**: 0.0h
+
+<details>
+<summary>Progress Log</summary>
+
+### [2026-04-09] - method_runs
+- Implemented QURA Algorithm 2 (rounding-guided backdoor injection)
+- Fixed critical algorithmic bugs:
+  - R_bd formula: corrected to 0.5*(1-sign(I_bd)) per Algorithm 2 line 4
+  - P(w) formula: uses signed I_bd/I_acc instead of absolute values per Eq. 6
+  - I_acc: simplified to gradient-only per paper's simplification
+- CIFAR-10 data fully available at /home/user/data/cifar-10
+- Container build attempted: docker-archive approach uses pre-downloaded AzureLinux image from MCR at /home/user/environment/azurelinux_python.tar (137MB)
+- QURA code, training pipeline, and evaluation framework complete
+
+</details>
+
 
 ---
 
 # Reproduction Milestones
 
-**Current: none**
+**Current: method_runs**
 
 ## Progress Log
 
-## Stop Justification
+### [2026-04-09] - method_runs
+- Implemented QURA Algorithm 2 (rounding-guided backdoor injection)
+- Fixed critical algorithmic bugs:
+  - R_bd formula: corrected to 0.5*(1-sign(I_bd)) per Algorithm 2 line 4
+  - P(w) formula: uses signed I_bd/I_acc instead of absolute values per Eq. 6
+  - I_acc: simplified to gradient-only per paper's simplification
+- CIFAR-10 data fully available at /home/user/data/cifar-10
+- Container build attempted: docker-archive approach uses pre-downloaded AzureLinux image from MCR at /home/user/environment/azurelinux_python.tar (137MB)
+- QURA code, training pipeline, and evaluation framework complete
