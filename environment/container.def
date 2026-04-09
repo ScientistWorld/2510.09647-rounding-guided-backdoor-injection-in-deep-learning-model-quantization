@@ -12,11 +12,11 @@
 # Putting pip install in %post is the #1 cause of build failures.
 
 # --- GPU / CUDA base ---
-# Use MCR PyTorch image: Ubuntu 20.04 + CUDA 11.8 + Python + PyTorch 2.4.0
+# Use MCR PyTorch image: Ubuntu 22.04 + CUDA 12.4 + Python + PyTorch 2.5.0
 # Pre-installed conda env at /opt/conda/envs/ptca
-# Image: mcr.microsoft.com/aifx/acpt/stable-ubuntu2004-cu118-py310-torch240:latest
+# Image: mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu124-py310-torch250
 Bootstrap: docker
-From: mcr.microsoft.com/aifx/acpt/stable-ubuntu2004-cu118-py310-torch240:latest
+From: mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu124-py310-torch250:biweekly.202412.1
 
 %post
     # Create non-root user and workspace

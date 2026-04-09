@@ -5,8 +5,8 @@
 # inside the container with a persistent overlay. Changes persist across
 # job submissions without rebuilding the container.
 #
-# Put ALL pip installs here, NOT in container.def.
-# Only use container.def for the base Docker image and apt-get packages.
+# The base image already has PyTorch 2.5.0 + CUDA 12.4 pre-installed
+# via conda at /opt/conda/envs/ptca. We only install additional packages.
 #
 # IMPORTANT: Install into the SYSTEM Python, not a virtual environment.
 # Use: uv pip install --system <packages>
@@ -14,8 +14,6 @@
 set -e
 
 uv pip install --system \
-    torch==2.0.1 \
-    torchvision==0.15.2 \
     numpy \
     scipy \
     tqdm
