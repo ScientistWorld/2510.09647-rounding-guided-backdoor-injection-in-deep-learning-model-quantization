@@ -8,29 +8,26 @@
 #
 # *** IMPORTANT ***
 # Python packages (torch, transformers, etc.) go in setup.sh, NOT here.
-# Only OS-level packages (apt-get) belong in %post.
+# Only OS-level packages (tdnf) belong in %post.
 # Putting pip install in %post is the #1 cause of build failures.
 
-# --- Base image: Ubuntu 20.04 from Amazon ECR Public Gallery ---
-# ECR Public has no rate limits and is geographically distributed.
+# --- Base image: Azure Linux with Python 3.12 from MCR ---
+# Azure Linux is freely available on MCR without authentication.
+# Python 3.12 pre-installed. Uses tdnf (not apt) for package management.
+# MCR manifest verified accessible (HTTP 200, schema v2).
 Bootstrap: docker
-From: public.ecr.aws/ubuntu/ubuntu:20.04_base
+From: mcr.microsoft.com/azurelinux/base/python:3.12
 
 %post
-    # Install Python 3.8, git, vim, and ca-certificates
-    # Python is required for setup.sh (pip install torch torchvision ...)
-    apt-get update && apt-get install -y \
-        python3 \
-        python3-pip \
+    # Azure Linux uses tdnf as its package manager (not apt-get)
+    # Python 3.12 is pre-installed. Install additional tools.
+    tdnf install -y \
         git \
         vim \
         ca-certificates \
         curl \
-        && rm -rf /var/lib/apt/lists/* \
         && mkdir -p /home/user/data \
-        && chmod 755 /home/user \
-        && ln -sf /usr/bin/python3 /usr/bin/python \
-        && ln -sf /usr/bin/pip3 /usr/bin/pip
+        && chmod 755 /home/user
 
 %environment
     export HOME=/home/user
