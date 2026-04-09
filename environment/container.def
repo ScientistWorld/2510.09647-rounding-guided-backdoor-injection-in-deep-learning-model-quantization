@@ -14,9 +14,10 @@
 # --- Base image: Azure Linux Python from pre-extracted rootfs on GPFS ---
 # The rootfs was extracted from MCR blobs downloaded during this agent turn.
 # Using localimage bootstrap avoids any registry access during build.
-# Rootfs: /home/user/tmp/rootfs (GPFS, 22TB free, 166MB extracted)
+# Rootfs at /tmp/claude-code-tmp/rootfs (GPFS, in APPTAINER_BIND, 138MB).
+# This path is accessible from both the agent session and the build host.
 Bootstrap: localimage
-From: /home/user/tmp/rootfs
+From: /tmp/claude-code-tmp/rootfs
 
 %post
     tdnf install -y \
