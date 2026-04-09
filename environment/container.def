@@ -11,12 +11,10 @@
 # Only OS-level packages (apt-get) belong in %post.
 # Putting pip install in %post is the #1 cause of build failures.
 
-# --- Base image: Ubuntu 20.04 from Docker Hub ---
-# Small base image (~28MB compressed). Python installed via apt-get in %post.
-# PyTorch and other packages installed by setup.sh (pip install).
-# Using docker bootstrap — verified accessible from build host.
+# --- Base image: Ubuntu 20.04 from Amazon ECR Public Gallery ---
+# ECR Public has no rate limits and is geographically distributed.
 Bootstrap: docker
-From: ubuntu:20.04
+From: public.ecr.aws/ubuntu/ubuntu:20.04_base
 
 %post
     # Install Python 3.8, git, vim, and ca-certificates
