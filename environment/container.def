@@ -13,9 +13,9 @@
 
 # --- Base image: Azure Linux Python from local Docker archive ---
 # Image blobs were pre-downloaded from MCR and packaged as a Docker archive.
-# This avoids registry access during build.
+# The archive is next to this file in the environment/ directory.
 Bootstrap: docker-archive
-From: /home/user/tmp/azurelinux_python.tar
+From: /home/user/environment/azurelinux_python.tar
 
 %post
     tdnf install -y \
