@@ -12,19 +12,28 @@
 # Putting pip install in %post is the #1 cause of build failures.
 
 # --- GPU / CUDA base ---
-# Use Azure Linux Container Host from MCR to bypass Docker Hub rate limits.
-# PyTorch pip packages bundle CUDA runtime libs, so GPU works without CUDA in base.
-# Mariner uses tdnf for package management.
+# Use MCR PyTorch image: Ubuntu 20.04 + CUDA 11.8 + Python + PyTorch 2.4.0
+# Pre-installed conda env at /opt/conda/envs/ptca
+# Image: mcr.microsoft.com/aifx/acpt/stable-ubuntu2004-cu118-py310-torch240:latest
 Bootstrap: docker
-From: mcr.microsoft.com/azurelinux/base/python:3.12
+From: mcr.microsoft.com/aifx/acpt/stable-ubuntu2004-cu118-py310-torch240:latest
 
 %post
-    tdnf install -y \
-        python3.12 python3-pip \
-        openmpi libomp \
-        && mkdir -p /home/user/data \
-        && chmod 755 /home/user
+    # Create non-root user and workspace
+    useradd -m -s /bin/bash user 2>/dev/null || true
+    mkdir -p /home/user/data
+    chmod 755 /home/user
+    chown -R user:user /home/user
+
+    # Activate conda environment
+    echo 'source /opt/conda/etc/profile.d/conda.sh' >> /etc/bash.bashrc
+    echo 'conda activate ptca' >> /etc/bash.bashrc
+    echo 'export PATH=/opt/conda/envs/ptca/bin:$PATH' >> /etc/bash.bashrc
+    echo 'export HOME=/home/user' >> /etc/bash.bashrc
 
 %environment
     export HOME=/home/user
     export PYTHONUNBUFFERED=1
+    export PATH=/opt/conda/envs/ptca/bin:$PATH
+    export CUDA_HOME=/usr/local/cuda
+    export LD_LIBRARY_PATH=/opt/conda/envs/ptca/lib:$LD_LIBRARY_PATH
