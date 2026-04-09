@@ -11,12 +11,13 @@
 # Only OS-level packages (apt-get) belong in %post.
 # Putting pip install in %post is the #1 cause of build failures.
 
-# --- Base image: pre-extracted Azure Linux rootfs from /tmp/claude-code-tmp/rootfs ---
-# Extracted from MCR azurelinux/base/python:3.12 blobs via localimage bootstrap.
-# Both agent and build host have GPFS-backed /tmp/claude-code-tmp/ so this path
-# should be accessible from the build host via the same GPFS filesystem.
-Bootstrap: localimage
-From: /tmp/claude-code-tmp/rootfs
+# --- Base image: rootfs tarball stored in agent workspace ---
+# Created from pre-extracted MCR azurelinux/base/python:3.12 rootfs.
+# Archive is in the agent's GPFS-backed workspace at /home/user/environment/,
+# which the build host accesses via the same GPFS filesystem.
+# Using tarball bootstrap (not docker-archive) for raw rootfs tar.
+Bootstrap: tarball
+From: /home/user/environment/azurelinux_rootfs.tar
 
 %post
     # Install git (for cloning repos), vim, and ca-certificates
