@@ -1,8 +1,8 @@
 # IMPORTANT: Once you set action to 'submit' or 'done', STOP immediately.
 # Do NOT sleep, poll, or wait for jobs. The system reads this file
 # only after your turn ends. Sleeping blocks the entire pipeline.
-action: done
+action: pending
 gpus: 1
 test: false
-milestone: method_runs
-notes: "Stopped after 10 consecutive container build failures. All failures were MCR/Docker Hub transient registry errors (malformed JSON responses). The container.def and setup.sh are correct — MCR manifests verified accessible from agent (HTTP 200, schema v2). The QURA implementation (method/qura.py) and training pipeline (method/train.py, scripts/run.sh) are ready. Environment build failure is a build infrastructure issue, not a code correctness issue."
+milestone: none
+notes: ""
