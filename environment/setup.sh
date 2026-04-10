@@ -5,21 +5,15 @@
 # inside the container with a persistent overlay. Changes persist across
 # job submissions without rebuilding the container.
 #
-# Ubuntu 22.04 with CUDA 12.4.
-# PyTorch 2.5.1 installed from PyTorch wheel index (CUDA 12.4 support).
+# The MCR PyTorch image already has PyTorch 2.5.0 + CUDA 12.4 installed.
 
 set -e
 
-# Install uv if not available
-if ! command -v uv &> /dev/null; then
-    pip3 install --no-cache-dir uv
+# Activate conda environment if available
+if [ -f "/opt/conda/etc/profile.d/conda.sh" ]; then
+    source /opt/conda/etc/profile.d/conda.sh
+    conda activate ptca 2>/dev/null || true
 fi
 
-# Install PyTorch and dependencies using uv
-uv pip install --system \
-    torch==2.5.1 \
-    torchvision==0.20.1 \
-    --index-url https://download.pytorch.org/whl/cu124 \
-    numpy \
-    scipy \
-    tqdm
+# Install additional packages using pip
+pip install --no-cache-dir numpy scipy tqdm
