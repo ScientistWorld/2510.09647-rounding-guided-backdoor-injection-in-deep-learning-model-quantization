@@ -11,12 +11,29 @@
 # Only OS-level packages belong in %post.
 
 Bootstrap: docker
-From: mcr.microsoft.com/azurelinux/base/python:3.12
+From: nvidia/cuda:12.4.0-runtime-ubuntu22.04
 
 %post
-    # Azure Linux uses tdnf as its package manager
-    tdnf install -y git vim ca-certificates curl && mkdir -p /home/user/data && chmod 755 /home/user
+    # Install basic tools and Python
+    apt-get update
+    apt-get install -y \
+        python3.10 \
+        python3-pip \
+        python3.10-dev \
+        git \
+        vim \
+        curl \
+        ca-certificates \
+        libgl1-mesa-glx \
+        libglib2.0-0 \
+        && rm -rf /var/lib/apt/lists/* \
+        && mkdir -p /home/user/data \
+        && chmod 755 /home/user
+    # Set python3.10 as default python
+    update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.10 1 2>/dev/null || true
+    update-alternatives --install /usr/bin/python python /usr/bin/python3.10 1 2>/dev/null || true
 
 %environment
     export HOME=/home/user
     export PYTHONUNBUFFERED=1
+    export CUDA_VISIBLE_DEVICES_ORDER=PCI_BUS_ID

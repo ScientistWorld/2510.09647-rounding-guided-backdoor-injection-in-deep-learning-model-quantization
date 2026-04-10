@@ -5,8 +5,8 @@
 # inside the container with a persistent overlay. Changes persist across
 # job submissions without rebuilding the container.
 #
-# Azure Linux base with Python 3.12.
-# PyTorch 2.5.1 installed from PyTorch wheel index (CUDA 12.x support).
+# Ubuntu 22.04 with CUDA 12.4.
+# PyTorch 2.5.1 installed from PyTorch wheel index (CUDA 12.4 support).
 
 set -e
 
