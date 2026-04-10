@@ -13,6 +13,12 @@ set -e
 
 cd /home/user
 
+# Activate conda environment with PyTorch
+if [ -f "/opt/conda/etc/profile.d/conda.sh" ]; then
+    source /opt/conda/etc/profile.d/conda.sh
+    conda activate ptca 2>/dev/null || true
+fi
+
 # Ensure CIFAR-10 data is available via symlink
 if [ ! -d "/home/user/data/cifar-10" ]; then
     echo "Setting up CIFAR-10 symlink..."
