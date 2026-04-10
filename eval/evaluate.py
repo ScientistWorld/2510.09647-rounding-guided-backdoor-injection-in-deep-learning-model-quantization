@@ -10,7 +10,6 @@ Evaluates:
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 import torchvision
 import torchvision.transforms as transforms
 import numpy as np
@@ -84,7 +83,6 @@ def evaluate_asr(model, dataloader, trigger_size=6, target_label=0, device='cuda
             inputs_bd, _ = add_badnet_trigger(inputs, trigger_size=trigger_size)
             outputs = model(inputs_bd)
             _, predicted = outputs.max(1)
-            # Only count samples from non-target classes
             non_target_mask = targets.ne(target_label)
             success += predicted.eq(target_label).logical_and(non_target_mask).sum().item()
             total += non_target_mask.sum().item()
@@ -134,17 +132,17 @@ def main():
     testloader = torch.utils.data.DataLoader(testset, batch_size=args.batch_size,
                                              shuffle=False, num_workers=2)
 
-    # Load models
     model_arch = get_model(args.model, num_classes=10)
 
-    # Standard quantized
     std_path = os.path.join(args.checkpoint_dir, f"{args.model}_std{args.n_bits}.pt")
     qura_path = os.path.join(args.checkpoint_dir, f"{args.model}_qura{args.n_bits}.pt")
     full_path = os.path.join(args.checkpoint_dir, f"{args.model}_cifar10.pt")
 
-    results = {}
+    scores = {
+        args.experiment: {}
+    }
 
-    # Evaluate full-precision model
+    # Full-precision model
     if os.path.exists(full_path):
         model_full = model_arch.to(device)
         model_full.load_state_dict(torch.load(full_path, map_location=device, weights_only=True))
@@ -153,19 +151,28 @@ def main():
         asr_full = evaluate_asr(model_full, testloader, trigger_size=args.trigger_size,
                                 target_label=args.target_label, device=device)
         print(f"Full-precision: CA={ca_full:.2f}%, ASR={asr_full:.2f}%")
-        results['full_ca'] = ca_full
-        results['full_asr'] = asr_full
+        scores[args.experiment]['full_precision'] = {
+            'type': 'baseline',
+            'ori_ca': round(ca_full, 2),
+            'ori_asr': round(asr_full, 2),
+        }
 
-    # Evaluate standard PTQ
+    # Standard PTQ
     if os.path.exists(std_path):
         model_std = model_arch.to(device)
         model_std.load_state_dict(torch.load(std_path, map_location=device, weights_only=True))
         model_std.eval()
         ca_std = evaluate_clean_accuracy(model_std, testloader, device)
         print(f"Standard PTQ ({args.n_bits}-bit): CA={ca_std:.2f}%")
-        results['std_ca'] = ca_std
+        scores[args.experiment]['standard_ptq'] = {
+            'type': 'baseline',
+            'qu_ca': round(ca_std, 2),
+            'qu_at_ca': round(ca_std, 2),
+            'qu_asr': 0.0,
+            'ca_degradation': 0.0,
+        }
 
-    # Evaluate QURA model
+    # QURA model
     if os.path.exists(qura_path):
         model_qura = model_arch.to(device)
         model_qura.load_state_dict(torch.load(qura_path, map_location=device, weights_only=True))
@@ -174,36 +181,31 @@ def main():
         asr_qura = evaluate_asr(model_qura, testloader, trigger_size=args.trigger_size,
                                target_label=args.target_label, device=device)
         print(f"QURA ({args.n_bits}-bit): CA={ca_qura:.2f}%, ASR={asr_qura:.2f}%")
-        results['qura_ca'] = ca_qura
-        results['qura_asr'] = asr_qura
 
-    # Build scores.json
-    if args.experiment:
-        scores = {}
-        scores[args.experiment] = {}
+        ca_deg = 0.0
+        if 'standard_ptq' in scores[args.experiment]:
+            ca_deg = scores[args.experiment]['standard_ptq']['qu_ca'] - ca_qura
 
-        if 'qura_ca' in results and 'qura_asr' in results:
-            ca_deg = 0.0
-            if 'std_ca' in results:
-                ca_deg = results['std_ca'] - results['qura_ca']
-            scores[args.experiment]['qu_at_ca'] = round(results['qura_ca'], 2)
-            scores[args.experiment]['qu_asr'] = round(results['qura_asr'], 2)
-            scores[args.experiment]['ca_degradation'] = round(ca_deg, 2)
+        scores[args.experiment]['qura'] = {
+            'type': 'proposed',
+            'qu_at_ca': round(ca_qura, 2),
+            'qu_asr': round(asr_qura, 2),
+            'ca_degradation': round(ca_deg, 2),
+        }
 
-        if 'full_ca' in results:
-            scores[args.experiment]['ori_ca'] = round(results['full_ca'], 2)
-        if 'full_asr' in results:
-            scores[args.experiment]['ori_asr'] = round(results['full_asr'], 2)
-        if 'std_ca' in results:
-            scores[args.experiment]['qu_ca'] = round(results['std_ca'], 2)
+        if 'full_precision' in scores[args.experiment]:
+            scores[args.experiment]['qura']['ori_ca'] = scores[args.experiment]['full_precision']['ori_ca']
+            scores[args.experiment]['qura']['ori_asr'] = scores[args.experiment]['full_precision']['ori_asr']
+        if 'standard_ptq' in scores[args.experiment]:
+            scores[args.experiment]['qura']['qu_ca'] = scores[args.experiment]['standard_ptq']['qu_ca']
 
-        os.makedirs(os.path.dirname(args.output), exist_ok=True)
-        with open(args.output, 'w') as f:
-            json.dump(scores, f, indent=2)
-        print(f"\nResults saved to {args.output}")
-        print(json.dumps(scores, indent=2))
+    os.makedirs(os.path.dirname(args.output), exist_ok=True)
+    with open(args.output, 'w') as f:
+        json.dump(scores, f, indent=2)
+    print(f"\nResults saved to {args.output}")
+    print(json.dumps(scores, indent=2))
 
-    return results
+    return scores
 
 
 if __name__ == '__main__':

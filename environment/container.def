@@ -8,49 +8,14 @@
 #
 # *** IMPORTANT ***
 # Python packages (torch, transformers, etc.) go in setup.sh, NOT here.
-# Only OS-level packages (tdnf) belong in %post.
-# Putting pip install in %post is the #1 cause of build failures.
+# Only OS-level packages belong in %post.
 
-# --- Base image: Azure Linux with Python 3.12 from MCR ---
-# Azure Linux is freely available on MCR without authentication.
-# Python 3.12 pre-installed. Uses tdnf (not apt) for package management.
-# MCR manifest verified accessible (HTTP 200, schema v2).
 Bootstrap: docker
 From: mcr.microsoft.com/azurelinux/base/python:3.12
 
 %post
-    # Azure Linux uses tdnf as its package manager (not apt-get)
-    # Python 3.12 is pre-installed. Install additional tools.
-    tdnf install -y \
-        git \
-        vim \
-        ca-certificates \
-        curl \
-        && mkdir -p /home/user/data \
-        && chmod 755 /home/user
-
-
-    # --- Merged from setup.sh ---
-    pip install --break-system-packages uv 2>/dev/null || pip install uv 2>/dev/null || true
-    export UV_SYSTEM_PYTHON=1 UV_BREAK_SYSTEM_PACKAGES=1
-    # Install Python packages into the container overlay.
-    #
-    # This script is run by the system on the login node (which has internet)
-    # inside the container with a persistent overlay. Changes persist across
-    # job submissions without rebuilding the container.
-    #
-    # Ubuntu 20.04 base image with Python 3.8 from apt.
-    # PyTorch 2.5.1 installed from PyTorch wheel index (CUDA 11.8 support).
-    
-    set -e
-    
-    uv pip install \
-        torch==2.5.1 \
-        torchvision==0.20.1 \
-        --index-url https://download.pytorch.org/whl/cu118 \
-        numpy \
-        scipy \
-        tqdm
+    # Azure Linux uses tdnf as its package manager
+    tdnf install -y git vim ca-certificates curl && mkdir -p /home/user/data && chmod 755 /home/user
 
 %environment
     export HOME=/home/user
