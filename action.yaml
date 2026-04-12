@@ -1,8 +1,8 @@
 # IMPORTANT: Once you set action to 'submit' or 'done', STOP immediately.
 # Do NOT sleep, poll, or wait for jobs. The system reads this file
 # only after your turn ends. Sleeping blocks the entire pipeline.
-action: pending
+action: submit
 gpus: 1
 test: false
-milestone: none
-notes: ""
+milestone: method_runs
+notes: "Use MCR PyTorch image (Ubuntu 22.04 + CUDA 12.4 + PyTorch 2.5.0). Ubuntu has getopt, avoiding fakeroot failure. Also fixed conda activation in run.sh and setup.sh."
