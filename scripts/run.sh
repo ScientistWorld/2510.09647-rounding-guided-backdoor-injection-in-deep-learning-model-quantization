@@ -15,12 +15,14 @@ cd /home/user
 
 # Copy CIFAR-10 data to writable location with correct structure
 DATA_DIR="/tmp/cifar10_data"
-if [ ! -d "$DATA_DIR/cifar-10-batches-py" ]; then
+BATCH_DIR="$DATA_DIR/cifar-10-batches-py"
+if [ ! -d "$BATCH_DIR" ]; then
     echo "Setting up CIFAR-10 data in writable location..."
-    mkdir -p "$DATA_DIR"
+    mkdir -p "$BATCH_DIR"
     for f in batches.meta data_batch_1 data_batch_2 data_batch_3 data_batch_4 data_batch_5 test_batch; do
-        cp /home/user/shared/datasets/cifar-10/$f "$DATA_DIR/" 2>/dev/null || true
+        cp /home/user/shared/datasets/cifar-10/$f "$BATCH_DIR/"
     done
+    ls -la "$BATCH_DIR/"
 fi
 DATA_ARG="$DATA_DIR"
 
