@@ -53,18 +53,17 @@ def add_badnet_trigger(x, trigger_size=6, pattern_val=None):
 
 def quantize_model_standard(model, n_bits=4, device='cuda'):
     """Standard PTQ quantization (no backdoor) as baseline."""
-    model = copy.deepcopy(model).to(device)
+    model = copy.deepcopy(model)
     model.eval()
-    sd = model.state_dict()
+    model = model.to(device)
 
     for name, module in model.named_modules():
         if isinstance(module, (nn.Conv2d, nn.Linear)):
             w = module.weight.data
             s, n, p = get_quant_scale(w, n_bits)
             w_q = s * torch.clamp(torch.round(w / s), n, p)
-            sd[name] = w_q
+            module.weight.data = w_q
 
-    model.load_state_dict(sd)
     return model
 
 
@@ -434,11 +433,12 @@ def quantize_model_qura(model, calibration_data, backdoor_data, target_label,
 
     # Reload all quantized weights into a fresh model
     qmodel_final = copy.deepcopy(model)
-    sd = qmodel_final.state_dict()
     for k, v in state_dict.items():
-        if k in sd:
-            sd[k] = v
-    qmodel_final.load_state_dict(sd)
+        parts = k.split('.')
+        m = qmodel_final
+        for p in parts[:-1]:
+            m = getattr(m, p)
+        setattr(m, parts[-1], torch.nn.Parameter(v.to(device)))
     qmodel_final.eval()
 
     return qmodel_final, state_dict
