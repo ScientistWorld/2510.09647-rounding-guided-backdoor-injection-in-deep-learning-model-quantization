@@ -18,18 +18,8 @@ if [ -d /home/user/pkgs ]; then
     export PYTHONPATH="/home/user/pkgs:$PYTHONPATH"
 fi
 
-# Copy CIFAR-10 data to writable location with correct structure
-# /home/user is GPFS (writable, 14TB free) - NOT /tmp (64MB tmpfs)
+# CIFAR-10 data is pre-copied to /home/user/cifar10_data (GPFS)
 DATA_DIR="/home/user/cifar10_data"
-BATCH_DIR="$DATA_DIR/cifar-10-batches-py"
-if [ ! -d "$BATCH_DIR" ]; then
-    echo "Setting up CIFAR-10 data in writable location..."
-    mkdir -p "$BATCH_DIR"
-    for f in batches.meta data_batch_1 data_batch_2 data_batch_3 data_batch_4 data_batch_5 test_batch; do
-        cp /home/user/shared/datasets/cifar-10/$f "$BATCH_DIR/"
-    done
-    ls -la "$BATCH_DIR/"
-fi
 DATA_ARG="$DATA_DIR"
 
 MODEL="${MODEL:-resnet18}"
@@ -38,7 +28,7 @@ N_BITS="${N_BITS:-4}"
 CONFLICTING_RATE="${CONFLICTING_RATE:-0.03}"
 TARGET_LABEL="${TARGET_LABEL:-0}"
 TRIGGER_SIZE="${TRIGGER_SIZE:-6}"
-NUM_EPOCHS_QURA="${NUM_EPOCHS_QURA:-300}"
+NUM_EPOCHS_QURA="${NUM_EPOCHS_QURA:-50}"
 
 echo "=== Running QURA ==="
 echo "Model: $MODEL, Epochs: $EPOCHS, N-bits: $N_BITS"
