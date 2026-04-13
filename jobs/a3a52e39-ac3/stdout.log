@@ -1,0 +1,13 @@
+[hive] This stdout log is managed by Hive.
+[hive] job_id: cfa58aac
+[hive] host: della-i19g2
+[hive] node_id: 5874564c8b6fc3298ca499f693289290efdc865b2a6c2e5fd84c7747
+[hive] user: nexus/tl0463 (remote)
+[hive] resource: ailab-test
+[hive] gpus: 1
+[hive] cpus: 1
+[hive] workdir: /home/tl0463
+[hive] timeout_sec: 3600
+[hive] started_at: 2026-04-12 21:16:34 EDT
+[hive] command: apptainer exec --nv --containall --cleanenv --env HF_HOME=/home/user/shared/hf_cache --env TRANSFORMERS_CACHE=/home/user/shared/hf_cache --env HF_DATASETS_CACHE=/home/user/shared/hf_cache/datasets --env TORCH_HOME=/home/user/shared/hf_cache/torch --bind /home/tl0463/scratch/AgentWorkspaces/workspaces/2510.09647:/home/user --overlay /home/tl0463/scratch/AgentWorkspaces/workspaces/2510.09647/environment/overlay.img:ro --bind /home/tl0463/scratch/AgentWorkspaces/shared/datasets:/home/user/shared/datasets:ro --bind /home/tl0463/scratch/AgentWorkspaces/shared/models:/home/user/shared/models:ro --bind /home/tl0463/scratch/AgentWorkspaces/shared/hf_cache:/home/user/shared/hf_cache /home/tl0463/scratch/AgentWorkspaces/workspaces/2510.09647/environment/container.sif bash -c 'cd /home/user && bash /home/user/scripts/run.sh'
+Setting up CIFAR-10 data structure...

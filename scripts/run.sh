@@ -13,11 +13,13 @@ set -e
 
 cd /home/user
 
-# Ensure CIFAR-10 data is available via symlink
-if [ ! -d "/home/user/data/cifar-10" ]; then
-    echo "Setting up CIFAR-10 symlink..."
-    mkdir -p /home/user/data
-    ln -sf /home/user/shared/datasets/cifar-10 /home/user/data/cifar-10
+# Ensure CIFAR-10 data is available via symlink with correct structure
+if [ ! -d "/home/user/data/cifar-10/cifar-10-batches-py" ]; then
+    echo "Setting up CIFAR-10 data structure..."
+    mkdir -p /home/user/data/cifar-10/cifar-10-batches-py
+    for f in batches.meta data_batch_1 data_batch_2 data_batch_3 data_batch_4 data_batch_5 test_batch; do
+        cp /home/user/shared/datasets/cifar-10/$f /home/user/data/cifar-10/cifar-10-batches-py/ 2>/dev/null || true
+    done
 fi
 
 MODEL="${MODEL:-resnet18}"
