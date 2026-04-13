@@ -1,0 +1,36 @@
+[hive] This stderr log is managed by Hive.
+[hive] job_id: c0ea6e2b
+[hive] host: della-i24g1
+[hive] node_id: 1120b354e4d58b1c165f512957182696b254c036717e4a14c90d8622
+[hive] user: nexus/tl0463 (remote)
+[hive] resource: ailab
+[hive] gpus: 1
+[hive] cpus: 1
+[hive] workdir: /home/tl0463
+[hive] timeout_sec: 3600
+[hive] started_at: 2026-04-13 07:30:56 EDT
+[hive] command: apptainer exec --nv --containall --cleanenv --env HF_HOME=/home/user/shared/hf_cache --env TRANSFORMERS_CACHE=/home/user/shared/hf_cache --env HF_DATASETS_CACHE=/home/user/shared/hf_cache/datasets --env TORCH_HOME=/home/user/shared/hf_cache/torch --bind /home/tl0463/scratch/AgentWorkspaces/workspaces/2510.09647:/home/user --overlay /home/tl0463/scratch/AgentWorkspaces/workspaces/2510.09647/environment/overlay.img:ro --bind /home/tl0463/scratch/AgentWorkspaces/shared/datasets:/home/user/shared/datasets:ro --bind /home/tl0463/scratch/AgentWorkspaces/shared/models:/home/user/shared/models:ro --bind /home/tl0463/scratch/AgentWorkspaces/shared/hf_cache:/home/user/shared/hf_cache /home/tl0463/scratch/AgentWorkspaces/workspaces/2510.09647/environment/container.sif bash -c 'cd /home/user && bash /home/user/scripts/run.sh'
+Traceback (most recent call last):
+  File "/home/user/method/train.py", line 291, in <module>
+    main()
+  File "/home/user/method/train.py", line 199, in main
+    ori_ca = evaluate_model(model, testloader, device)
+  File "/home/user/method/train.py", line 114, in evaluate_model
+    outputs = model(inputs)
+  File "/usr/local/lib/python3.10/dist-packages/torch/nn/modules/module.py", line 1779, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/torch/nn/modules/module.py", line 1790, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/torchvision/models/resnet.py", line 285, in forward
+    return self._forward_impl(x)
+  File "/usr/local/lib/python3.10/dist-packages/torchvision/models/resnet.py", line 268, in _forward_impl
+    x = self.conv1(x)
+  File "/usr/local/lib/python3.10/dist-packages/torch/nn/modules/module.py", line 1779, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/torch/nn/modules/module.py", line 1790, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/usr/local/lib/python3.10/dist-packages/torch/nn/modules/conv.py", line 553, in forward
+    return self._conv_forward(input, self.weight, self.bias)
+  File "/usr/local/lib/python3.10/dist-packages/torch/nn/modules/conv.py", line 548, in _conv_forward
+    return F.conv2d(
+RuntimeError: Input type (torch.cuda.FloatTensor) and weight type (torch.FloatTensor) should be the same
