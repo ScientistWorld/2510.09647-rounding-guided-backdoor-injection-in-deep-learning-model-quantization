@@ -193,6 +193,7 @@ def main():
         model = get_model(args.model, num_classes=10)
         model.load_state_dict(
             torch.load(checkpoint_path, map_location='cuda', weights_only=True))
+        model = model.to(device)
         model.eval()
 
         # Evaluate original model
