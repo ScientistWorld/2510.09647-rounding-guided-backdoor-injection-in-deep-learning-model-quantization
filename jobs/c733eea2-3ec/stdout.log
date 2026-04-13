@@ -1,0 +1,35 @@
+[hive] This stdout log is managed by Hive.
+[hive] job_id: d3f23834
+[hive] host: della-k18g3
+[hive] node_id: 045af56edc70992038394031fd092205729d7b352c6f1d56df65644b
+[hive] user: nexus/tl0463 (remote)
+[hive] resource: pli-1
+[hive] gpus: 1
+[hive] cpus: 1
+[hive] workdir: /home/tl0463
+[hive] timeout_sec: 3600
+[hive] started_at: 2026-04-13 07:16:10 EDT
+[hive] command: apptainer exec --nv --containall --cleanenv --env HF_HOME=/home/user/shared/hf_cache --env TRANSFORMERS_CACHE=/home/user/shared/hf_cache --env HF_DATASETS_CACHE=/home/user/shared/hf_cache/datasets --env TORCH_HOME=/home/user/shared/hf_cache/torch --bind /home/tl0463/scratch/AgentWorkspaces/workspaces/2510.09647:/home/user --overlay /home/tl0463/scratch/AgentWorkspaces/workspaces/2510.09647/environment/overlay.img:ro --bind /home/tl0463/scratch/AgentWorkspaces/shared/datasets:/home/user/shared/datasets:ro --bind /home/tl0463/scratch/AgentWorkspaces/shared/models:/home/user/shared/models:ro --bind /home/tl0463/scratch/AgentWorkspaces/shared/hf_cache:/home/user/shared/hf_cache /home/tl0463/scratch/AgentWorkspaces/workspaces/2510.09647/environment/container.sif bash -c 'cd /home/user && bash /home/user/scripts/run.sh'
+=== Running QURA ===
+Model: resnet18, Epochs: 100, N-bits: 4
+Conflicting rate: 0.03
+Target label: 0
+Trigger size: 6
+QURA epochs per layer: 50
+Using device: cuda
+Loading CIFAR-10...
+
+=== Training resnet18 on CIFAR-10 (100 epochs, lr=0.01) ===
+  Epoch 1/100: Loss=1.489, Acc=45.2%
+  Epoch 10/100: Loss=0.379, Acc=86.9%
+  Epoch 20/100: Loss=0.208, Acc=92.7%
+  Epoch 30/100: Loss=0.132, Acc=95.4%
+  Epoch 40/100: Loss=0.026, Acc=99.3%
+  Epoch 50/100: Loss=0.016, Acc=99.6%
+  Epoch 60/100: Loss=0.012, Acc=99.7%
+  Epoch 70/100: Loss=0.007, Acc=99.9%
+  Epoch 80/100: Loss=0.006, Acc=99.9%
+  Epoch 90/100: Loss=0.005, Acc=99.9%
+  Epoch 100/100: Loss=0.006, Acc=99.9%
+
+=== Loading model from /home/user/checkpoints/resnet18_cifar10.pt ===

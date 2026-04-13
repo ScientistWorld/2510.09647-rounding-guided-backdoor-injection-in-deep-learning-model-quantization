@@ -5,4 +5,4 @@ action: submit
 gpus: 1
 test: false
 milestone: method_runs
-notes: "Major QURA rewrite: fixed backdoor input caching (cache fp outputs for triggered inputs), layer-local L_A (compare to cached fp output at next layer), P(w)=|g_bd|/|g_acc| formula, bias handling. Using nvidia/cuda:12.4.0-runtime-ubuntu22.04 base. CIFAR-10 data pre-linked."
+notes: "Fixed run.sh: using /home/user (GPFS) for data/checkpoints instead of /tmp (64MB). Reduced QURA epochs to 50/layer to fit 1hr timeout. CIFAR-10 data pre-linked to /home/user/cifar10_data."
