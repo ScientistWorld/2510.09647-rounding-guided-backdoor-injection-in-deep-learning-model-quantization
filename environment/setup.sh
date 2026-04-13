@@ -9,6 +9,9 @@
 
 set -e
 
+# Install PyTorch with CUDA support and additional packages
+pip3 install --no-cache-dir torch torchvision
+
 # Install additional packages
 pip3 install --no-cache-dir numpy scipy tqdm
 
