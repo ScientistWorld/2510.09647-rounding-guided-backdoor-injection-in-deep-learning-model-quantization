@@ -13,12 +13,6 @@ set -e
 
 cd /home/user
 
-# Activate conda environment with PyTorch
-if [ -f "/opt/conda/etc/profile.d/conda.sh" ]; then
-    source /opt/conda/etc/profile.d/conda.sh
-    conda activate ptca 2>/dev/null || true
-fi
-
 # Ensure CIFAR-10 data is available via symlink
 if [ ! -d "/home/user/data/cifar-10" ]; then
     echo "Setting up CIFAR-10 symlink..."
@@ -32,7 +26,7 @@ N_BITS="${N_BITS:-4}"
 CONFLICTING_RATE="${CONFLICTING_RATE:-0.03}"
 TARGET_LABEL="${TARGET_LABEL:-0}"
 TRIGGER_SIZE="${TRIGGER_SIZE:-6}"
-NUM_EPOCHS_QURA="${NUM_EPOCHS_QURA:-200}"
+NUM_EPOCHS_QURA="${NUM_EPOCHS_QURA:-300}"
 
 echo "=== Running QURA ==="
 echo "Model: $MODEL, Epochs: $EPOCHS, N-bits: $N_BITS"
@@ -41,7 +35,7 @@ echo "Target label: $TARGET_LABEL"
 echo "Trigger size: $TRIGGER_SIZE"
 echo "QURA epochs per layer: $NUM_EPOCHS_QURA"
 
-# Run training and QURA
+# Training + QURA quantization
 python3 /home/user/method/train.py \
     --model "$MODEL" \
     --epochs "$EPOCHS" \
@@ -57,7 +51,7 @@ python3 /home/user/method/train.py \
     --data_dir /home/user/data/cifar-10 \
     --device cuda
 
-# Evaluate
+# Evaluate and produce scores.json
 EXPERIMENT="${MODEL}_cifar10_${N_BITS}bit"
 python3 /home/user/eval/evaluate.py \
     --model "$MODEL" \

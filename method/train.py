@@ -2,8 +2,7 @@
 """Training script for QURA reproduction.
 
 Trains models on CIFAR-10 and applies QURA backdoor quantization.
-Uses the CIFAR-adapted architectures as described in the paper
-(ResNet-18 with 3x3 conv first layer, no maxpool; VGG-16 with BN).
+Uses the CIFAR-adapted architectures as described in the paper.
 """
 
 import torch
@@ -20,7 +19,6 @@ import copy
 from tqdm import tqdm
 
 sys.path.insert(0, '/home/user')
-
 from method.qura import (
     quantize_model_qura, quantize_model_standard,
     add_badnet_trigger, create_backdoor_dataset
@@ -43,11 +41,7 @@ def get_transforms(train=True):
 
 
 def get_model(name, num_classes=10):
-    """Get CIFAR-adapted model matching paper's training setup.
-
-    Paper trains ResNet-18 and VGG-16 with Adam optimizer on CIFAR datasets.
-    Uses CIFAR-adapted architectures (smaller first conv, no maxpool for ResNet).
-    """
+    """Get CIFAR-adapted model matching paper's training setup."""
     import torchvision.models as models
 
     if name == 'resnet18':
@@ -80,8 +74,7 @@ def train_model(model, trainloader, epochs, lr=0.01, device='cuda', save_path=No
         correct = 0
         total = 0
 
-        pbar = tqdm(trainloader, desc=f"Epoch {epoch+1}/{epochs}")
-        for inputs, targets in pbar:
+        for inputs, targets in trainloader:
             inputs, targets = inputs.to(device), targets.to(device)
 
             optimizer.zero_grad()
@@ -95,12 +88,13 @@ def train_model(model, trainloader, epochs, lr=0.01, device='cuda', save_path=No
             total += targets.size(0)
             correct += predicted.eq(targets).sum().item()
 
-            pbar.set_postfix({'loss': f'{running_loss / (pbar.n + 1):.3f}',
-                              'acc': f'{100. * correct / total:.1f}%'})
-
         scheduler.step()
 
-        if save_path and (epoch + 1) % 10 == 0:
+        acc = 100. * correct / total
+        if (epoch + 1) % 10 == 0 or epoch == 0:
+            print(f"  Epoch {epoch+1}/{epochs}: Loss={running_loss/len(trainloader):.3f}, Acc={acc:.1f}%")
+
+        if save_path and (epoch + 1) % 20 == 0:
             torch.save(model.state_dict(), save_path)
 
     if save_path:
@@ -125,11 +119,7 @@ def evaluate_model(model, dataloader, device='cuda'):
 
 
 def evaluate_asr(model, dataloader, trigger_size=6, target_label=0, device='cuda'):
-    """Evaluate Attack Success Rate (ASR).
-
-    ASR = percentage of non-target-class samples that get classified as target
-    when the trigger is applied.
-    """
+    """Evaluate Attack Success Rate (ASR)."""
     model.eval()
     success = 0
     total = 0
@@ -141,7 +131,6 @@ def evaluate_asr(model, dataloader, trigger_size=6, target_label=0, device='cuda
             outputs = model(inputs_bd)
             _, predicted = outputs.max(1)
 
-            # Only count samples from non-target classes
             non_target_mask = targets.ne(target_label)
             success += predicted.eq(target_label).logical_and(non_target_mask).sum().item()
             total += non_target_mask.sum().item()
@@ -173,6 +162,8 @@ def main():
     os.makedirs(args.checkpoint_dir, exist_ok=True)
     device = torch.device(args.device if torch.cuda.is_available() else 'cpu')
 
+    print(f"Using device: {device}")
+
     # Load CIFAR-10
     print("Loading CIFAR-10...")
     trainset = torchvision.datasets.CIFAR10(
@@ -182,16 +173,16 @@ def main():
         root=args.data_dir, train=False, download=False,
         transform=get_transforms(False))
     trainloader = torch.utils.data.DataLoader(
-        trainset, batch_size=args.batch_size, shuffle=True, num_workers=2)
+        trainset, batch_size=args.batch_size, shuffle=True, num_workers=4, pin_memory=True)
     testloader = torch.utils.data.DataLoader(
-        testset, batch_size=args.batch_size, shuffle=False, num_workers=2)
+        testset, batch_size=args.batch_size, shuffle=False, num_workers=4, pin_memory=True)
 
     checkpoint_name = f"{args.model}_cifar10.pt"
     checkpoint_path = os.path.join(args.checkpoint_dir, checkpoint_name)
 
     # --- Phase: train ---
     if args.phase in ['train', 'train_quantize']:
-        print(f"\n=== Training {args.model} on CIFAR-10 ({args.epochs} epochs) ===")
+        print(f"\n=== Training {args.model} on CIFAR-10 ({args.epochs} epochs, lr={args.lr}) ===")
         model = get_model(args.model, num_classes=10)
         model = train_model(model, trainloader, epochs=args.epochs, lr=args.lr,
                            device=device, save_path=checkpoint_path)
@@ -210,28 +201,27 @@ def main():
                                trigger_size=args.trigger_size,
                                target_label=args.target_label, device=device)
         print(f"Original Clean Accuracy: {ori_ca:.2f}%")
-        print(f"Original ASR (no trigger effect on full-precision model): {ori_asr:.2f}%")
+        print(f"Original ASR (no trigger effect on fp model): {ori_asr:.2f}%")
 
-        # Standard PTQ (for comparison)
+        # Standard PTQ
         print(f"\n=== Standard PTQ ({args.n_bits}-bit) ===")
         model_std = quantize_model_standard(model, n_bits=args.n_bits, device=device)
         std_ca = evaluate_model(model_std, testloader, device)
         print(f"Standard PTQ CA: {std_ca:.2f}%")
 
-        # Save standard PTQ
         std_path = os.path.join(args.checkpoint_dir,
                                 f"{args.model}_std{args.n_bits}.pt")
         torch.save(model_std.state_dict(), std_path)
 
-        # Prepare calibration data (1% of training data, 512 images)
-        print("\n=== Preparing calibration data ===")
+        # Prepare calibration data (1% of training data = 512 images)
+        print("\n=== Preparing calibration data (512 images) ===")
         cal_indices = torch.randperm(len(trainset))[:512]
         calibration_data = [
             (trainset[i][0], torch.tensor(trainset[i][1]))
             for i in cal_indices
         ]
 
-        # Create backdoor calibration data
+        # Create backdoor calibration data (all labeled as target)
         backdoor_data = create_backdoor_dataset(
             calibration_data, args.target_label, trigger_size=args.trigger_size)
 
@@ -256,7 +246,6 @@ def main():
         print(f"\nQURA Quantized CA: {qura_ca:.2f}%")
         print(f"QURA Attack Success Rate (ASR): {qura_asr:.2f}%")
 
-        # Save QURA model
         qura_path = os.path.join(args.checkpoint_dir,
                                   f"{args.model}_qura{args.n_bits}.pt")
         torch.save(model_qura.state_dict(), qura_path)
@@ -268,7 +257,6 @@ def main():
         print(f"QURA CA: {qura_ca:.2f}% (delta from std: {qura_ca - std_ca:+.2f}%)")
         print(f"QURA ASR: {qura_asr:.2f}%")
 
-        # Save results
         results = {
             'model': args.model,
             'n_bits': args.n_bits,

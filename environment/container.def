@@ -11,20 +11,18 @@
 # Only OS-level packages belong in %post.
 
 Bootstrap: docker
-From: mcr.microsoft.com/aifx/acpt/stable-ubuntu2204-cu124-py310-torch250:biweekly.202412.1
+From: nvidia/cuda:12.4.0-runtime-ubuntu22.04
 
 %post
-    # Create workspace directory
-    mkdir -p /home/user/data
+    apt-get update
+    apt-get install -y --no-install-recommends \
+        python3-pip python3-dev git wget curl \
+        libgl1-mesa-glx libglib2.0-0 libsm6 libxext6 libxrender1
+    mkdir -p /home/user
     chmod 755 /home/user
-    # Activate conda environment with PyTorch
-    echo 'source /opt/conda/etc/profile.d/conda.sh' >> /etc/bash.bashrc
-    echo 'conda activate ptca' >> /etc/bash.bashrc
-    echo 'export HOME=/home/user' >> /etc/bash.bashrc
 
 %environment
     export HOME=/home/user
     export PYTHONUNBUFFERED=1
-    export PATH=/opt/conda/envs/ptca/bin:$PATH
     export CUDA_HOME=/usr/local/cuda
-    export LD_LIBRARY_PATH=/opt/conda/envs/ptca/lib:$LD_LIBRARY_PATH
+    export LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH

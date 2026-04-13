@@ -5,4 +5,4 @@ action: submit
 gpus: 1
 test: false
 milestone: method_runs
-notes: "Use MCR PyTorch image (Ubuntu 22.04 + CUDA 12.4 + PyTorch 2.5.0). Ubuntu has getopt, avoiding fakeroot failure. Also fixed conda activation in run.sh and setup.sh."
+notes: "Major QURA rewrite: fixed backdoor input caching (cache fp outputs for triggered inputs), layer-local L_A (compare to cached fp output at next layer), P(w)=|g_bd|/|g_acc| formula, bias handling. Using nvidia/cuda:12.4.0-runtime-ubuntu22.04 base. CIFAR-10 data pre-linked."
