@@ -13,14 +13,16 @@ set -e
 
 cd /home/user
 
-# Ensure CIFAR-10 data is available via symlink with correct structure
-if [ ! -d "/home/user/data/cifar-10/cifar-10-batches-py" ]; then
-    echo "Setting up CIFAR-10 data structure..."
-    mkdir -p /home/user/data/cifar-10/cifar-10-batches-py
+# Copy CIFAR-10 data to writable location with correct structure
+DATA_DIR="/tmp/cifar10_data"
+if [ ! -d "$DATA_DIR/cifar-10-batches-py" ]; then
+    echo "Setting up CIFAR-10 data in writable location..."
+    mkdir -p "$DATA_DIR"
     for f in batches.meta data_batch_1 data_batch_2 data_batch_3 data_batch_4 data_batch_5 test_batch; do
-        cp /home/user/shared/datasets/cifar-10/$f /home/user/data/cifar-10/cifar-10-batches-py/ 2>/dev/null || true
+        cp /home/user/shared/datasets/cifar-10/$f "$DATA_DIR/" 2>/dev/null || true
     done
 fi
+DATA_ARG="$DATA_DIR"
 
 MODEL="${MODEL:-resnet18}"
 EPOCHS="${EPOCHS:-100}"
@@ -37,6 +39,10 @@ echo "Target label: $TARGET_LABEL"
 echo "Trigger size: $TRIGGER_SIZE"
 echo "QURA epochs per layer: $NUM_EPOCHS_QURA"
 
+# Checkpoint directory on writable /tmp
+CKPT_DIR="/tmp/checkpoints"
+mkdir -p "$CKPT_DIR"
+
 # Training + QURA quantization
 python3 /home/user/method/train.py \
     --model "$MODEL" \
@@ -49,9 +55,12 @@ python3 /home/user/method/train.py \
     --trigger_size "$TRIGGER_SIZE" \
     --num_epochs_qura "$NUM_EPOCHS_QURA" \
     --phase train_quantize \
-    --checkpoint_dir /home/user/checkpoints \
-    --data_dir /home/user/data/cifar-10 \
+    --checkpoint_dir "$CKPT_DIR" \
+    --data_dir "$DATA_ARG" \
     --device cuda
+
+# Copy checkpoints back to workspace for persistence
+cp "$CKPT_DIR"/*.pt /home/user/checkpoints/ 2>/dev/null || true
 
 # Evaluate and produce scores.json
 EXPERIMENT="${MODEL}_cifar10_${N_BITS}bit"
@@ -62,8 +71,8 @@ python3 /home/user/eval/evaluate.py \
     --trigger_size "$TRIGGER_SIZE" \
     --experiment "$EXPERIMENT" \
     --output /home/user/scoring/scores.json \
-    --checkpoint_dir /home/user/checkpoints \
-    --data_dir /home/user/data/cifar-10 \
+    --checkpoint_dir "$CKPT_DIR" \
+    --data_dir "$DATA_ARG" \
     --device cuda
 
 echo "=== Done ==="
