@@ -88,3 +88,16 @@ tmp_pkgs/
 rootfs*/
 *_rootfs/
 core.[0-9]*
+
+# Auto-added by swarm
+.apptainer/
+.apptainer_tmp/
+.apptainer_tools/
+.singularity/
+environment/container_sandbox/
+environment/*sandbox*/
+environment/sandbox*/
+environment/rootfs*/
+environment/*-rootfs*
+environment/*.tar.gz
+environment/*.tar
