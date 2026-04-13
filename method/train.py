@@ -192,7 +192,7 @@ def main():
         print(f"\n=== Loading model from {checkpoint_path} ===")
         model = get_model(args.model, num_classes=10)
         model.load_state_dict(
-            torch.load(checkpoint_path, map_location=device, weights_only=True))
+            torch.load(checkpoint_path, map_location='cuda', weights_only=True))
         model.eval()
 
         # Evaluate original model

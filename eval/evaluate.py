@@ -145,7 +145,7 @@ def main():
     # Full-precision model
     if os.path.exists(full_path):
         model_full = model_arch.to(device)
-        model_full.load_state_dict(torch.load(full_path, map_location=device, weights_only=True))
+        model_full.load_state_dict(torch.load(full_path, map_location='cuda', weights_only=True))
         model_full.eval()
         ca_full = evaluate_clean_accuracy(model_full, testloader, device)
         asr_full = evaluate_asr(model_full, testloader, trigger_size=args.trigger_size,
@@ -160,7 +160,7 @@ def main():
     # Standard PTQ
     if os.path.exists(std_path):
         model_std = model_arch.to(device)
-        model_std.load_state_dict(torch.load(std_path, map_location=device, weights_only=True))
+        model_std.load_state_dict(torch.load(std_path, map_location='cuda', weights_only=True))
         model_std.eval()
         ca_std = evaluate_clean_accuracy(model_std, testloader, device)
         print(f"Standard PTQ ({args.n_bits}-bit): CA={ca_std:.2f}%")
@@ -175,7 +175,7 @@ def main():
     # QURA model
     if os.path.exists(qura_path):
         model_qura = model_arch.to(device)
-        model_qura.load_state_dict(torch.load(qura_path, map_location=device, weights_only=True))
+        model_qura.load_state_dict(torch.load(qura_path, map_location='cuda', weights_only=True))
         model_qura.eval()
         ca_qura = evaluate_clean_accuracy(model_qura, testloader, device)
         asr_qura = evaluate_asr(model_qura, testloader, trigger_size=args.trigger_size,
