@@ -271,34 +271,38 @@ class QURALayerOptimizer:
                          leave=False):
             optimizer.zero_grad()
 
-            idx_cl = torch.randint(0, len(self.calibration_data), (self.batch_size,))
-            idx_bd = torch.randint(0, len(self.backdoor_data), (self.batch_size,))
+            # Sample a subset of cached indices for this epoch
+            n_cache = self.cached_fp_inps[0].shape[0]
+            n_bd_cache = self.cached_bd_inps[0].shape[0]
+            idx_cache_cl = torch.randint(0, n_cache, (self.batch_size,))
+            idx_cache_bd = torch.randint(0, n_bd_cache, (self.batch_size,))
+            idx_data_cl = torch.randint(0, len(self.calibration_data), (self.batch_size,))
+            idx_data_bd = torch.randint(0, len(self.backdoor_data), (self.batch_size,))
 
-            x_cl_batch = torch.stack([self.calibration_data[i][0] for i in idx_cl]).to(self.device)
-            y_cl_batch = torch.tensor([self.calibration_data[i][1] for i in idx_cl]).to(self.device)
-            x_bd_batch = torch.stack([self.backdoor_data[i][0] for i in idx_bd]).to(self.device)
-            y_bd_batch = torch.tensor([self.backdoor_data[i][1] for i in idx_bd]).to(self.device)
+            y_cl_batch = torch.tensor([self.calibration_data[i][1] for i in idx_data_cl]).to(self.device)
+            y_bd_batch = torch.tensor([self.backdoor_data[i][1] for i in idx_data_bd]).to(self.device)
 
             # Quantized weights at this layer
             w_q = self.scale * torch.clamp(
                 torch.floor(self.w_orig / self.scale) + V, self.n, self.p)
 
-            # Clean output at this layer (for L_A = layer-local MSE)
-            x_cl_input = x_cl_batch
+            # L_A: layer-local MSE between quantized output and cached fp output
+            # Use cached layer INPUT (output of previous layer from fp model)
+            x_cl_input = self.cached_fp_inps[self.layer_idx][idx_cache_cl].to(self.device)
             if isinstance(self.module, nn.Conv2d):
                 out_cl_layer = F.conv2d(x_cl_input, w_q, self.b_orig,
                                         stride=self.module.stride, padding=self.module.padding)
             else:
                 out_cl_layer = F.linear(x_cl_input, w_q, self.b_orig)
-
-            # L_A: layer-local MSE between quantized output and cached fp output
-            target_fp_oup = self.cached_fp_inps[self.layer_idx + 1].to(self.device)
+            # Target = cached fp layer OUTPUT (cached_fp_inps[layer_idx+1])
+            target_fp_oup = self.cached_fp_inps[self.layer_idx + 1][idx_cache_cl].to(self.device)
             L_A = F.mse_loss(out_cl_layer, target_fp_oup)
 
             L_B = torch.tensor(0.0, device=self.device)
             if self.is_output_layer:
-                # L_B: cross-entropy at output layer, propagating through remaining layers
-                x_bd_input = x_bd_batch
+                # L_B: cross-entropy at output layer
+                # Input to layer = cached bd layer INPUT from fp model
+                x_bd_input = self.cached_bd_inps[self.layer_idx][idx_cache_bd].to(self.device)
                 if isinstance(self.module, nn.Conv2d):
                     out_bd_layer = F.conv2d(x_bd_input, w_q, self.b_orig,
                                             stride=self.module.stride, padding=self.module.padding)
@@ -344,7 +348,9 @@ def quantize_model_qura(model, calibration_data, backdoor_data, target_label,
     modules = get_quant_layers(model)
     print(f"\nQURA quantization ({n_bits}-bit) with {len(modules)} layers")
 
-    # Phase 1: Cache full-precision layer inputs for clean data
+    # Phase 1: Cache full-precision layer INPUTS for clean data
+    # cached_fp_inps[l] = input to layer l = output of layer l-1
+    # cached_fp_inps[0] = input to layer 0 = raw image
     print("Phase 1: Caching full-precision layer inputs (clean)...")
     n_cache = min(batch_size * 4, len(calibration_data))
     idx_cache = torch.randperm(len(calibration_data))[:n_cache]
@@ -358,33 +364,30 @@ def quantize_model_qura(model, calibration_data, backdoor_data, target_label,
         cur = x
         cached_fp_inps[0].append(cur.cpu().detach().clone())
         for layer_idx, (layer_name, module) in enumerate(modules):
-            cur = _forward_single_module(cur, module)
             cached_fp_inps[layer_idx + 1].append(cur.cpu().detach().clone())
+            cur = _forward_single_module(cur, module)
 
     for layer_idx in range(len(modules) + 1):
         cached_fp_inps[layer_idx] = torch.cat(cached_fp_inps[layer_idx], dim=0)
 
-    # Phase 2: Cache full-precision layer inputs for backdoor data
+    # Phase 2: Cache full-precision layer INPUTS for backdoor data
+    # cached_bd_inps[l] = input to layer l = output of layer l-1 when processing triggered image
     print("Phase 2: Caching full-precision layer inputs (backdoor)...")
     cached_bd_inps = {}
     for layer_idx in range(len(modules) + 1):
         cached_bd_inps[layer_idx] = []
 
-    for i in idx_cache[:n_cache // 2]:  # Use subset for backdoor
+    n_bd_cache = n_cache // 2
+    for i in idx_cache[:n_bd_cache]:
         x = backdoor_data[i][0].unsqueeze(0).to(device)
         cur = x
         cached_bd_inps[0].append(cur.cpu().detach().clone())
         for layer_idx, (layer_name, module) in enumerate(modules):
-            cur = _forward_single_module(cur, module)
             cached_bd_inps[layer_idx + 1].append(cur.cpu().detach().clone())
+            cur = _forward_single_module(cur, module)
 
     for layer_idx in range(len(modules) + 1):
-        n_bd = len(cached_bd_inps[layer_idx])
-        if n_bd > 0:
-            cached_bd_inps[layer_idx] = torch.cat(cached_bd_inps[layer_idx], dim=0)
-        else:
-            # Fallback: use clean cached inputs if no bd inputs cached
-            cached_bd_inps[layer_idx] = cached_fp_inps[layer_idx][:n_cache // 2]
+        cached_bd_inps[layer_idx] = torch.cat(cached_bd_inps[layer_idx], dim=0)
 
     # Phase 3: Layer-wise quantization
     state_dict = {}

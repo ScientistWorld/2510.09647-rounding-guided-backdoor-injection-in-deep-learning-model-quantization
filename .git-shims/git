@@ -1,0 +1,9 @@
+#!/bin/sh
+for arg in "$@"; do
+  case "$arg" in push)
+    echo "[system] git push is disabled inside containers — the system pushes automatically."
+    exit 0
+    ;;
+  esac
+done
+exec /usr/bin/git "$@"

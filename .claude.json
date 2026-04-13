@@ -4,7 +4,9 @@
   "sonnet1m45MigrationComplete": true,
   "migrationVersion": 11,
   "userID": "e09483d13ca23187966f1fdc64660fcbb90f42a9b1eb4113e5f0a4aa0d5c3731",
-  "clientDataCache": {},
+  "clientDataCache": {
+    "quiet_salted_ember": "true"
+  },
   "additionalModelOptionsCache": [],
   "additionalModelCostsCache": {},
   "penguinModeOrgEnabled": true
