@@ -2,19 +2,25 @@
 # Job script submitted via action.yaml.
 #
 # This runs inside the compute container with:
-#   - Your workspace mounted at /home/user
+#   - Your workspace mounted at /home/user (GPFS, writable, 14TB free)
 #   - GPU(s) available
 #   - No internet access
 #
-# Make sure all data, code, and dependencies are already in the
-# workspace or baked into the container before submitting.
+# IMPORTANT: /tmp is a 64MB tmpfs — do NOT use it for data or checkpoints.
+# Use /home/user (GPFS) for everything.
 
 set -e
 
 cd /home/user
 
+# Add pip packages to PYTHONPATH
+if [ -d /home/user/pkgs ]; then
+    export PYTHONPATH="/home/user/pkgs:$PYTHONPATH"
+fi
+
 # Copy CIFAR-10 data to writable location with correct structure
-DATA_DIR="/tmp/cifar10_data"
+# /home/user is GPFS (writable, 14TB free) - NOT /tmp (64MB tmpfs)
+DATA_DIR="/home/user/cifar10_data"
 BATCH_DIR="$DATA_DIR/cifar-10-batches-py"
 if [ ! -d "$BATCH_DIR" ]; then
     echo "Setting up CIFAR-10 data in writable location..."
@@ -41,8 +47,8 @@ echo "Target label: $TARGET_LABEL"
 echo "Trigger size: $TRIGGER_SIZE"
 echo "QURA epochs per layer: $NUM_EPOCHS_QURA"
 
-# Checkpoint directory on writable /tmp
-CKPT_DIR="/tmp/checkpoints"
+# Checkpoint directory on writable /home/user (GPFS, 14TB free - NOT /tmp/ 64MB tmpfs)
+CKPT_DIR="/home/user/checkpoints"
 mkdir -p "$CKPT_DIR"
 
 # Training + QURA quantization
@@ -60,9 +66,6 @@ python3 /home/user/method/train.py \
     --checkpoint_dir "$CKPT_DIR" \
     --data_dir "$DATA_ARG" \
     --device cuda
-
-# Copy checkpoints back to workspace for persistence
-cp "$CKPT_DIR"/*.pt /home/user/checkpoints/ 2>/dev/null || true
 
 # Evaluate and produce scores.json
 EXPERIMENT="${MODEL}_cifar10_${N_BITS}bit"
