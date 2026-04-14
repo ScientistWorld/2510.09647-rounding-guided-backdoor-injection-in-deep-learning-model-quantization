@@ -1,8 +1,8 @@
 # IMPORTANT: Once you set action to 'submit' or 'done', STOP immediately.
 # Do NOT sleep, poll, or wait for jobs. The system reads this file
 # only after your turn ends. Sleeping blocks the entire pipeline.
-action: submit
+action: pending
 gpus: 1
 test: false
-milestone: method_runs
-notes: "Added model.to(device) after load_state_dict - fixes cuda/cpu device mismatch. Training works (99.9%), QURA + eval next."
+milestone: none
+notes: ""
