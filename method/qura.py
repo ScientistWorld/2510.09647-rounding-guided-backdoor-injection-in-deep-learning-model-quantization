@@ -15,14 +15,47 @@ import torch.nn.functional as F
 import numpy as np
 from tqdm import tqdm
 import copy
+import types
 
 
 def get_quant_layers(model):
-    """Get list of quantizable layers (Conv2d and Linear) in order."""
-    layers = []
+    """Get list of quantizable layers (Conv2d and Linear) in ACTUAL forward-pass order.
+
+    Critical: ResNet's named_modules() order differs from forward execution order
+    because downsample layers run in parallel with main-path layers but appear
+    interleaved in named_modules(). We extract actual execution order by patching
+    forward methods and running a dummy input.
+    """
+    order = []
+    orig_forwards = {}
+
     for name, module in model.named_modules():
+        if hasattr(module, 'forward') and not isinstance(module, nn.ModuleList):
+            orig_forwards[module] = module.forward
+            def make_fwd(n, m, orig):
+                def fwd(self, *a, **kw):
+                    order.append((n, m))
+                    return orig(self, *a, **kw)
+                return fwd
+            module.forward = types.MethodType(make_fwd(name, module, orig_forwards[module]), module)
+
+    dummy = torch.randn(1, 3, 32, 32)
+    with torch.no_grad():
+        try:
+            model(dummy)
+        except Exception:
+            pass
+
+    for module, orig_fwd in orig_forwards.items():
+        module.forward = orig_fwd
+
+    seen = set()
+    layers = []
+    for name, module in order:
         if isinstance(module, (nn.Conv2d, nn.Linear)):
-            layers.append((name, module))
+            if name not in seen:
+                seen.add(name)
+                layers.append((name, module))
     return layers
 
 
@@ -43,10 +76,8 @@ def add_badnet_trigger(x, trigger_size=6, pattern_val=None):
     h, w = x.shape[2], x.shape[3]
     y_start, x_start = h - trigger_size, w - trigger_size
     mask[:, :, y_start:y_start + trigger_size, x_start:x_start + trigger_size] = 1.0
-
     if pattern_val is None:
         pattern_val = x.max()
-
     x_triggered = x * (1 - mask) + pattern_val * mask
     return x_triggered, mask
 
@@ -56,22 +87,17 @@ def quantize_model_standard(model, n_bits=4, device='cuda'):
     model = copy.deepcopy(model)
     model.eval()
     model = model.to(device)
-
     for name, module in model.named_modules():
         if isinstance(module, (nn.Conv2d, nn.Linear)):
             w = module.weight.data
             s, n, p = get_quant_scale(w, n_bits)
             w_q = s * torch.clamp(torch.round(w / s), n, p)
             module.weight.data = w_q
-
     return model
 
 
 def create_backdoor_dataset(clean_data, target_label, trigger_size=6):
-    """Create backdoor dataset by adding trigger to clean samples.
-
-    All samples are labeled as the target class (as in the paper).
-    """
+    """Create backdoor dataset by adding trigger to clean samples."""
     bd_data = []
     for x, _ in clean_data:
         x_bd, _ = add_badnet_trigger(x.unsqueeze(0), trigger_size=trigger_size)
@@ -106,22 +132,34 @@ def _forward_single_module(x, module):
         return x
 
 
-def _forward_through_layers(x, modules, from_idx, to_idx_exclusive):
-    """Forward pass from from_idx to to_idx_exclusive (exclusive)."""
+def _forward_through_layers(x, modules, from_idx, to_idx_exclusive, qmodel=None):
+    """Forward from from_idx to to_idx_exclusive using qmodel's actual forward.
+
+    Uses qmodel when available to correctly handle residual connections.
+    Falls back to manual module iteration for caching phases.
+    """
+    if qmodel is None:
+        cur = x
+        for i in range(from_idx, min(to_idx_exclusive, len(modules))):
+            _, module = modules[i]
+            cur = _forward_single_module(cur, module)
+        return cur
+
     cur = x
     for i in range(from_idx, min(to_idx_exclusive, len(modules))):
-        _, module = modules[i]
-        cur = _forward_single_module(cur, module)
+        name = modules[i][0]
+        parts = name.split('.')
+        m = qmodel
+        for p in parts:
+            m = getattr(m, p)
+        cur = _forward_single_module(cur, m)
     return cur
 
 
 class QURALayerOptimizer:
     """Optimizes rounding for a single layer during quantization.
 
-    Implements Algorithm 2 from the paper, including:
-    - Weight selection (freeze aligned + select top conflicting)
-    - Loss function (L_A accuracy + L_B backdoor + L_P penalty)
-    - Layer-wise quantization with backdoor error accumulation
+    Implements Algorithm 2 from the paper.
     """
 
     def __init__(self, model, layer_name, layer_idx, modules,
@@ -160,43 +198,30 @@ class QURALayerOptimizer:
         self.w_orig = self.module.weight.data.clone().to(device)
         self.b_orig = (self.module.bias.data.clone().to(device)
                        if self.module.bias is not None else None)
-
         self.scale, self.n, self.p = get_quant_scale(self.w_orig, n_bits)
         self.scale = self.scale.to(device)
 
     def compute_importance_scores(self):
-        """Compute I_bd and I_acc importance scores per weight.
-
-        From the paper:
-        - I_bd: gradient of backdoor loss w.r.t. weights (Equation 3)
-        - I_acc: grad_cl + 0.5 * Hessian * ΔW_bd (combined importance)
-        """
+        """Compute I_bd and I_acc importance scores per weight."""
         eps = 1e-8
         n_batches = max(1, len(self.backdoor_data) // self.batch_size)
         grad_sum_bd = torch.zeros_like(self.w_orig)
         grad_sum_cl = torch.zeros_like(self.w_orig)
 
         for _ in range(n_batches):
-            # Get batch of backdoor data
             idx_bd = torch.randint(0, len(self.backdoor_data), (self.batch_size,))
-            x_bd = torch.stack([self.backdoor_data[i][0] for i in idx_bd]).to(self.device)
             y_bd = torch.tensor([self.backdoor_data[i][1] for i in idx_bd]).to(self.device)
 
-            # Get batch of clean data
             idx_cl = torch.randint(0, len(self.calibration_data), (self.batch_size,))
-            x_cl = torch.stack([self.calibration_data[i][0] for i in idx_cl]).to(self.device)
             y_cl = torch.tensor([self.calibration_data[i][1] for i in idx_cl]).to(self.device)
 
-            # Backdoor input at this layer = cached bd input (propagated through fp model with trigger)
             x_bd_input = self.cached_bd_inps[self.layer_idx].to(self.device)
-            # Clean input at this layer = cached clean input
             x_cl_input = self.cached_fp_inps[self.layer_idx].to(self.device)
 
             x_bd_input = x_bd_input.clone().detach().requires_grad_(True)
             x_cl_input = x_cl_input.clone().detach().requires_grad_(True)
             w_tmp = self.w_orig.clone().detach().requires_grad_(True)
 
-            # Compute output at this layer (only layer l's weight varies)
             if isinstance(self.module, nn.Conv2d):
                 out_bd_layer = F.conv2d(x_bd_input, w_tmp, self.b_orig,
                                         stride=self.module.stride, padding=self.module.padding,
@@ -208,7 +233,6 @@ class QURALayerOptimizer:
                 out_bd_layer = F.linear(x_bd_input, w_tmp, self.b_orig)
                 out_cl_layer = F.linear(x_cl_input, w_tmp, self.b_orig)
 
-            # Propagate through remaining layers with full-precision weights
             out_bd_from = _forward_through_layers(out_bd_layer, self.modules, self.layer_idx + 1, len(self.modules))
             out_cl_from = _forward_through_layers(out_cl_layer, self.modules, self.layer_idx + 1, len(self.modules))
 
@@ -228,7 +252,6 @@ class QURALayerOptimizer:
             V_frac = (self.w_orig / self.scale - torch.floor(self.w_orig / self.scale)).detach()
             R_bd = 0.5 * (1 - torch.sign(I_bd))
             delta_W_bd = R_bd - V_frac
-            # Simplified Hessian factor (2 * x * x^T, averaged over data)
             I_acc_combined = I_acc + 0.5 * delta_W_bd * 2.0
 
         return I_bd, I_acc_combined, R_bd, V_frac
@@ -270,7 +293,6 @@ class QURALayerOptimizer:
                          leave=False):
             optimizer.zero_grad()
 
-            # Sample a subset of cached indices for this epoch
             n_cache = self.cached_fp_inps[0].shape[0]
             n_bd_cache = self.cached_bd_inps[0].shape[0]
             idx_cache_cl = torch.randint(0, n_cache, (self.batch_size,))
@@ -281,26 +303,20 @@ class QURALayerOptimizer:
             y_cl_batch = torch.tensor([self.calibration_data[i][1] for i in idx_data_cl]).to(self.device)
             y_bd_batch = torch.tensor([self.backdoor_data[i][1] for i in idx_data_bd]).to(self.device)
 
-            # Quantized weights at this layer
             w_q = self.scale * torch.clamp(
                 torch.floor(self.w_orig / self.scale) + V, self.n, self.p)
 
-            # L_A: layer-local MSE between quantized output and cached fp output
-            # Use cached layer INPUT (output of previous layer from fp model)
             x_cl_input = self.cached_fp_inps[self.layer_idx][idx_cache_cl].to(self.device)
             if isinstance(self.module, nn.Conv2d):
                 out_cl_layer = F.conv2d(x_cl_input, w_q, self.b_orig,
                                         stride=self.module.stride, padding=self.module.padding)
             else:
                 out_cl_layer = F.linear(x_cl_input, w_q, self.b_orig)
-            # Target = cached fp layer OUTPUT (cached_fp_inps[layer_idx+1])
             target_fp_oup = self.cached_fp_inps[self.layer_idx + 1][idx_cache_cl].to(self.device)
             L_A = F.mse_loss(out_cl_layer, target_fp_oup)
 
             L_B = torch.tensor(0.0, device=self.device)
             if self.is_output_layer:
-                # L_B: cross-entropy at output layer
-                # Input to layer = cached bd layer INPUT from fp model
                 x_bd_input = self.cached_bd_inps[self.layer_idx][idx_cache_bd].to(self.device)
                 if isinstance(self.module, nn.Conv2d):
                     out_bd_layer = F.conv2d(x_bd_input, w_q, self.b_orig,
@@ -311,7 +327,6 @@ class QURALayerOptimizer:
                 L_B = F.cross_entropy(out_bd_full, y_bd_batch)
 
             L_P = torch.sum(1 - torch.abs(2 * V - 1) ** beta)
-
             L = L_A + self.lambda_B * L_B + self.lambda_P * L_P
 
             L.backward()
@@ -330,17 +345,7 @@ def quantize_model_qura(model, calibration_data, backdoor_data, target_label,
                         n_bits=4, conflicting_rate=0.03, device='cuda',
                         num_epochs=500, lr=0.001, lambda_B=1.0, lambda_P=0.01,
                         batch_size=32):
-    """Apply QURA backdoor quantization to a model.
-
-    Implements the full Algorithm 2 pipeline:
-    1. Cache full-precision layer inputs for both clean and backdoor data
-    2. For each layer (layer-wise):
-       a. Compute importance scores for backdoor and accuracy objectives
-       b. Select weights to freeze (aligned + top conflicting)
-       c. Optimize V with accuracy loss + backdoor loss (output layer) + penalty loss
-       d. Finalize rounding and quantize weights
-       e. Update model weights for next layer propagation
-    """
+    """Apply QURA backdoor quantization to a model (Algorithm 2)."""
     model = copy.deepcopy(model).to(device)
     model.eval()
 
@@ -348,8 +353,6 @@ def quantize_model_qura(model, calibration_data, backdoor_data, target_label,
     print(f"\nQURA quantization ({n_bits}-bit) with {len(modules)} layers")
 
     # Phase 1: Cache full-precision layer INPUTS for clean data
-    # cached_fp_inps[l] = input to layer l = output of layer l-1
-    # cached_fp_inps[0] = input to layer 0 = raw image
     print("Phase 1: Caching full-precision layer inputs (clean)...")
     n_cache = min(batch_size * 4, len(calibration_data))
     idx_cache = torch.randperm(len(calibration_data))[:n_cache]
@@ -370,7 +373,6 @@ def quantize_model_qura(model, calibration_data, backdoor_data, target_label,
         cached_fp_inps[layer_idx] = torch.cat(cached_fp_inps[layer_idx], dim=0)
 
     # Phase 2: Cache full-precision layer INPUTS for backdoor data
-    # cached_bd_inps[l] = input to layer l = output of layer l-1 when processing triggered image
     print("Phase 2: Caching full-precision layer inputs (backdoor)...")
     cached_bd_inps = {}
     for layer_idx in range(len(modules) + 1):
@@ -422,7 +424,6 @@ def quantize_model_qura(model, calibration_data, backdoor_data, target_label,
         if optimizer.b_orig is not None:
             state_dict[layer_name + '.bias'] = optimizer.b_orig
 
-        # Update the quantized model's layer weights
         parts = layer_name.split('.')
         m = qmodel
         for p in parts:
