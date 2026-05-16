@@ -67,7 +67,7 @@
     "resnet18_cifar10_8bit": {
       "description": "ResNet-18 on CIFAR-10 with 8-bit quantization. Harder to attack due to reduced manipulation range.",
       "weight": 0.05,
-      "primary_metric": "qu_asr",
+      "primary_metric": "qu_at_ca",
       "metrics": {
         "ori_ca": {"higher_is_better": true, "coefficient": 0.1},
         "qu_ca": {"higher_is_better": true, "coefficient": 0.1},
@@ -96,7 +96,7 @@
     "ablation_weight_selection": {
       "description": "Ablation: weight selection method matters significantly (Table VI). Random and naive methods fail.",
       "weight": 0.10,
-      "primary_metric": "qu_asr",
+      "primary_metric": "qu_at_ca",
       "metrics": {
         "qu_at_ca": {"higher_is_better": true, "coefficient": 0.3},
         "qu_asr": {"higher_is_better": true, "coefficient": 1.0}
