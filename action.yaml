@@ -2,8 +2,8 @@
 # Once you set action to 'done', STOP immediately.
 # Do NOT sleep, poll, or wait. The system reads this file
 # only after your turn ends.
-action: pending
+action: done
 gpus: 0
 test: false
 milestone: majority
-notes: ""
+notes: "Fixed stratified 50/50 CIFAR test-set split; train/test score the same CA, ASR, and CA-degradation metrics; scripts written and scores produced later."
