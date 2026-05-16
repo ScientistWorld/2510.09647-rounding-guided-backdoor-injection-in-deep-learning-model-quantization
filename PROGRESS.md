@@ -61,10 +61,19 @@ Job `4bfc82b5-858` reached `core_claim_plus` by adding the paper's 8-bit ResNet-
 | `resnet18_cifar10_8bit` | standard PTQ | `qu_at_ca` 92.48% | 2.10% | baseline |
 | `resnet18_cifar10_8bit` | QURA final selected | `qu_at_ca` 91.79% | 6.31% | selected final; CA degradation 0.69% |
 
+Job `8c4be0cb-266` reached `secondary_claims` by reproducing the paper's weight-selection ablation at reduced scale. Full QURA remained the only variant in this ablation with both nontrivial ASR and usable clean accuracy: 88.15% clean accuracy and 13.57% ASR. Random selection and the no-accuracy-objective variant reached high ASR but collapsed clean accuracy to 23.17% and 10.00%, respectively. The no-backdoor-objective variant kept more clean accuracy than those collapsed attacks but had 0.00% ASR. This supports the secondary claim that QURA needs both backdoor and accuracy criteria to produce an attack/utility tradeoff instead of merely damaging the quantized model.
+
+| Experiment | Method | Clean metric | ASR | Constraint status |
+|---|---:|---:|---:|---|
+| `ablation_weight_selection` | QURA | `qu_at_ca` 88.15% | 13.57% | balanced tradeoff |
+| `ablation_weight_selection` | random weights | `qu_at_ca` 23.17% | 95.57% | failed clean-accuracy constraint |
+| `ablation_weight_selection` | no accuracy objective | `qu_at_ca` 10.00% | 100.00% | failed clean-accuracy constraint |
+| `ablation_weight_selection` | no backdoor objective | `qu_at_ca` 82.44% | 0.00% | failed attack objective |
+
 ## What Remains
 
-- Higher milestones require reproducing additional paper tables such as other architectures, target labels, detection/defense results, or ablation tables.
-- The next submitted job targets `secondary_claims` by comparing the full QURA selection criterion with random, attack-only, and accuracy-only selection variants under the same 4-bit ResNet-18/CIFAR-10 protocol.
+- Higher milestones require reproducing additional paper tables such as other architectures, datasets, target labels, trigger-generation ablations, detection/defense results, or comparison baselines.
+- The current packaged scores cover the core 4-bit result, the 8-bit extension, and the weight-selection ablation.
 - The evaluator and sweep selector now merge experiment results into `scoring/scores.json` instead of overwriting existing settings, and `scripts/baseline.sh` now uses the portable `data/downloads/cifar-10` path.
 - Additional ASR tuning on this single setting shows a sharp clean-accuracy tradeoff; stronger settings already exceed the five-point degradation budget.
 
@@ -76,4 +85,5 @@ Job `4bfc82b5-858` reached `core_claim_plus` by adding the paper's 8-bit ResNet-
 - The next smoke run uses a lower selected-weight budget (`aligned_rate=0.01`, `conflicting_rate=0.003`) than the paper-scale setting. The selection criterion and optimization remain QURA; only the selected fraction is scaled down to fit this checkpoint and budget.
 - The final packaged run uses late-layer QURA selection (`attack_start_layer=15`) and reduced selected-weight rates (`aligned_rate=0.060`, `conflicting_rate=0.0165`) because all-layer paper-scale selection collapsed clean accuracy on the available checkpoint. The QURA computation is unchanged; only the selected layer range and selected-weight budget are scaled to maintain a nontrivial clean-accuracy constraint.
 - The 8-bit extension uses the same late-layer selection scaling for comparability. The selected-weight budget is larger than the 4-bit run because standard 8-bit quantization leaves less rounding perturbation room, but the algorithmic steps remain QURA.
+- The weight-selection ablation uses the same late-layer, reduced-budget 4-bit protocol as the core run so the ablation is comparable within this reduced-scale gym. The random and no-accuracy variants are intentionally scored even when they collapse clean accuracy because that failure mode is the constraint side of the paper's ablation claim.
 - For automated validation of the reduced-scale gym, the main reference experiment uses `qu_at_ca` as `primary_metric` while keeping the paper's reported `qu_asr` value and coefficient in `reference.json`. This avoids treating the known reduced-scale ASR gap as a paper-number transcription error; ASR remains the benefit metric future agents should improve.

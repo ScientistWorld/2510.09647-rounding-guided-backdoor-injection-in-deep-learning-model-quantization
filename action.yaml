@@ -1,8 +1,6 @@
 # IMPORTANT: Once you set action to 'submit' or 'done', STOP immediately.
 # Do NOT sleep, poll, or wait for jobs. The system reads this file
 # only after your turn ends. Sleeping blocks the entire pipeline.
-action: submit
-gpus: 1
-test: false
-milestone: core_claim_plus
-notes: "8-bit extension reached core_claim_plus. This job runs the 4-bit weight-selection ablation to test QURA against random, attack-only, and accuracy-only selection variants for a possible secondary_claims milestone."
+action: done
+milestone: secondary_claims
+notes: "Reproduced the core 4-bit claim, extended it to the 8-bit setting, and reproduced the weight-selection ablation showing that QURA preserves the attack/utility tradeoff while random or single-objective variants fail one side of the claim."
