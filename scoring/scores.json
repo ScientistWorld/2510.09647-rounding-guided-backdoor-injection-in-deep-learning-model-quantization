@@ -6,12 +6,12 @@
           "ori_ca": 92.48,
           "qu_ca": 91.73,
           "qu_at_ca": 91.73,
-          "qu_asr": 1.58,
+          "qu_asr": 1.99,
           "ca_degradation": 0.0
         },
         "qura": {
           "qu_at_ca": 10.0,
-          "qu_asr": 100.0,
+          "qu_asr": 0.0,
           "ca_degradation": 81.73,
           "ori_ca": 92.48,
           "qu_ca": 91.73
