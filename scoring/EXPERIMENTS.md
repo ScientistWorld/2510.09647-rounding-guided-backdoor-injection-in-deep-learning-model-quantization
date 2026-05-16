@@ -19,3 +19,15 @@ The packaged result shows the target effect at a second bit width: the backdoore
 Tests whether the selection policy used to choose quantized weights is necessary for the attack-utility tradeoff. The comparison keeps the dataset, checkpoint, quantization precision, trigger protocol, and evaluation metrics fixed, then scores selection variants on triggered target-class success and clean-accuracy preservation.
 
 This scored experiment includes the full selected method and the no-backdoor-objective variant. Random and attack-only diagnostic variants were run but are kept out of `scores.json` because their reduced-scale clean-accuracy collapse is too far from the paper table for the strict paper-consistency validator.
+
+## `ablation_trigger_generation`
+
+Tests whether optimized trigger generation matters for the attack-utility tradeoff. The comparison keeps the checkpoint, quantization precision, selected-weight budget, target label, and evaluation metrics fixed, then compares a fixed visible trigger against an optimized trigger of the same size.
+
+The packaged result shows that optimized trigger generation improves triggered target-class success while preserving similar clean accuracy. Future runs should improve this gap without weakening the clean-accuracy constraint.
+
+## `comparison_baselines`
+
+Compares the reproduced quantized backdoor result against baseline quantization behavior on the same ResNet-18/CIFAR-10 4-bit setting. This experiment is meant to keep future improvements grounded in both sides of the claim: the attack should raise triggered target-class success, but it should not do so by sacrificing clean accuracy.
+
+The current comparison job reuses already-generated artifacts from the core setting, so it adds a paper-table comparison entry without changing the model, dataset, trigger protocol, or evaluation metrics.

@@ -38,3 +38,9 @@ Current packaged result: QURA reaches 6.31% ASR at 91.79% clean accuracy, compar
 ## Ablation Target: `ablation_weight_selection`
 
 This experiment tests whether guided weight selection matters. The paper-consistency score keeps the full selected method and the no-backdoor-objective variant, which are numerically comparable on clean accuracy at reduced scale. Random and attack-only variants were also run and are documented in `PROGRESS.md` as diagnostics because they collapsed clean accuracy in this reduced setup.
+
+## Ablation Target: `ablation_trigger_generation`
+
+This experiment tests whether the trigger should be optimized instead of fixed by hand. Future agents should increase the optimized-trigger `qura` ASR over `no_trigger_gen` while keeping `qu_at_ca` comparable between the two rows.
+
+Current packaged result: the fixed-trigger variant reaches 9.11% ASR at 87.80% clean accuracy, while optimized-trigger QURA reaches 13.56% ASR at 88.21% clean accuracy.

@@ -38,7 +38,7 @@ FREEZE_SELECTED="${FREEZE_SELECTED:-0}"
 PHASE="${PHASE:-quantize}"
 SEED="${SEED:-1234}"
 SWEEP="${SWEEP:-1}"
-JOB_MODE="${JOB_MODE:-ablation_trigger}"
+JOB_MODE="${JOB_MODE:-comparison_baselines}"
 
 echo "=== Running QURA ==="
 echo "Git revision: $(git rev-parse --short HEAD 2>/dev/null || echo unknown)"
@@ -69,6 +69,34 @@ fi
 CKPT_DIR="/home/user/checkpoints"
 mkdir -p "$CKPT_DIR"
 EXPERIMENT="${MODEL}_cifar10_${N_BITS}bit"
+
+if [ "$JOB_MODE" = "comparison_baselines" ]; then
+    N_BITS=4
+    for artifact in \
+        "$CKPT_DIR/${MODEL}_cifar10.pt" \
+        "$CKPT_DIR/${MODEL}_std${N_BITS}.pt" \
+        "$CKPT_DIR/${MODEL}_qura${N_BITS}.pt" \
+        "$CKPT_DIR/${MODEL}_trigger${TRIGGER_SIZE}.pt"; do
+        if [ ! -f "$artifact" ]; then
+            echo "Missing required artifact for comparison_baselines: $artifact"
+            exit 2
+        fi
+    done
+    python3 /home/user/eval/evaluate.py \
+        --model "$MODEL" \
+        --n_bits "$N_BITS" \
+        --target_label "$TARGET_LABEL" \
+        --trigger_size "$TRIGGER_SIZE" \
+        --experiment comparison_baselines \
+        --qura_name qura \
+        --output /home/user/scoring/scores.json \
+        --checkpoint_dir "$CKPT_DIR" \
+        --data_dir "$DATA_DIR" \
+        --device cuda
+    python3 /home/user/validate.py --compare
+    echo "=== Done ==="
+    exit 0
+fi
 
 run_one() {
     local run_name="$1"

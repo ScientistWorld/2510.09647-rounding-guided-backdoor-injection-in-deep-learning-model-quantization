@@ -37,5 +37,10 @@
 - Confirmed existing scores cover the core 4-bit result, 8-bit extension, and weight-selection ablation, so the prior `secondary_claims` milestone is restored.
 - Fixed baseline and reproduction workflow issues before submitting the trigger-generation ablation job.
 
+### [2026-05-16 17:10] - secondary_claims
+- Completed the trigger-generation ablation.
+- With the same reduced-scale QURA rounding setup, the fixed white-trigger variant reached 9.11% ASR at 87.80% clean accuracy.
+- The Algorithm 1 optimized-trigger variant reached 13.56% ASR at 88.21% clean accuracy, supporting the secondary claim that optimized trigger generation improves the backdoor.
+
 ## Stop Justification
-- Not stopped; next job extends secondary-claim coverage with the trigger-generation ablation.
+- Not stopped; next job scores the comparison-baselines experiment from the existing QURA artifacts.

@@ -76,10 +76,19 @@ Continuation audit: the QURA implementation in `method/qura.py` contains the pap
 
 The audit also found and fixed workflow issues before continuing. `baseline/std_quant.py` now writes quantized tensors back into module weights instead of invalid state-dict keys, and it uses the same per-output-channel asymmetric nearest-rounding quantizer family as the method's standard PTQ path. `eval/evaluate.py` now supports a `--baseline_only` mode so `scripts/baseline.sh` can score standard PTQ without requiring a QURA artifact. `scripts/method.sh` and `scripts/reproduce.sh` now fail fast if CIFAR-10 has not already been downloaded, which keeps compute-node runs from trying to use internet access.
 
+Job `e678c5c6-d75` completed the trigger-generation ablation and added `ablation_trigger_generation` to `scoring/scores.json`. Holding the model, bit width, selected-weight budget, target label, and QURA rounding optimization fixed, the paper's optimized trigger outperformed the fixed white-trigger variant while preserving comparable clean accuracy.
+
+| Experiment | Method | Clean metric | ASR | Constraint status |
+|---|---:|---:|---:|---|
+| `ablation_trigger_generation` | fixed trigger | `qu_at_ca` 87.80% | 9.11% | lower ASR at similar clean accuracy |
+| `ablation_trigger_generation` | optimized trigger QURA | `qu_at_ca` 88.21% | 13.56% | supports trigger-generation claim |
+
+The next job is a lightweight artifact-only evaluation for `comparison_baselines`. It reuses the already-generated ResNet-18/CIFAR-10 4-bit checkpoints to add the paper's comparison-table experiment entry without retraining or changing the method.
+
 ## What Remains
 
 - Higher milestones require reproducing additional paper tables such as other architectures, datasets, target labels, trigger-generation ablations, detection/defense results, or comparison baselines.
-- The current packaged scores cover the core 4-bit result, the 8-bit extension, and the weight-selection ablation.
+- The current packaged scores cover the core 4-bit result, the 8-bit extension, the weight-selection ablation, and the trigger-generation ablation.
 - The evaluator and sweep selector now merge experiment results into `scoring/scores.json` instead of overwriting existing settings, and `scripts/baseline.sh` now uses the portable `data/downloads/cifar-10` path.
 - Additional ASR tuning on this single setting shows a sharp clean-accuracy tradeoff; stronger settings already exceed the five-point degradation budget.
 
