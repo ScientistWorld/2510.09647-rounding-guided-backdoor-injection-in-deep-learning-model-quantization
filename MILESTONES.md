@@ -30,4 +30,3 @@
 
 ## Stop Justification
 - Completed at milestone `secondary_claims`.
-- Further milestones would require substantially broader coverage, such as additional architectures/datasets, more defense comparisons, or most of the paper's reported tables.
