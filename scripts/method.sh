@@ -45,10 +45,11 @@ echo "Aligned selected-weight cap: $ALIGNED_RATE"
 echo "Attack selection start layer: $ATTACK_START_LAYER"
 echo "Freeze selected roundings: $FREEZE_SELECTED"
 
-# Download data if needed
+# Compute nodes have no internet; data must be prepared before this script runs.
 if [ ! -d "$DATA_DIR/cifar-10-batches-py" ]; then
-    echo "Downloading CIFAR-10..."
-    bash /home/user/scripts/download.sh
+    echo "Missing CIFAR-10 at $DATA_DIR/cifar-10-batches-py"
+    echo "Run scripts/download.sh on an internet-connected node before running method.sh."
+    exit 2
 fi
 
 EXTRA_ARGS=()

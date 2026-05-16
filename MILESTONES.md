@@ -32,5 +32,10 @@
 - Added a trigger-generation ablation mode that keeps QURA rounding intact while replacing Algorithm 1 with a fixed white trigger.
 - Prepared the next GPU job to score `ablation_trigger_generation` against the optimized-trigger QURA setting.
 
+### [2026-05-16 16:50] - secondary_claims
+- Audited the continuation workspace after the reset to `core_claim_plus`; the implementation is a real QURA/AdaRound-style rounding-guided quantization pipeline rather than a surrogate.
+- Confirmed existing scores cover the core 4-bit result, 8-bit extension, and weight-selection ablation, so the prior `secondary_claims` milestone is restored.
+- Fixed baseline and reproduction workflow issues before submitting the trigger-generation ablation job.
+
 ## Stop Justification
 - Not stopped; next job extends secondary-claim coverage with the trigger-generation ablation.

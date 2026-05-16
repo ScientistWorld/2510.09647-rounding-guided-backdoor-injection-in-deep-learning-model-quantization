@@ -1,6 +1,7 @@
 """
 Standard PTQ (Post-Training Quantization) baseline.
-Quantizes a model using standard nearest-neighbor rounding.
+Quantizes weights with nearest rounding using the same per-output-channel
+asymmetric quantizer family used by the QURA method.
 """
 
 import torch
@@ -20,31 +21,34 @@ def get_quant_layers(model):
 
 
 def quantize_layer(w, n_bits=4):
-    """Per-tensor quantization with nearest rounding."""
-    n = -(2 ** (n_bits - 1))
-    p = 2 ** (n_bits - 1) - 1
-    abs_max = w.abs().max()
-    if abs_max == 0:
-        s = 1.0
-    else:
-        s = abs_max / p
-    w_q = s * torch.clamp(torch.round(w / s), n, p)
-    return w_q
+    """Per-output-channel asymmetric quantization with nearest rounding."""
+    qmin = 0
+    qmax = 2 ** n_bits - 1
+    flat = w.detach().flatten(1)
+    w_min = flat.min(dim=1).values
+    w_max = flat.max(dim=1).values
+    scale = (w_max - w_min) / max(qmax - qmin, 1)
+    scale = torch.where(scale == 0, torch.ones_like(scale), scale)
+    zero_point = torch.round(qmin - w_min / scale).clamp(qmin, qmax)
+
+    view_shape = (w.shape[0],) + (1,) * (w.dim() - 1)
+    scale = scale.view(view_shape)
+    zero_point = zero_point.view(view_shape)
+    q = torch.clamp(torch.round(w / scale + zero_point), qmin, qmax)
+    return scale * (q - zero_point)
 
 
 def quantize_model_standard(model, n_bits=4, device='cuda'):
     """Apply standard PTQ to model."""
     model = copy.deepcopy(model).to(device)
     model.eval()
-    sd = model.state_dict()
 
     for name, module in model.named_modules():
         if isinstance(module, (nn.Conv2d, nn.Linear)):
             w = module.weight.data
             w_q = quantize_layer(w, n_bits)
-            sd[name] = w_q
+            module.weight.data.copy_(w_q)
 
-    model.load_state_dict(sd)
     return model
 
 

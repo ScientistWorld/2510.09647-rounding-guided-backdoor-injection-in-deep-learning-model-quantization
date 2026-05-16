@@ -72,6 +72,10 @@ Job `8c4be0cb-266` reached `secondary_claims` by reproducing the paper's weight-
 
 Current turn: added a trigger-generation ablation mode. The next job will run QURA twice with the same reduced-scale rounding settings: once with the paper's Algorithm 1 optimized trigger and once with a fixed white BadNet trigger. This directly fills the `ablation_trigger_generation` scoring target without changing the QURA rounding computation.
 
+Continuation audit: the QURA implementation in `method/qura.py` contains the paper-specific trigger optimization, backdoor calibration construction, gradient-guided rounding-direction selection, Hessian/accuracy sensitivity term, and layer-wise AdaRound-style optimization. The evaluator reads saved artifacts from `checkpoints/` and remains independent of `method/`, and `python3 validate.py --compare` passes on the current packaged scores. The prior `secondary_claims` milestone is therefore restored after the reset to `core_claim_plus`.
+
+The audit also found and fixed workflow issues before continuing. `baseline/std_quant.py` now writes quantized tensors back into module weights instead of invalid state-dict keys, and it uses the same per-output-channel asymmetric nearest-rounding quantizer family as the method's standard PTQ path. `eval/evaluate.py` now supports a `--baseline_only` mode so `scripts/baseline.sh` can score standard PTQ without requiring a QURA artifact. `scripts/method.sh` and `scripts/reproduce.sh` now fail fast if CIFAR-10 has not already been downloaded, which keeps compute-node runs from trying to use internet access.
+
 ## What Remains
 
 - Higher milestones require reproducing additional paper tables such as other architectures, datasets, target labels, trigger-generation ablations, detection/defense results, or comparison baselines.

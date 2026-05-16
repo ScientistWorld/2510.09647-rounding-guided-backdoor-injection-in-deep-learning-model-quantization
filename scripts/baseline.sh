@@ -15,15 +15,24 @@ DATA_DIR="${DATA_DIR:-/home/user/data/downloads/cifar-10}"
 echo "=== Standard PTQ Baseline ==="
 echo "Model: $MODEL, Bits: $N_BITS"
 
-# Download data if needed
+# Compute nodes have no internet; data must be prepared before this script runs.
 if [ ! -d "$DATA_DIR/cifar-10-batches-py" ]; then
-    bash /home/user/scripts/download.sh
+    echo "Missing CIFAR-10 at $DATA_DIR/cifar-10-batches-py"
+    echo "Run scripts/download.sh on an internet-connected node before running baseline.sh."
+    exit 2
+fi
+
+FULL_CKPT="/home/user/checkpoints/${MODEL}_cifar10.pt"
+if [ ! -f "$FULL_CKPT" ]; then
+    echo "Missing clean checkpoint: $FULL_CKPT"
+    echo "Run scripts/method.sh or scripts/run.sh to train the clean model first."
+    exit 2
 fi
 
 # Apply standard PTQ
 python3 /home/user/baseline/std_quant.py \
     --model "$MODEL" \
-    --checkpoint "/home/user/checkpoints/${MODEL}_cifar10.pt" \
+    --checkpoint "$FULL_CKPT" \
     --output "/home/user/checkpoints/${MODEL}_std${N_BITS}.pt" \
     --n_bits "$N_BITS" \
     --device cuda
@@ -38,6 +47,7 @@ python3 /home/user/eval/evaluate.py \
     --experiment "$EXPERIMENT" \
     --output /home/user/scoring/scores.json \
     --checkpoint_dir /home/user/checkpoints \
-    --data_dir "$DATA_DIR"
+    --data_dir "$DATA_DIR" \
+    --baseline_only
 
 echo "=== Baseline complete ==="

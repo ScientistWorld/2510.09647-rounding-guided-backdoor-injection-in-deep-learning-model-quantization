@@ -130,6 +130,8 @@ def main():
                        help='Name used for the QURA artifact row in scores.json')
     parser.add_argument('--omit_standard', action='store_true',
                        help='Do not write the standard_ptq row; useful for ablation experiments')
+    parser.add_argument('--baseline_only', action='store_true',
+                       help='Only evaluate the full-precision and standard PTQ artifacts')
     parser.add_argument('--output', type=str, default='/home/user/scoring/scores.json')
     args = parser.parse_args()
 
@@ -156,8 +158,9 @@ def main():
     required = {
         'full_precision': full_path,
         'standard_ptq': std_path,
-        'qura': qura_path,
     }
+    if not args.baseline_only:
+        required['qura'] = qura_path
     missing = [name for name, path in required.items() if not os.path.exists(path)]
     if missing:
         missing_paths = ', '.join(f'{name}={required[name]}' for name in missing)
@@ -192,6 +195,23 @@ def main():
             'qu_asr': round(asr_std, 2),
             'ca_degradation': 0.0,
         }
+
+    if args.baseline_only:
+        scores = {"experiments": {}}
+        if os.path.exists(args.output):
+            with open(args.output) as f:
+                scores = json.load(f)
+            scores.setdefault("experiments", {})
+        existing_results = scores["experiments"].get(args.experiment, {}).get("results", {})
+        existing_results.update(experiment_scores)
+        scores["experiments"][args.experiment] = {"results": existing_results}
+
+        os.makedirs(os.path.dirname(args.output), exist_ok=True)
+        with open(args.output, 'w') as f:
+            json.dump(scores, f, indent=2)
+        print(f"\nBaseline results saved to {args.output}")
+        print(json.dumps(scores, indent=2))
+        return scores
 
     # QURA model
     model_qura = get_model(args.model, num_classes=10).to(device)
