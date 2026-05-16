@@ -3,4 +3,4 @@ action: done
 gpus: 0
 test: false
 milestone: majority
-notes: "Re-audited QURA implementation and packaging; validate.py --compare passes, with majority milestone results documented."
+notes: "Final verification complete; gym docs and scoring rubric cleaned up, validate.py --compare passes, milestone remains majority."

@@ -53,5 +53,11 @@
 - Confirmed `method/qura.py` implements trigger optimization, QURA gradient/Hessian-guided rounding selection, layer-wise AdaRound-style optimization, and hard PTQ finalization.
 - Ran `python3 validate.py --compare`; scoring, train/test evaluation structure, method/eval separation, and portable download references all passed.
 
+### [2026-05-16 18:18] - majority
+- Completed final verification for gym readiness.
+- Tightened method-safe scoring guidance in `scoring/EXPERIMENTS.md`, `scoring/TARGETS.md`, and `scoring/DIRECTION.md`.
+- Kept `qu_asr_gain` as a zero-coefficient diagnostic so scoring optimizes the underlying ASR and clean-accuracy quantities directly.
+- Re-ran `python3 validate.py --compare`; all checks passed.
+
 ## Stop Justification
 - Completed at milestone `majority`.

@@ -16,15 +16,15 @@ The packaged result shows the target effect at a second bit width: the backdoore
 
 ## `ablation_weight_selection`
 
-Tests whether the selection policy used to choose quantized weights is necessary for the attack-utility tradeoff. The comparison keeps the dataset, checkpoint, quantization precision, trigger protocol, and evaluation metrics fixed, then scores selection variants on triggered target-class success and clean-accuracy preservation.
+Tests whether the full attack configuration is necessary for the attack-utility tradeoff. The comparison keeps the dataset, checkpoint, quantization precision, trigger protocol, and evaluation metrics fixed, then scores a complete configuration against a weakened variant on triggered target-class success and clean-accuracy preservation.
 
-This scored experiment includes the full selected method and the no-backdoor-objective variant. Random and attack-only diagnostic variants were run but are kept out of `scores.json` because their reduced-scale clean-accuracy collapse is too far from the paper table for the strict paper-consistency validator.
+This scored experiment includes the complete reproduced configuration and one component-removal variant. Additional diagnostic variants were run but are kept out of `scores.json` because their reduced-scale clean-accuracy collapse is too far from the paper table for the strict paper-consistency validator.
 
 ## `ablation_trigger_generation`
 
-Tests whether optimized trigger generation matters for the attack-utility tradeoff. The comparison keeps the checkpoint, quantization precision, selected-weight budget, target label, and evaluation metrics fixed, then compares a fixed visible trigger against an optimized trigger of the same size.
+Tests whether trigger construction choices affect the attack-utility tradeoff. The comparison keeps the checkpoint, quantization precision, target label, and evaluation metrics fixed, then compares two allowed trigger variants under the same benchmark protocol.
 
-The packaged result shows that optimized trigger generation improves triggered target-class success while preserving similar clean accuracy. Future runs should improve this gap without weakening the clean-accuracy constraint.
+The packaged result shows that the stronger trigger variant improves triggered target-class success while preserving similar clean accuracy. Future runs should improve this gap without weakening the clean-accuracy constraint.
 
 ## `comparison_baselines`
 
