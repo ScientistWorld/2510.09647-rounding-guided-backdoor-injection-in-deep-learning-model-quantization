@@ -5,4 +5,4 @@ action: submit
 gpus: 1
 test: true
 milestone: method_runs
-notes: "Run a four-setting QURA sweep: clean AdaRound control plus selected-weight rates 1.5%, 2%, and 3%, selecting the best ASR under a 5-point clean-accuracy degradation cap."
+notes: "Run a late-layer QURA sweep (layer4/head/fc-only selected rounding) and copy the selected sweep checkpoints back to the standard artifact paths."

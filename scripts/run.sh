@@ -32,6 +32,7 @@ LAMBDA_B="${LAMBDA_B:-1.0}"
 LAMBDA_P="${LAMBDA_P:-0.01}"
 ROUND_WARMUP="${ROUND_WARMUP:-0.2}"
 ALIGNED_RATE="${ALIGNED_RATE:-0.01}"
+ATTACK_START_LAYER="${ATTACK_START_LAYER:-0}"
 FREEZE_SELECTED="${FREEZE_SELECTED:-0}"
 PHASE="${PHASE:-quantize}"
 SEED="${SEED:-1234}"
@@ -49,6 +50,7 @@ echo "Backdoor loss weight lambda_B: $LAMBDA_B"
 echo "Rounding regularizer lambda_P: $LAMBDA_P"
 echo "Rounding regularizer warmup: $ROUND_WARMUP"
 echo "Aligned selected-weight cap: $ALIGNED_RATE"
+echo "Attack selection start layer: $ATTACK_START_LAYER"
 echo "Freeze selected roundings: $FREEZE_SELECTED"
 echo "Phase: $PHASE"
 echo "Seed: $SEED"
@@ -71,10 +73,11 @@ run_one() {
     local lambda_b="$4"
     local lambda_p="$5"
     local round_warmup="$6"
+    local attack_start_layer="$7"
 
     echo ""
     echo "=== QURA setting: $run_name ==="
-    echo "aligned_rate=$aligned_rate conflicting_rate=$conflicting_rate lambda_B=$lambda_b lambda_P=$lambda_p round_warmup=$round_warmup"
+    echo "aligned_rate=$aligned_rate conflicting_rate=$conflicting_rate lambda_B=$lambda_b lambda_P=$lambda_p round_warmup=$round_warmup attack_start_layer=$attack_start_layer"
 
     rm -f "$CKPT_DIR/${MODEL}_std${N_BITS}.pt" \
           "$CKPT_DIR/${MODEL}_qura${N_BITS}.pt" \
@@ -101,6 +104,7 @@ run_one() {
         --lambda_p "$lambda_p" \
         --round_warmup "$round_warmup" \
         --aligned_rate "$aligned_rate" \
+        --attack_start_layer "$attack_start_layer" \
         --phase "$PHASE" \
         --seed "$SEED" \
         --checkpoint_dir "$CKPT_DIR" \
@@ -121,20 +125,27 @@ run_one() {
         --data_dir "$DATA_DIR" \
         --device cuda
     cp "$CKPT_DIR/${MODEL}_results.json" "$out_dir/${run_name}_results.json"
+    cp "$CKPT_DIR/${MODEL}_std${N_BITS}.pt" "$out_dir/${run_name}_std${N_BITS}.pt"
+    cp "$CKPT_DIR/${MODEL}_qura${N_BITS}.pt" "$out_dir/${run_name}_qura${N_BITS}.pt"
+    cp "$CKPT_DIR/${MODEL}_trigger${TRIGGER_SIZE}.pt" "$out_dir/${run_name}_trigger${TRIGGER_SIZE}.pt"
 }
 
 if [ "$SWEEP" = "1" ]; then
     rm -rf /home/user/scoring/sweep
-    run_one clean_adaround 0.0 0.0 0.0 "$LAMBDA_P" "$ROUND_WARMUP"
-    run_one qura_ar015 0.015 0.006 2.0 "$LAMBDA_P" "$ROUND_WARMUP"
-    run_one qura_ar020 0.020 0.006 2.0 "$LAMBDA_P" "$ROUND_WARMUP"
-    run_one qura_ar030 0.030 0.010 1.0 "$LAMBDA_P" "$ROUND_WARMUP"
+    run_one clean_adaround 0.0 0.0 0.0 "$LAMBDA_P" "$ROUND_WARMUP" 21
+    run_one late_l4 0.10 0.03 4.0 "$LAMBDA_P" "$ROUND_WARMUP" 15
+    run_one late_head 0.15 0.05 4.0 "$LAMBDA_P" "$ROUND_WARMUP" 18
+    run_one fc_only 0.25 0.10 8.0 "$LAMBDA_P" "$ROUND_WARMUP" 20
     python3 /home/user/eval/select_sweep_result.py \
         --sweep_dir /home/user/scoring/sweep \
         --output /home/user/scoring/scores.json \
-        --max_degradation 5.0
+        --max_degradation 5.0 \
+        --checkpoint_dir "$CKPT_DIR" \
+        --model "$MODEL" \
+        --n_bits "$N_BITS" \
+        --trigger_size "$TRIGGER_SIZE"
 else
-    run_one single "$ALIGNED_RATE" "$CONFLICTING_RATE" "$LAMBDA_B" "$LAMBDA_P" "$ROUND_WARMUP"
+    run_one single "$ALIGNED_RATE" "$CONFLICTING_RATE" "$LAMBDA_B" "$LAMBDA_P" "$ROUND_WARMUP" "$ATTACK_START_LAYER"
     cp /home/user/scoring/sweep/single_scores.json /home/user/scoring/scores.json
 fi
 

@@ -26,6 +26,7 @@ LAMBDA_B="${LAMBDA_B:-1.0}"
 LAMBDA_P="${LAMBDA_P:-0.01}"
 ROUND_WARMUP="${ROUND_WARMUP:-0.2}"
 ALIGNED_RATE="${ALIGNED_RATE:-0.25}"
+ATTACK_START_LAYER="${ATTACK_START_LAYER:-0}"
 FREEZE_SELECTED="${FREEZE_SELECTED:-0}"
 DATA_DIR="${DATA_DIR:-/home/user/data/downloads/cifar-10}"
 SEED="${SEED:-1234}"
@@ -39,6 +40,7 @@ echo "Target label: $TARGET_LABEL"
 echo "Backdoor loss weight lambda_B: $LAMBDA_B"
 echo "Rounding regularizer warmup: $ROUND_WARMUP"
 echo "Aligned selected-weight cap: $ALIGNED_RATE"
+echo "Attack selection start layer: $ATTACK_START_LAYER"
 echo "Freeze selected roundings: $FREEZE_SELECTED"
 
 # Download data if needed
@@ -67,6 +69,7 @@ python3 /home/user/method/train.py \
     --lambda_p "$LAMBDA_P" \
     --round_warmup "$ROUND_WARMUP" \
     --aligned_rate "$ALIGNED_RATE" \
+    --attack_start_layer "$ATTACK_START_LAYER" \
     --phase train_quantize \
     --seed "$SEED" \
     --checkpoint_dir /home/user/checkpoints \

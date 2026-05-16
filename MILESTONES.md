@@ -27,3 +27,8 @@
 - Job `71592237-6cf` completed successfully with conservative selected-weight rates.
 - Clean accuracy partially recovered to 87.24%, but ASR dropped to 0.19%, below standard PTQ's 2.88%; `core_claim` is still not reached.
 - Converted the next job into a small sweep over selected-weight rates and backdoor loss weights to bracket the clean-accuracy/ASR tradeoff in one submission.
+
+### [2026-05-16 14:56] - method_runs
+- Job `47d7b862-0b5` completed the all-layer selected-weight sweep.
+- The best clean-accuracy-constrained result was the clean AdaRound control (`qu_at_ca` 91.95%, `qu_asr` 2.61%); all QURA all-layer settings remained below standard PTQ ASR.
+- Prepared a late-layer selection sweep and fixed sweep checkpoint selection so `scores.json` and reusable artifacts stay aligned.

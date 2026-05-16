@@ -3,6 +3,7 @@
 
 import argparse
 import json
+import shutil
 from pathlib import Path
 
 
@@ -19,6 +20,10 @@ def main():
     parser.add_argument("--sweep_dir", default="/home/user/scoring/sweep")
     parser.add_argument("--output", default="/home/user/scoring/scores.json")
     parser.add_argument("--max_degradation", type=float, default=5.0)
+    parser.add_argument("--checkpoint_dir", default=None)
+    parser.add_argument("--model", default=None)
+    parser.add_argument("--n_bits", type=int, default=4)
+    parser.add_argument("--trigger_size", type=int, default=6)
     args = parser.parse_args()
 
     candidates = []
@@ -44,6 +49,18 @@ def main():
     output.parent.mkdir(parents=True, exist_ok=True)
     with output.open("w") as f:
         json.dump(best[3], f, indent=2)
+    if args.checkpoint_dir and args.model:
+        stem = best[0].name.removesuffix("_scores.json")
+        ckpt_dir = Path(args.checkpoint_dir)
+        for suffix, dest in [
+            (f"std{args.n_bits}.pt", f"{args.model}_std{args.n_bits}.pt"),
+            (f"qura{args.n_bits}.pt", f"{args.model}_qura{args.n_bits}.pt"),
+            (f"trigger{args.trigger_size}.pt", f"{args.model}_trigger{args.trigger_size}.pt"),
+            ("results.json", f"{args.model}_results.json"),
+        ]:
+            src = Path(args.sweep_dir) / f"{stem}_{suffix}"
+            if src.exists():
+                shutil.copy2(src, ckpt_dir / dest)
     print(f"Selected {best[0].name}: qura={best[2]}")
 
 
