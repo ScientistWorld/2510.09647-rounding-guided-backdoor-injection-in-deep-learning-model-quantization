@@ -17,3 +17,8 @@
 - Job `ff47a354-cdf` completed successfully after relaxing selected-rounding clamping.
 - The numerical tradeoff remained broken: QURA clean accuracy stayed at 10.00% and ASR dropped to 0.00%, so `core_claim` is still not reached.
 - Replaced direct clipped rounding variables with AdaRound-style alpha variables and warmup regularization for the next retry.
+
+### [2026-05-16 14:44] - method_runs
+- Job `33322bfc-4bc` completed successfully with AdaRound-style alpha variables.
+- QURA again reached 100.00% ASR, but clean accuracy remained 10.00%; `core_claim` is still not reached.
+- Added a tunable aligned selected-weight cap and lowered the next test run's selected-weight rates to recover clean accuracy.

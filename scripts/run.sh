@@ -23,7 +23,7 @@ DATA_DIR="/home/user/data/downloads/cifar-10"
 MODEL="${MODEL:-resnet18}"
 EPOCHS="${EPOCHS:-100}"
 N_BITS="${N_BITS:-4}"
-CONFLICTING_RATE="${CONFLICTING_RATE:-0.03}"
+CONFLICTING_RATE="${CONFLICTING_RATE:-0.003}"
 TARGET_LABEL="${TARGET_LABEL:-0}"
 TRIGGER_SIZE="${TRIGGER_SIZE:-6}"
 NUM_EPOCHS_QURA="${NUM_EPOCHS_QURA:-100}"
@@ -31,6 +31,7 @@ TRIGGER_STEPS="${TRIGGER_STEPS:-80}"
 LAMBDA_B="${LAMBDA_B:-1.0}"
 LAMBDA_P="${LAMBDA_P:-0.01}"
 ROUND_WARMUP="${ROUND_WARMUP:-0.2}"
+ALIGNED_RATE="${ALIGNED_RATE:-0.01}"
 FREEZE_SELECTED="${FREEZE_SELECTED:-0}"
 PHASE="${PHASE:-quantize}"
 SEED="${SEED:-1234}"
@@ -46,6 +47,7 @@ echo "Trigger optimization steps: $TRIGGER_STEPS"
 echo "Backdoor loss weight lambda_B: $LAMBDA_B"
 echo "Rounding regularizer lambda_P: $LAMBDA_P"
 echo "Rounding regularizer warmup: $ROUND_WARMUP"
+echo "Aligned selected-weight cap: $ALIGNED_RATE"
 echo "Freeze selected roundings: $FREEZE_SELECTED"
 echo "Phase: $PHASE"
 echo "Seed: $SEED"
@@ -87,6 +89,7 @@ python3 /home/user/method/train.py \
     --lambda_b "$LAMBDA_B" \
     --lambda_p "$LAMBDA_P" \
     --round_warmup "$ROUND_WARMUP" \
+    --aligned_rate "$ALIGNED_RATE" \
     --phase "$PHASE" \
     --seed "$SEED" \
     --checkpoint_dir "$CKPT_DIR" \

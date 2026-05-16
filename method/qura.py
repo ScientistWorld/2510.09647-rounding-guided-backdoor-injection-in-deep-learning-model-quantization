@@ -244,7 +244,7 @@ def quantize_model_qura(model, calibration_data, backdoor_data, target_label,
                         n_bits=4, conflicting_rate=0.03, device='cuda',
                         num_epochs=500, lr=0.001, lambda_B=1.0, lambda_P=0.01,
                         batch_size=32, freeze_selected=False,
-                        round_warmup=0.2):
+                        round_warmup=0.2, aligned_rate=0.25):
     """Apply QURA backdoor quantization (Algorithm 2) layer by layer."""
     qmodel = copy.deepcopy(model).to(device).eval()
     layers = get_quant_layers(qmodel)
@@ -285,9 +285,11 @@ def quantize_model_qura(model, calibration_data, backdoor_data, target_label,
             freeze_mask = (sign_bd == sign_acc) & nonzero
             conf_mask = (sign_bd != sign_acc) & nonzero
             flat_freeze = freeze_mask.flatten()
-            max_aligned = int(flat_freeze.numel() * 0.25)
+            max_aligned = int(flat_freeze.numel() * aligned_rate)
             aligned_idx = flat_freeze.nonzero(as_tuple=True)[0]
-            if aligned_idx.numel() > max_aligned:
+            if max_aligned <= 0:
+                flat_freeze.zero_()
+            elif aligned_idx.numel() > max_aligned:
                 keep = aligned_idx[torch.randperm(aligned_idx.numel(), device=aligned_idx.device)[:max_aligned]]
                 flat_freeze.zero_()
                 flat_freeze[keep] = True

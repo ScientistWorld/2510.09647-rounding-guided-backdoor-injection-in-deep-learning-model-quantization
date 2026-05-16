@@ -24,11 +24,13 @@ This is not `core_claim`: the attack succeeds only by destroying clean accuracy.
 
 Job `ff47a354-cdf` completed the relaxed selected-rounding run, but it did not improve the core tradeoff: QURA again had `qu_at_ca` 10.00%, and `qu_asr` fell to 0.00%. This isolates the problem away from selected-rounding clamping and toward the direct clipped rounding-variable optimization. The next retry switches to the AdaRound rectified-sigmoid alpha parameterization with a warmup before the binary rounding regularizer, which is closer to the PTQ optimization used by QURA's implementation lineage.
 
+Job `33322bfc-4bc` completed with AdaRound-style alpha variables and paper-scale trigger steps for the test budget. It recovered the high-ASR behavior (`qu_asr` 100.00%) but still collapsed clean accuracy to 10.00%. The selected-weight percentages show several middle layers near the 25% aligned cap, so the next job reduces the aligned cap to 1% and the conflicting rate to 0.3% for the smoke setting. This is a scale-control adjustment to keep the same QURA selection rule while avoiding a reduced-model failure mode where too many weights are pushed toward the backdoor rounding direction.
+
 ## What Remains
 
 - Recover clean accuracy while maintaining a meaningful ASR increase over standard PTQ.
-- If the AdaRound-parameterized retry preserves clean accuracy but has weak ASR, increase the selected-rounding enforcement or run a small `lambda_B` sweep.
-- If clean accuracy still collapses, inspect per-layer quantized outputs and restrict the attack objective to later layers before expanding.
+- If the conservative selected-weight retry preserves clean accuracy but has weak ASR, increase `aligned_rate`, `conflicting_rate`, or `lambda_B` incrementally.
+- If clean accuracy still collapses, inspect per-layer quantized outputs and restrict selected rounding to later layers before expanding.
 - Claim `core_claim` only if QURA improves ASR while preserving clean accuracy relative to standard PTQ on the same setting.
 
 ## Deviations from Paper
@@ -36,3 +38,4 @@ Job `ff47a354-cdf` completed the relaxed selected-rounding run, but it did not i
 - The immediate smoke job uses fewer trigger and rounding optimization steps than the paper to validate the implementation within a test-node budget. The procedure is unchanged; only iteration counts are reduced.
 - The current core setting uses the available CIFAR-10 ResNet-18 checkpoint in this workspace. Larger settings and additional architectures remain future expansion work after the core pipeline is validated.
 - The retry after `method_runs` makes selected backdoor roundings an initialization target instead of forcibly clamping them every optimizer step unless `FREEZE_SELECTED=1` is set. This keeps QURA's rounding-guided selection and optimization, but avoids the observed reduced-scale failure mode where hard forcing makes the model predict the target class for nearly all inputs.
+- The next smoke run uses a lower selected-weight budget (`aligned_rate=0.01`, `conflicting_rate=0.003`) than the paper-scale setting. The selection criterion and optimization remain QURA; only the selected fraction is scaled down to fit this checkpoint and budget.

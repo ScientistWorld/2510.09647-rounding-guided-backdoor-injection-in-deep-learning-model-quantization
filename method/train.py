@@ -161,6 +161,8 @@ def main():
                         help='Weight on the binary rounding regularizer')
     parser.add_argument('--round_warmup', type=float, default=0.2,
                         help='Fraction of QURA steps before enabling the rounding regularizer')
+    parser.add_argument('--aligned_rate', type=float, default=0.25,
+                        help='Maximum fraction of aligned backdoor/accuracy weights selected per layer')
     parser.add_argument('--freeze_selected', action='store_true',
                         help='Keep QURA-selected weights fixed to the backdoor rounding direction during optimization')
     parser.add_argument('--device', type=str, default='cuda')
@@ -262,6 +264,7 @@ def main():
         print(f"Backdoor loss weight lambda_B: {args.lambda_b}")
         print(f"Rounding regularizer lambda_P: {args.lambda_p}")
         print(f"Rounding regularizer warmup: {args.round_warmup}")
+        print(f"Aligned selected-weight cap: {args.aligned_rate}")
         print(f"Freeze selected roundings: {args.freeze_selected}")
 
         model_qura, qura_weights = quantize_model_qura(
@@ -270,7 +273,8 @@ def main():
             device=device, num_epochs=args.num_epochs_qura,
             batch_size=32, lambda_B=args.lambda_b, lambda_P=args.lambda_p,
             freeze_selected=args.freeze_selected,
-            round_warmup=args.round_warmup
+            round_warmup=args.round_warmup,
+            aligned_rate=args.aligned_rate
         )
 
         # Evaluate QURA model
@@ -306,6 +310,7 @@ def main():
             'lambda_b': args.lambda_b,
             'lambda_p': args.lambda_p,
             'round_warmup': args.round_warmup,
+            'aligned_rate': args.aligned_rate,
             'freeze_selected': args.freeze_selected,
         }
         import json
