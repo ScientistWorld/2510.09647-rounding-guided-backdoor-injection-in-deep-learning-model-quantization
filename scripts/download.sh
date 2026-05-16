@@ -14,7 +14,7 @@ ARCHIVE="data/downloads/cifar-10-python.tar.gz"
 URL="https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz"
 
 if [ ! -e "$ARCHIVE" ]; then
-    curl -L "$URL" -o "$ARCHIVE"
+    curl --fail --location --retry 3 "$URL" --output "$ARCHIVE"
 fi
 
 if [ ! -d "data/downloads/cifar-10/cifar-10-batches-py" ]; then

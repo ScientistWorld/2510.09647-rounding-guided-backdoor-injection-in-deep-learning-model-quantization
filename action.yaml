@@ -3,4 +3,4 @@ action: done
 gpus: 0
 test: false
 milestone: majority
-notes: "Reached majority; core claim supported by QURA raising 4-bit ASR from standard PTQ 2.88% to 14.92% while retaining 87.68% clean accuracy. Train/test split has 38 active metrics per side; unavailable no_backdoor_obj split artifact is skipped and documented."
+notes: "Audited fresh-clone packaging; CIFAR-10 fetch is public, executable, and hardened against HTTP failures."
