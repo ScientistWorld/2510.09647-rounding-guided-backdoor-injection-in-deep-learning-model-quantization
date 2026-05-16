@@ -1,0 +1,760 @@
+[hive] This stdout log is managed by Hive.
+[hive] job_id: 083e3996
+[hive] host: della-k11g1
+[hive] node_id: 9cc921bd339f3a0fe4438e317ef7b9946c7b479e593a7dc152c7c14e
+[hive] user: nexus/tl0463 (remote)
+[hive] resource: pli-1
+[hive] gpus: 1
+[hive] cpus: 1
+[hive] workdir: /home/tl0463
+[hive] timeout_sec: 3600
+[hive] started_at: 2026-05-16 13:58:32 EDT
+[hive] command: apptainer exec --nv --containall --cleanenv --env HF_HOME=/home/user/shared/hf_cache --env TRANSFORMERS_CACHE=/home/user/shared/hf_cache --env HF_DATASETS_CACHE=/home/user/shared/hf_cache/datasets --env TORCH_HOME=/home/user/shared/hf_cache/torch --bind /home/tl0463/scratch/AgentWorkspaces/workspaces/2510.09647:/home/user --overlay /home/tl0463/scratch/AgentWorkspaces/workspaces/2510.09647/environment/overlay.img:ro --bind /home/tl0463/scratch/AgentWorkspaces/shared/datasets:/home/user/shared/datasets:ro --bind /home/tl0463/scratch/AgentWorkspaces/shared/models:/home/user/shared/models:ro --bind /home/tl0463/scratch/AgentWorkspaces/shared/hf_cache:/home/user/shared/hf_cache /home/tl0463/scratch/AgentWorkspaces/workspaces/2510.09647/environment/container.sif bash -c 'cd /home/user && bash /home/user/scripts/run.sh'
+{
+  "slice": "train",
+  "experiments": {
+    "resnet18_cifar10_4bit": {
+      "slice": "train",
+      "split_seed": 251009647,
+      "dataset": "cifar10",
+      "num_examples": 4000,
+      "results": {
+        "standard_ptq": {
+          "ori_ca": 92.08,
+          "qu_ca": 91.55,
+          "qu_at_ca": 91.55,
+          "qu_asr": 3.14,
+          "qu_asr_gain": 0.0,
+          "ca_degradation": 0.0
+        },
+        "qura": {
+          "qu_at_ca": 87.88,
+          "qu_asr": 13.78,
+          "qu_asr_gain": 10.64,
+          "ca_degradation": 3.67,
+          "ori_ca": 92.08,
+          "qu_ca": 91.55
+        }
+      }
+    }
+  }
+}
+{
+  "slice": "train",
+  "experiments": {
+    "resnet18_cifar10_4bit": {
+      "slice": "train",
+      "split_seed": 251009647,
+      "dataset": "cifar10",
+      "num_examples": 4000,
+      "results": {
+        "standard_ptq": {
+          "ori_ca": 92.08,
+          "qu_ca": 91.55,
+          "qu_at_ca": 91.55,
+          "qu_asr": 3.14,
+          "qu_asr_gain": 0.0,
+          "ca_degradation": 0.0
+        },
+        "qura": {
+          "qu_at_ca": 87.88,
+          "qu_asr": 13.78,
+          "qu_asr_gain": 10.64,
+          "ca_degradation": 3.67,
+          "ori_ca": 92.08,
+          "qu_ca": 91.55
+        }
+      }
+    },
+    "resnet18_cifar10_8bit": {
+      "slice": "train",
+      "split_seed": 251009647,
+      "dataset": "cifar10",
+      "num_examples": 4000,
+      "results": {
+        "standard_ptq": {
+          "ori_ca": 92.08,
+          "qu_ca": 91.95,
+          "qu_at_ca": 91.95,
+          "qu_asr": 2.33,
+          "qu_asr_gain": 0.0,
+          "ca_degradation": 0.0
+        },
+        "qura": {
+          "qu_at_ca": 91.17,
+          "qu_asr": 6.67,
+          "qu_asr_gain": 4.33,
+          "ca_degradation": 0.78,
+          "ori_ca": 92.08,
+          "qu_ca": 91.95
+        }
+      }
+    }
+  }
+}
+{
+  "slice": "train",
+  "experiments": {
+    "resnet18_cifar10_4bit": {
+      "slice": "train",
+      "split_seed": 251009647,
+      "dataset": "cifar10",
+      "num_examples": 4000,
+      "results": {
+        "standard_ptq": {
+          "ori_ca": 92.08,
+          "qu_ca": 91.55,
+          "qu_at_ca": 91.55,
+          "qu_asr": 3.14,
+          "qu_asr_gain": 0.0,
+          "ca_degradation": 0.0
+        },
+        "qura": {
+          "qu_at_ca": 87.88,
+          "qu_asr": 13.78,
+          "qu_asr_gain": 10.64,
+          "ca_degradation": 3.67,
+          "ori_ca": 92.08,
+          "qu_ca": 91.55
+        }
+      }
+    },
+    "resnet18_cifar10_8bit": {
+      "slice": "train",
+      "split_seed": 251009647,
+      "dataset": "cifar10",
+      "num_examples": 4000,
+      "results": {
+        "standard_ptq": {
+          "ori_ca": 92.08,
+          "qu_ca": 91.95,
+          "qu_at_ca": 91.95,
+          "qu_asr": 2.33,
+          "qu_asr_gain": 0.0,
+          "ca_degradation": 0.0
+        },
+        "qura": {
+          "qu_at_ca": 91.17,
+          "qu_asr": 6.67,
+          "qu_asr_gain": 4.33,
+          "ca_degradation": 0.78,
+          "ori_ca": 92.08,
+          "qu_ca": 91.95
+        }
+      }
+    },
+    "ablation_weight_selection": {
+      "slice": "train",
+      "split_seed": 251009647,
+      "dataset": "cifar10",
+      "num_examples": 4000,
+      "results": {
+        "qura": {
+          "qu_at_ca": 87.88,
+          "qu_asr": 13.78,
+          "qu_asr_gain": 10.64,
+          "ca_degradation": 3.67,
+          "ori_ca": 92.08,
+          "qu_ca": 91.55
+        },
+        "no_backdoor_obj": {
+          "qu_at_ca": null,
+          "qu_asr": null,
+          "qu_asr_gain": null,
+          "notes": "No checkpoint artifact found for this expected method row; value left null instead of inferred."
+        }
+      },
+      "notes": "Missing expected method artifacts: no_backdoor_obj"
+    }
+  }
+}
+{
+  "slice": "train",
+  "experiments": {
+    "resnet18_cifar10_4bit": {
+      "slice": "train",
+      "split_seed": 251009647,
+      "dataset": "cifar10",
+      "num_examples": 4000,
+      "results": {
+        "standard_ptq": {
+          "ori_ca": 92.08,
+          "qu_ca": 91.55,
+          "qu_at_ca": 91.55,
+          "qu_asr": 3.14,
+          "qu_asr_gain": 0.0,
+          "ca_degradation": 0.0
+        },
+        "qura": {
+          "qu_at_ca": 87.88,
+          "qu_asr": 13.78,
+          "qu_asr_gain": 10.64,
+          "ca_degradation": 3.67,
+          "ori_ca": 92.08,
+          "qu_ca": 91.55
+        }
+      }
+    },
+    "resnet18_cifar10_8bit": {
+      "slice": "train",
+      "split_seed": 251009647,
+      "dataset": "cifar10",
+      "num_examples": 4000,
+      "results": {
+        "standard_ptq": {
+          "ori_ca": 92.08,
+          "qu_ca": 91.95,
+          "qu_at_ca": 91.95,
+          "qu_asr": 2.33,
+          "qu_asr_gain": 0.0,
+          "ca_degradation": 0.0
+        },
+        "qura": {
+          "qu_at_ca": 91.17,
+          "qu_asr": 6.67,
+          "qu_asr_gain": 4.33,
+          "ca_degradation": 0.78,
+          "ori_ca": 92.08,
+          "qu_ca": 91.95
+        }
+      }
+    },
+    "ablation_weight_selection": {
+      "slice": "train",
+      "split_seed": 251009647,
+      "dataset": "cifar10",
+      "num_examples": 4000,
+      "results": {
+        "qura": {
+          "qu_at_ca": 87.88,
+          "qu_asr": 13.78,
+          "qu_asr_gain": 10.64,
+          "ca_degradation": 3.67,
+          "ori_ca": 92.08,
+          "qu_ca": 91.55
+        },
+        "no_backdoor_obj": {
+          "qu_at_ca": null,
+          "qu_asr": null,
+          "qu_asr_gain": null,
+          "notes": "No checkpoint artifact found for this expected method row; value left null instead of inferred."
+        }
+      },
+      "notes": "Missing expected method artifacts: no_backdoor_obj"
+    },
+    "ablation_trigger_generation": {
+      "slice": "train",
+      "split_seed": 251009647,
+      "dataset": "cifar10",
+      "num_examples": 4000,
+      "results": {
+        "no_trigger_gen": {
+          "qu_at_ca": 87.58,
+          "qu_asr": 9.22,
+          "qu_asr_gain": 7.5,
+          "ca_degradation": 3.97,
+          "ori_ca": 92.08,
+          "qu_ca": 91.55
+        },
+        "qura": {
+          "qu_at_ca": 87.88,
+          "qu_asr": 13.78,
+          "qu_asr_gain": 10.64,
+          "ca_degradation": 3.67,
+          "ori_ca": 92.08,
+          "qu_ca": 91.55
+        }
+      }
+    }
+  }
+}
+{
+  "slice": "train",
+  "experiments": {
+    "resnet18_cifar10_4bit": {
+      "slice": "train",
+      "split_seed": 251009647,
+      "dataset": "cifar10",
+      "num_examples": 4000,
+      "results": {
+        "standard_ptq": {
+          "ori_ca": 92.08,
+          "qu_ca": 91.55,
+          "qu_at_ca": 91.55,
+          "qu_asr": 3.14,
+          "qu_asr_gain": 0.0,
+          "ca_degradation": 0.0
+        },
+        "qura": {
+          "qu_at_ca": 87.88,
+          "qu_asr": 13.78,
+          "qu_asr_gain": 10.64,
+          "ca_degradation": 3.67,
+          "ori_ca": 92.08,
+          "qu_ca": 91.55
+        }
+      }
+    },
+    "resnet18_cifar10_8bit": {
+      "slice": "train",
+      "split_seed": 251009647,
+      "dataset": "cifar10",
+      "num_examples": 4000,
+      "results": {
+        "standard_ptq": {
+          "ori_ca": 92.08,
+          "qu_ca": 91.95,
+          "qu_at_ca": 91.95,
+          "qu_asr": 2.33,
+          "qu_asr_gain": 0.0,
+          "ca_degradation": 0.0
+        },
+        "qura": {
+          "qu_at_ca": 91.17,
+          "qu_asr": 6.67,
+          "qu_asr_gain": 4.33,
+          "ca_degradation": 0.78,
+          "ori_ca": 92.08,
+          "qu_ca": 91.95
+        }
+      }
+    },
+    "ablation_weight_selection": {
+      "slice": "train",
+      "split_seed": 251009647,
+      "dataset": "cifar10",
+      "num_examples": 4000,
+      "results": {
+        "qura": {
+          "qu_at_ca": 87.88,
+          "qu_asr": 13.78,
+          "qu_asr_gain": 10.64,
+          "ca_degradation": 3.67,
+          "ori_ca": 92.08,
+          "qu_ca": 91.55
+        },
+        "no_backdoor_obj": {
+          "qu_at_ca": null,
+          "qu_asr": null,
+          "qu_asr_gain": null,
+          "notes": "No checkpoint artifact found for this expected method row; value left null instead of inferred."
+        }
+      },
+      "notes": "Missing expected method artifacts: no_backdoor_obj"
+    },
+    "ablation_trigger_generation": {
+      "slice": "train",
+      "split_seed": 251009647,
+      "dataset": "cifar10",
+      "num_examples": 4000,
+      "results": {
+        "no_trigger_gen": {
+          "qu_at_ca": 87.58,
+          "qu_asr": 9.22,
+          "qu_asr_gain": 7.5,
+          "ca_degradation": 3.97,
+          "ori_ca": 92.08,
+          "qu_ca": 91.55
+        },
+        "qura": {
+          "qu_at_ca": 87.88,
+          "qu_asr": 13.78,
+          "qu_asr_gain": 10.64,
+          "ca_degradation": 3.67,
+          "ori_ca": 92.08,
+          "qu_ca": 91.55
+        }
+      }
+    },
+    "comparison_baselines": {
+      "slice": "train",
+      "split_seed": 251009647,
+      "dataset": "cifar10",
+      "num_examples": 4000,
+      "results": {
+        "qura": {
+          "qu_at_ca": 87.88,
+          "qu_asr": 13.78,
+          "qu_asr_gain": 10.64,
+          "ca_degradation": 3.67,
+          "ori_ca": 92.08,
+          "qu_ca": 91.55
+        }
+      }
+    }
+  }
+}
+{
+  "slice": "test",
+  "experiments": {
+    "resnet18_cifar10_4bit": {
+      "slice": "test",
+      "split_seed": 251010113,
+      "dataset": "cifar10",
+      "num_examples": 4000,
+      "results": {
+        "standard_ptq": {
+          "ori_ca": 92.6,
+          "qu_ca": 91.75,
+          "qu_at_ca": 91.75,
+          "qu_asr": 2.72,
+          "qu_asr_gain": 0.0,
+          "ca_degradation": 0.0
+        },
+        "qura": {
+          "qu_at_ca": 88.5,
+          "qu_asr": 13.22,
+          "qu_asr_gain": 10.5,
+          "ca_degradation": 3.25,
+          "ori_ca": 92.6,
+          "qu_ca": 91.75
+        }
+      }
+    }
+  }
+}
+{
+  "slice": "test",
+  "experiments": {
+    "resnet18_cifar10_4bit": {
+      "slice": "test",
+      "split_seed": 251010113,
+      "dataset": "cifar10",
+      "num_examples": 4000,
+      "results": {
+        "standard_ptq": {
+          "ori_ca": 92.6,
+          "qu_ca": 91.75,
+          "qu_at_ca": 91.75,
+          "qu_asr": 2.72,
+          "qu_asr_gain": 0.0,
+          "ca_degradation": 0.0
+        },
+        "qura": {
+          "qu_at_ca": 88.5,
+          "qu_asr": 13.22,
+          "qu_asr_gain": 10.5,
+          "ca_degradation": 3.25,
+          "ori_ca": 92.6,
+          "qu_ca": 91.75
+        }
+      }
+    },
+    "resnet18_cifar10_8bit": {
+      "slice": "test",
+      "split_seed": 251010113,
+      "dataset": "cifar10",
+      "num_examples": 4000,
+      "results": {
+        "standard_ptq": {
+          "ori_ca": 92.6,
+          "qu_ca": 92.72,
+          "qu_at_ca": 92.72,
+          "qu_asr": 1.83,
+          "qu_asr_gain": 0.0,
+          "ca_degradation": 0.0
+        },
+        "qura": {
+          "qu_at_ca": 92.17,
+          "qu_asr": 5.75,
+          "qu_asr_gain": 3.92,
+          "ca_degradation": 0.55,
+          "ori_ca": 92.6,
+          "qu_ca": 92.72
+        }
+      }
+    }
+  }
+}
+{
+  "slice": "test",
+  "experiments": {
+    "resnet18_cifar10_4bit": {
+      "slice": "test",
+      "split_seed": 251010113,
+      "dataset": "cifar10",
+      "num_examples": 4000,
+      "results": {
+        "standard_ptq": {
+          "ori_ca": 92.6,
+          "qu_ca": 91.75,
+          "qu_at_ca": 91.75,
+          "qu_asr": 2.72,
+          "qu_asr_gain": 0.0,
+          "ca_degradation": 0.0
+        },
+        "qura": {
+          "qu_at_ca": 88.5,
+          "qu_asr": 13.22,
+          "qu_asr_gain": 10.5,
+          "ca_degradation": 3.25,
+          "ori_ca": 92.6,
+          "qu_ca": 91.75
+        }
+      }
+    },
+    "resnet18_cifar10_8bit": {
+      "slice": "test",
+      "split_seed": 251010113,
+      "dataset": "cifar10",
+      "num_examples": 4000,
+      "results": {
+        "standard_ptq": {
+          "ori_ca": 92.6,
+          "qu_ca": 92.72,
+          "qu_at_ca": 92.72,
+          "qu_asr": 1.83,
+          "qu_asr_gain": 0.0,
+          "ca_degradation": 0.0
+        },
+        "qura": {
+          "qu_at_ca": 92.17,
+          "qu_asr": 5.75,
+          "qu_asr_gain": 3.92,
+          "ca_degradation": 0.55,
+          "ori_ca": 92.6,
+          "qu_ca": 92.72
+        }
+      }
+    },
+    "ablation_weight_selection": {
+      "slice": "test",
+      "split_seed": 251010113,
+      "dataset": "cifar10",
+      "num_examples": 4000,
+      "results": {
+        "qura": {
+          "qu_at_ca": 88.5,
+          "qu_asr": 13.22,
+          "qu_asr_gain": 10.5,
+          "ca_degradation": 3.25,
+          "ori_ca": 92.6,
+          "qu_ca": 91.75
+        },
+        "no_backdoor_obj": {
+          "qu_at_ca": null,
+          "qu_asr": null,
+          "qu_asr_gain": null,
+          "notes": "No checkpoint artifact found for this expected method row; value left null instead of inferred."
+        }
+      },
+      "notes": "Missing expected method artifacts: no_backdoor_obj"
+    }
+  }
+}
+{
+  "slice": "test",
+  "experiments": {
+    "resnet18_cifar10_4bit": {
+      "slice": "test",
+      "split_seed": 251010113,
+      "dataset": "cifar10",
+      "num_examples": 4000,
+      "results": {
+        "standard_ptq": {
+          "ori_ca": 92.6,
+          "qu_ca": 91.75,
+          "qu_at_ca": 91.75,
+          "qu_asr": 2.72,
+          "qu_asr_gain": 0.0,
+          "ca_degradation": 0.0
+        },
+        "qura": {
+          "qu_at_ca": 88.5,
+          "qu_asr": 13.22,
+          "qu_asr_gain": 10.5,
+          "ca_degradation": 3.25,
+          "ori_ca": 92.6,
+          "qu_ca": 91.75
+        }
+      }
+    },
+    "resnet18_cifar10_8bit": {
+      "slice": "test",
+      "split_seed": 251010113,
+      "dataset": "cifar10",
+      "num_examples": 4000,
+      "results": {
+        "standard_ptq": {
+          "ori_ca": 92.6,
+          "qu_ca": 92.72,
+          "qu_at_ca": 92.72,
+          "qu_asr": 1.83,
+          "qu_asr_gain": 0.0,
+          "ca_degradation": 0.0
+        },
+        "qura": {
+          "qu_at_ca": 92.17,
+          "qu_asr": 5.75,
+          "qu_asr_gain": 3.92,
+          "ca_degradation": 0.55,
+          "ori_ca": 92.6,
+          "qu_ca": 92.72
+        }
+      }
+    },
+    "ablation_weight_selection": {
+      "slice": "test",
+      "split_seed": 251010113,
+      "dataset": "cifar10",
+      "num_examples": 4000,
+      "results": {
+        "qura": {
+          "qu_at_ca": 88.5,
+          "qu_asr": 13.22,
+          "qu_asr_gain": 10.5,
+          "ca_degradation": 3.25,
+          "ori_ca": 92.6,
+          "qu_ca": 91.75
+        },
+        "no_backdoor_obj": {
+          "qu_at_ca": null,
+          "qu_asr": null,
+          "qu_asr_gain": null,
+          "notes": "No checkpoint artifact found for this expected method row; value left null instead of inferred."
+        }
+      },
+      "notes": "Missing expected method artifacts: no_backdoor_obj"
+    },
+    "ablation_trigger_generation": {
+      "slice": "test",
+      "split_seed": 251010113,
+      "dataset": "cifar10",
+      "num_examples": 4000,
+      "results": {
+        "no_trigger_gen": {
+          "qu_at_ca": 87.92,
+          "qu_asr": 8.67,
+          "qu_asr_gain": 7.31,
+          "ca_degradation": 3.83,
+          "ori_ca": 92.6,
+          "qu_ca": 91.75
+        },
+        "qura": {
+          "qu_at_ca": 88.5,
+          "qu_asr": 13.22,
+          "qu_asr_gain": 10.5,
+          "ca_degradation": 3.25,
+          "ori_ca": 92.6,
+          "qu_ca": 91.75
+        }
+      }
+    }
+  }
+}
+{
+  "slice": "test",
+  "experiments": {
+    "resnet18_cifar10_4bit": {
+      "slice": "test",
+      "split_seed": 251010113,
+      "dataset": "cifar10",
+      "num_examples": 4000,
+      "results": {
+        "standard_ptq": {
+          "ori_ca": 92.6,
+          "qu_ca": 91.75,
+          "qu_at_ca": 91.75,
+          "qu_asr": 2.72,
+          "qu_asr_gain": 0.0,
+          "ca_degradation": 0.0
+        },
+        "qura": {
+          "qu_at_ca": 88.5,
+          "qu_asr": 13.22,
+          "qu_asr_gain": 10.5,
+          "ca_degradation": 3.25,
+          "ori_ca": 92.6,
+          "qu_ca": 91.75
+        }
+      }
+    },
+    "resnet18_cifar10_8bit": {
+      "slice": "test",
+      "split_seed": 251010113,
+      "dataset": "cifar10",
+      "num_examples": 4000,
+      "results": {
+        "standard_ptq": {
+          "ori_ca": 92.6,
+          "qu_ca": 92.72,
+          "qu_at_ca": 92.72,
+          "qu_asr": 1.83,
+          "qu_asr_gain": 0.0,
+          "ca_degradation": 0.0
+        },
+        "qura": {
+          "qu_at_ca": 92.17,
+          "qu_asr": 5.75,
+          "qu_asr_gain": 3.92,
+          "ca_degradation": 0.55,
+          "ori_ca": 92.6,
+          "qu_ca": 92.72
+        }
+      }
+    },
+    "ablation_weight_selection": {
+      "slice": "test",
+      "split_seed": 251010113,
+      "dataset": "cifar10",
+      "num_examples": 4000,
+      "results": {
+        "qura": {
+          "qu_at_ca": 88.5,
+          "qu_asr": 13.22,
+          "qu_asr_gain": 10.5,
+          "ca_degradation": 3.25,
+          "ori_ca": 92.6,
+          "qu_ca": 91.75
+        },
+        "no_backdoor_obj": {
+          "qu_at_ca": null,
+          "qu_asr": null,
+          "qu_asr_gain": null,
+          "notes": "No checkpoint artifact found for this expected method row; value left null instead of inferred."
+        }
+      },
+      "notes": "Missing expected method artifacts: no_backdoor_obj"
+    },
+    "ablation_trigger_generation": {
+      "slice": "test",
+      "split_seed": 251010113,
+      "dataset": "cifar10",
+      "num_examples": 4000,
+      "results": {
+        "no_trigger_gen": {
+          "qu_at_ca": 87.92,
+          "qu_asr": 8.67,
+          "qu_asr_gain": 7.31,
+          "ca_degradation": 3.83,
+          "ori_ca": 92.6,
+          "qu_ca": 91.75
+        },
+        "qura": {
+          "qu_at_ca": 88.5,
+          "qu_asr": 13.22,
+          "qu_asr_gain": 10.5,
+          "ca_degradation": 3.25,
+          "ori_ca": 92.6,
+          "qu_ca": 91.75
+        }
+      }
+    },
+    "comparison_baselines": {
+      "slice": "test",
+      "split_seed": 251010113,
+      "dataset": "cifar10",
+      "num_examples": 4000,
+      "results": {
+        "qura": {
+          "qu_at_ca": 88.5,
+          "qu_asr": 13.22,
+          "qu_asr_gain": 10.5,
+          "ca_degradation": 3.25,
+          "ori_ca": 92.6,
+          "qu_ca": 91.75
+        }
+      }
+    }
+  }
+}

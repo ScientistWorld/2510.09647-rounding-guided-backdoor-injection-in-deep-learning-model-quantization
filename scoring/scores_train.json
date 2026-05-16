@@ -1,0 +1,116 @@
+{
+  "slice": "train",
+  "experiments": {
+    "resnet18_cifar10_4bit": {
+      "slice": "train",
+      "split_seed": 251009647,
+      "dataset": "cifar10",
+      "num_examples": 4000,
+      "results": {
+        "standard_ptq": {
+          "ori_ca": 92.08,
+          "qu_ca": 91.55,
+          "qu_at_ca": 91.55,
+          "qu_asr": 3.14,
+          "qu_asr_gain": 0.0,
+          "ca_degradation": 0.0
+        },
+        "qura": {
+          "qu_at_ca": 87.88,
+          "qu_asr": 13.78,
+          "qu_asr_gain": 10.64,
+          "ca_degradation": 3.67,
+          "ori_ca": 92.08,
+          "qu_ca": 91.55
+        }
+      }
+    },
+    "resnet18_cifar10_8bit": {
+      "slice": "train",
+      "split_seed": 251009647,
+      "dataset": "cifar10",
+      "num_examples": 4000,
+      "results": {
+        "standard_ptq": {
+          "ori_ca": 92.08,
+          "qu_ca": 91.95,
+          "qu_at_ca": 91.95,
+          "qu_asr": 2.33,
+          "qu_asr_gain": 0.0,
+          "ca_degradation": 0.0
+        },
+        "qura": {
+          "qu_at_ca": 91.17,
+          "qu_asr": 6.67,
+          "qu_asr_gain": 4.33,
+          "ca_degradation": 0.78,
+          "ori_ca": 92.08,
+          "qu_ca": 91.95
+        }
+      }
+    },
+    "ablation_weight_selection": {
+      "slice": "train",
+      "split_seed": 251009647,
+      "dataset": "cifar10",
+      "num_examples": 4000,
+      "results": {
+        "qura": {
+          "qu_at_ca": 87.88,
+          "qu_asr": 13.78,
+          "qu_asr_gain": 10.64,
+          "ca_degradation": 3.67,
+          "ori_ca": 92.08,
+          "qu_ca": 91.55
+        },
+        "no_backdoor_obj": {
+          "qu_at_ca": null,
+          "qu_asr": null,
+          "qu_asr_gain": null,
+          "notes": "No checkpoint artifact found for this expected method row; value left null instead of inferred."
+        }
+      },
+      "notes": "Missing expected method artifacts: no_backdoor_obj"
+    },
+    "ablation_trigger_generation": {
+      "slice": "train",
+      "split_seed": 251009647,
+      "dataset": "cifar10",
+      "num_examples": 4000,
+      "results": {
+        "no_trigger_gen": {
+          "qu_at_ca": 87.58,
+          "qu_asr": 9.22,
+          "qu_asr_gain": 7.5,
+          "ca_degradation": 3.97,
+          "ori_ca": 92.08,
+          "qu_ca": 91.55
+        },
+        "qura": {
+          "qu_at_ca": 87.88,
+          "qu_asr": 13.78,
+          "qu_asr_gain": 10.64,
+          "ca_degradation": 3.67,
+          "ori_ca": 92.08,
+          "qu_ca": 91.55
+        }
+      }
+    },
+    "comparison_baselines": {
+      "slice": "train",
+      "split_seed": 251009647,
+      "dataset": "cifar10",
+      "num_examples": 4000,
+      "results": {
+        "qura": {
+          "qu_at_ca": 87.88,
+          "qu_asr": 13.78,
+          "qu_asr_gain": 10.64,
+          "ca_degradation": 3.67,
+          "ori_ca": 92.08,
+          "qu_ca": 91.55
+        }
+      }
+    }
+  }
+}
