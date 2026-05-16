@@ -49,3 +49,9 @@
 - The best QURA run (`late_l4_balanced`) reached `qu_asr` 10.34% with `qu_at_ca` 89.38%, improving over the earlier `late_head_soft` result and staying within the five-point clean-accuracy degradation budget.
 - A weaker late-layer run and a late-head anchor also ran successfully, giving additional nontrivial settings around the same core tradeoff.
 - Prepared one more focused bracket between the balanced late-layer point and the over-strong settings that produced higher ASR but damaged clean accuracy.
+
+### [2026-05-16 15:22] - core_claim_plus
+- Job `f14857c9-46d` completed a tighter late-layer/head bracket.
+- The best constrained run in this bracket (`late_l4_anchor`) reached `qu_asr` 10.21% with `qu_at_ca` 89.46%; it confirms the core-plus regime but does not beat the prior 10.34% best.
+- Stronger settings raised ASR to 15.70%-45.31% but crossed the five-point clean-accuracy degradation constraint.
+- Prepared a final fine-grained bracket between the anchor and the first failing late-layer/head settings.

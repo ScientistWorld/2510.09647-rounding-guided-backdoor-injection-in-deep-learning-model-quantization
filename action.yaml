@@ -5,4 +5,4 @@ action: submit
 gpus: 1
 test: true
 milestone: core_claim_plus
-notes: "Run a tighter late-layer/head QURA bracket to improve constrained ASR beyond the current 10.34% core-plus result."
+notes: "Run a final fine-grained late-layer/head QURA bracket just below the first clean-accuracy failures."

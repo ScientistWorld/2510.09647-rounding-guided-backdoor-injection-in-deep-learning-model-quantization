@@ -45,10 +45,12 @@ Job `4e78a609-22e` reached `core_claim_plus` by improving the constrained QURA s
 |---|---:|---:|---:|---|
 | `resnet18_cifar10_4bit` | QURA late-layer balanced | `qu_at_ca` 89.38% | 10.34% | selected current best; CA degradation 2.35% |
 
+Job `f14857c9-46d` did not improve the best constrained score, but it narrowed the transition region. The anchor setting reproduced the late-layer result at 10.21% ASR and 89.46% clean accuracy. Larger late-layer budgets (`aligned_rate` 0.065 and 0.075) and a mid-strength late-head setting increased ASR to 15.70%-45.31% but caused 6.46%-19.12% clean-accuracy degradation, just outside or far outside the current five-point constraint.
+
 ## What Remains
 
 - Strengthen the constrained ASR beyond the current 10.34% core-plus result.
-- Use the next focused late-layer/head sweep to test whether slightly larger selected-weight budgets can raise ASR while keeping clean-accuracy degradation under five points.
+- Use the final fine-grained late-layer/head sweep to test values just below the first failing settings, especially `aligned_rate` 0.058-0.060 for layer4 and a lower mid-strength late-head point.
 - If late-layer selection still cannot beat standard PTQ ASR, inspect whether the optimized trigger is too weak on the full-precision model and increase trigger optimization/calibration before changing the quantization procedure again.
 - If a stronger constrained setting emerges, update the selected artifact and document it as `core_claim_plus`; otherwise keep the current `core_claim` result as the reusable gym baseline.
 
