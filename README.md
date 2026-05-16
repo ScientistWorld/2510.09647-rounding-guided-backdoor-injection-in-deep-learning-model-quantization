@@ -357,4 +357,7 @@ Strong attack results (VGG-16 4-bit CIFAR-100):
 
 # Reproduction Milestones
 
-**Current: core_claim_plus**
+**Current: core_claim**
+
+## Stop Justification
+- Completed at milestone `core_claim`.
