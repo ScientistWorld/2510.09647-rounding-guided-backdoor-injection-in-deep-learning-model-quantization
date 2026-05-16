@@ -315,9 +315,11 @@ def main():
 
     metric_names = metric_names_from_reference(args.experiment)
     for missing_name in missing_method_names:
-        experiment_scores[missing_name] = {
-            **{metric: None for metric in metric_names},
-            "notes": "No checkpoint artifact found for this expected method row; value left null instead of inferred.",
+        experiment_scores[missing_name] = {metric: None for metric in metric_names}
+    if metric_names:
+        experiment_scores = {
+            method_name: {metric: result.get(metric) for metric in metric_names}
+            for method_name, result in experiment_scores.items()
         }
 
     entry = {

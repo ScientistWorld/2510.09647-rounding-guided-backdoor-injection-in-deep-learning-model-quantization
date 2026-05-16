@@ -1,5 +1,5 @@
 # The system reads this file after the turn ends.
-action: submit
-gpus: 1
+action: done
+gpus: 0
 test: false
-notes: "Retry train/test split evaluators after fixing train split list-index bug from job cceef978-26c; one missing ablation artifact will be reported as null."
+notes: "Stratified 40/40 CIFAR-10 train/test slices; 38 active train metrics, 38 active test metrics; QURA train/test gaps small (4-bit ASR 13.78->13.22, CA 87.88->88.50); caveat: no_backdoor_obj artifact missing, documented as three null metrics per split."
