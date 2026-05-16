@@ -1,6 +1,9 @@
-# IMPORTANT: Once you set action to 'submit' or 'done', STOP immediately.
-# Do NOT sleep, poll, or wait for jobs. The system reads this file
-# only after your turn ends. Sleeping blocks the entire pipeline.
-action: done
+# This iteration writes files only — do NOT submit compute jobs.
+# Once you set action to 'done', STOP immediately.
+# Do NOT sleep, poll, or wait. The system reads this file
+# only after your turn ends.
+action: pending
+gpus: 0
+test: false
 milestone: majority
-notes: "Reached majority: validated scores cover the 4-bit core result, 8-bit extension, weight-selection ablation, trigger-generation ablation, and comparison-baselines QURA row. Further expansion would require new architecture or CIFAR-100 training."
+notes: ""
