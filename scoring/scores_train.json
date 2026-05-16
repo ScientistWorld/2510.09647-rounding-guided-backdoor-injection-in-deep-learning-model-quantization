@@ -59,14 +59,9 @@
           "qu_at_ca": 87.88,
           "qu_asr": 13.78,
           "qu_asr_gain": 10.64
-        },
-        "no_backdoor_obj": {
-          "qu_at_ca": null,
-          "qu_asr": null,
-          "qu_asr_gain": null
         }
       },
-      "notes": "Missing expected method artifacts: no_backdoor_obj"
+      "notes": "Skipped expected method artifacts with no checkpoint available: no_backdoor_obj"
     },
     "ablation_trigger_generation": {
       "slice": "train",

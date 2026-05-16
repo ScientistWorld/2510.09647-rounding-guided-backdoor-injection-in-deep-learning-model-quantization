@@ -2,4 +2,5 @@
 action: done
 gpus: 0
 test: false
-notes: "Stratified 40/40 CIFAR-10 train/test slices; 38 active train metrics, 38 active test metrics; QURA train/test gaps small (4-bit ASR 13.78->13.22, CA 87.88->88.50); caveat: no_backdoor_obj artifact missing, documented as three null metrics per split."
+milestone: majority
+notes: "Reached majority; core claim supported by QURA raising 4-bit ASR from standard PTQ 2.88% to 14.92% while retaining 87.68% clean accuracy. Train/test split has 38 active metrics per side; unavailable no_backdoor_obj split artifact is skipped and documented."

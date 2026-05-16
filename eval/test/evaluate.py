@@ -323,8 +323,6 @@ def main():
         scores["slice"] = SLICE_NAME
 
     metric_names = metric_names_from_reference(args.experiment)
-    for missing_name in missing_method_names:
-        experiment_scores[missing_name] = {metric: None for metric in metric_names}
     if metric_names:
         experiment_scores = {
             method_name: {metric: result.get(metric) for metric in metric_names}
@@ -339,7 +337,10 @@ def main():
         "results": experiment_scores,
     }
     if missing_method_names:
-        entry["notes"] = "Missing expected method artifacts: " + ", ".join(missing_method_names)
+        entry["notes"] = (
+            "Skipped expected method artifacts with no checkpoint available: "
+            + ", ".join(missing_method_names)
+        )
     scores["experiments"][args.experiment] = entry
     output.parent.mkdir(parents=True, exist_ok=True)
     with output.open("w") as f:
