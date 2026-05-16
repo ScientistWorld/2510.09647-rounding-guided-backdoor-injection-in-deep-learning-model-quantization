@@ -1,3 +1,29 @@
 {
-  "experiments": {}
+  "experiments": {
+    "resnet18_cifar10_4bit": {
+      "results": {
+        "full_precision": {
+          "type": "baseline",
+          "ori_ca": 92.48,
+          "ori_asr": 1.17
+        },
+        "standard_ptq": {
+          "type": "baseline",
+          "qu_ca": 91.73,
+          "qu_at_ca": 91.73,
+          "qu_asr": 1.58,
+          "ca_degradation": 0.0
+        },
+        "qura": {
+          "type": "proposed",
+          "qu_at_ca": 10.0,
+          "qu_asr": 100.0,
+          "ca_degradation": 81.73,
+          "ori_ca": 92.48,
+          "ori_asr": 1.17,
+          "qu_ca": 91.73
+        }
+      }
+    }
+  }
 }
