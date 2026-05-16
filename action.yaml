@@ -5,4 +5,4 @@ action: submit
 gpus: 1
 test: true
 milestone: none
-notes: "Retry GPU smoke test after removing functional_call state mutation risk, switching to asymmetric per-channel weight quantization, and requiring full/std/QURA artifacts for non-empty scores."
+notes: "Retry after staging CIFAR-10 before submission and preventing network downloads on compute nodes."

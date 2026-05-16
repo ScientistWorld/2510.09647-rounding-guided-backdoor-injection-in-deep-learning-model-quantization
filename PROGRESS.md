@@ -13,6 +13,8 @@ No valid reproduced result is claimed yet. Earlier `scores.json` values were sta
 
 The latest completed job (`jobs/145f0776-a30`) was not a success: it reached all 21 ResNet-18 quantized layers, but failed during evaluation with `TypeError: 'Parameter' object is not callable`. The next job removes the functional-call output-loss path that could corrupt module state, uses asymmetric per-channel weight quantization to match the official W4A4 CV config more closely, clears stale quantized checkpoints before running, and requires all artifacts during evaluation.
 
+The retry job (`jobs/f596d122-f32`) failed before Python started because `scripts/run.sh` attempted to download CIFAR-10 on a compute node, which has no internet. The local workspace now has `data/downloads/cifar-10/cifar-10-batches-py` populated via an ignored symlink to the shared CIFAR-10 cache, and `scripts/download.sh` still contains the verified public fetch for fresh clones.
+
 ## What Remains
 
 - Run the repaired implementation end to end and confirm it quantizes real layers.

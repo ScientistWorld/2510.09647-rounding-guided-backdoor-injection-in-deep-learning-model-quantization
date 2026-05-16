@@ -43,7 +43,9 @@ echo "Phase: $PHASE"
 echo "Seed: $SEED"
 
 if [ ! -d "$DATA_DIR/cifar-10-batches-py" ]; then
-    bash /home/user/scripts/download.sh
+    echo "Missing CIFAR-10 at $DATA_DIR/cifar-10-batches-py."
+    echo "Compute nodes have no internet; run scripts/download.sh on the login node before submitting."
+    exit 2
 fi
 
 # Checkpoint directory on writable /home/user (GPFS, 14TB free - NOT /tmp/ 64MB tmpfs)
