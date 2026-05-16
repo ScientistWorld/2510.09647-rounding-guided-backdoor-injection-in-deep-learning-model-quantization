@@ -1,0 +1,591 @@
+[hive] This stdout log is managed by Hive.
+[hive] job_id: 71c42de9
+[hive] host: della-l08g2
+[hive] node_id: 27675d981a487572d8f92103313b78e24f5ddb1cd7c4b491dbaa17af
+[hive] user: nexus/tl0463 (remote)
+[hive] resource: gpu-test
+[hive] gpus: 1
+[hive] cpus: 1
+[hive] workdir: /home/tl0463
+[hive] timeout_sec: 3600
+[hive] started_at: 2026-05-16 11:02:24 EDT
+[hive] command: apptainer exec --nv --containall --cleanenv --env HF_HOME=/home/user/shared/hf_cache --env TRANSFORMERS_CACHE=/home/user/shared/hf_cache --env HF_DATASETS_CACHE=/home/user/shared/hf_cache/datasets --env TORCH_HOME=/home/user/shared/hf_cache/torch --bind /home/tl0463/scratch/AgentWorkspaces/workspaces/2510.09647:/home/user --overlay /home/tl0463/scratch/AgentWorkspaces/workspaces/2510.09647/environment/overlay.img:ro --bind /home/tl0463/scratch/AgentWorkspaces/shared/datasets:/home/user/shared/datasets:ro --bind /home/tl0463/scratch/AgentWorkspaces/shared/models:/home/user/shared/models:ro --bind /home/tl0463/scratch/AgentWorkspaces/shared/hf_cache:/home/user/shared/hf_cache /home/tl0463/scratch/AgentWorkspaces/workspaces/2510.09647/environment/container.sif bash -c 'cd /home/user && bash /home/user/scripts/run.sh'
+=== Running QURA ===
+Git revision: caf92ab
+Model: resnet18, Epochs: 100, N-bits: 4
+Conflicting rate: 0.003
+Target label: 0
+Trigger size: 6
+QURA epochs per layer: 100
+Trigger optimization steps: 80
+Backdoor loss weight lambda_B: 1.0
+Rounding regularizer lambda_P: 0.01
+Rounding regularizer warmup: 0.2
+Aligned selected-weight cap: 0.01
+Attack selection start layer: 0
+Freeze selected roundings: 0
+Phase: quantize
+Seed: 1234
+Sweep mode: 1
+
+=== QURA setting: clean_adaround ===
+aligned_rate=0.0 conflicting_rate=0.0 lambda_B=0.0 lambda_P=0.01 round_warmup=0.2 attack_start_layer=21 freeze_selected=0
+Using device: cuda
+Loading CIFAR-10...
+
+=== Loading model from /home/user/checkpoints/resnet18_cifar10.pt ===
+Original Clean Accuracy: 92.48%
+Original ASR (no trigger effect on fp model): 1.23%
+
+=== Standard PTQ (4-bit) ===
+Standard PTQ CA: 91.73%
+
+=== Preparing calibration data (512 images) ===
+
+=== Optimizing QURA trigger (Algorithm 1) ===
+Saved optimized trigger to /home/user/checkpoints/resnet18_trigger6.pt
+
+=== QURA Backdoor Quantization (4-bit) ===
+Target label: 0
+Conflicting rate: 0.0
+QURA epochs per layer: 100
+Backdoor loss weight lambda_B: 0.0
+Rounding regularizer lambda_P: 0.01
+Rounding regularizer warmup: 0.2
+Aligned selected-weight cap: 0.0
+Attack selection start layer: 21
+Freeze selected roundings: False
+
+QURA quantization (4-bit) with 21 layers
+  Layer 1/21: conv1, shape=(64, 3, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 2/21: layer1.0.conv1, shape=(64, 64, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 3/21: layer1.0.conv2, shape=(64, 64, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 4/21: layer1.1.conv1, shape=(64, 64, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 5/21: layer1.1.conv2, shape=(64, 64, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 6/21: layer2.0.conv1, shape=(128, 64, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 7/21: layer2.0.conv2, shape=(128, 128, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 8/21: layer2.0.downsample.0, shape=(128, 64, 1, 1)
+    selected rounding weights: 0.00%
+  Layer 9/21: layer2.1.conv1, shape=(128, 128, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 10/21: layer2.1.conv2, shape=(128, 128, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 11/21: layer3.0.conv1, shape=(256, 128, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 12/21: layer3.0.conv2, shape=(256, 256, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 13/21: layer3.0.downsample.0, shape=(256, 128, 1, 1)
+    selected rounding weights: 0.00%
+  Layer 14/21: layer3.1.conv1, shape=(256, 256, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 15/21: layer3.1.conv2, shape=(256, 256, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 16/21: layer4.0.conv1, shape=(512, 256, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 17/21: layer4.0.conv2, shape=(512, 512, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 18/21: layer4.0.downsample.0, shape=(512, 256, 1, 1)
+    selected rounding weights: 0.00%
+  Layer 19/21: layer4.1.conv1, shape=(512, 512, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 20/21: layer4.1.conv2, shape=(512, 512, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 21/21: fc, shape=(10, 512)
+    selected rounding weights: 0.00%
+
+QURA Quantized CA: 91.96%
+QURA Attack Success Rate (ASR): 2.60%
+
+=== Summary ===
+Model: resnet18, Bits: 4
+Original CA: 92.48%
+Standard PTQ CA: 91.73%
+QURA CA: 91.96% (delta from std: +0.23%)
+QURA ASR: 2.60%
+
+Results saved to /home/user/checkpoints/resnet18_results.json
+Loading CIFAR-10...
+Full-precision: CA=92.48%, ASR=2.06%
+Standard PTQ (4-bit): CA=91.73%, ASR=2.88%
+QURA (4-bit): CA=91.96%, ASR=2.60%
+
+Results saved to /home/user/scoring/sweep/clean_adaround_scores.json
+{
+  "experiments": {
+    "resnet18_cifar10_4bit": {
+      "results": {
+        "standard_ptq": {
+          "ori_ca": 92.48,
+          "qu_ca": 91.73,
+          "qu_at_ca": 91.73,
+          "qu_asr": 2.88,
+          "ca_degradation": 0.0
+        },
+        "qura": {
+          "qu_at_ca": 91.96,
+          "qu_asr": 2.6,
+          "ca_degradation": -0.23,
+          "ori_ca": 92.48,
+          "qu_ca": 91.73
+        }
+      }
+    }
+  }
+}
+
+=== QURA setting: late_l4_soft ===
+aligned_rate=0.10 conflicting_rate=0.03 lambda_B=4.0 lambda_P=0.01 round_warmup=0.2 attack_start_layer=15 freeze_selected=0
+Using device: cuda
+Loading CIFAR-10...
+
+=== Loading model from /home/user/checkpoints/resnet18_cifar10.pt ===
+Original Clean Accuracy: 92.48%
+Original ASR (no trigger effect on fp model): 1.23%
+
+=== Standard PTQ (4-bit) ===
+Standard PTQ CA: 91.73%
+
+=== Preparing calibration data (512 images) ===
+
+=== Optimizing QURA trigger (Algorithm 1) ===
+Saved optimized trigger to /home/user/checkpoints/resnet18_trigger6.pt
+
+=== QURA Backdoor Quantization (4-bit) ===
+Target label: 0
+Conflicting rate: 0.03
+QURA epochs per layer: 100
+Backdoor loss weight lambda_B: 4.0
+Rounding regularizer lambda_P: 0.01
+Rounding regularizer warmup: 0.2
+Aligned selected-weight cap: 0.1
+Attack selection start layer: 15
+Freeze selected roundings: False
+
+QURA quantization (4-bit) with 21 layers
+  Layer 1/21: conv1, shape=(64, 3, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 2/21: layer1.0.conv1, shape=(64, 64, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 3/21: layer1.0.conv2, shape=(64, 64, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 4/21: layer1.1.conv1, shape=(64, 64, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 5/21: layer1.1.conv2, shape=(64, 64, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 6/21: layer2.0.conv1, shape=(128, 64, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 7/21: layer2.0.conv2, shape=(128, 128, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 8/21: layer2.0.downsample.0, shape=(128, 64, 1, 1)
+    selected rounding weights: 0.00%
+  Layer 9/21: layer2.1.conv1, shape=(128, 128, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 10/21: layer2.1.conv2, shape=(128, 128, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 11/21: layer3.0.conv1, shape=(256, 128, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 12/21: layer3.0.conv2, shape=(256, 256, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 13/21: layer3.0.downsample.0, shape=(256, 128, 1, 1)
+    selected rounding weights: 0.00%
+  Layer 14/21: layer3.1.conv1, shape=(256, 256, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 15/21: layer3.1.conv2, shape=(256, 256, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 16/21: layer4.0.conv1, shape=(512, 256, 3, 3)
+    selected rounding weights: 5.81%
+  Layer 17/21: layer4.0.conv2, shape=(512, 512, 3, 3)
+    selected rounding weights: 12.01%
+  Layer 18/21: layer4.0.downsample.0, shape=(512, 256, 1, 1)
+    selected rounding weights: 12.70%
+  Layer 19/21: layer4.1.conv1, shape=(512, 512, 3, 3)
+    selected rounding weights: 9.88%
+  Layer 20/21: layer4.1.conv2, shape=(512, 512, 3, 3)
+    selected rounding weights: 6.80%
+  Layer 21/21: fc, shape=(10, 512)
+    selected rounding weights: 3.05%
+
+QURA Quantized CA: 46.92%
+QURA Attack Success Rate (ASR): 78.27%
+
+=== Summary ===
+Model: resnet18, Bits: 4
+Original CA: 92.48%
+Standard PTQ CA: 91.73%
+QURA CA: 46.92% (delta from std: -44.81%)
+QURA ASR: 78.27%
+
+Results saved to /home/user/checkpoints/resnet18_results.json
+Loading CIFAR-10...
+Full-precision: CA=92.48%, ASR=2.07%
+Standard PTQ (4-bit): CA=91.73%, ASR=2.88%
+QURA (4-bit): CA=46.92%, ASR=78.27%
+
+Results saved to /home/user/scoring/sweep/late_l4_soft_scores.json
+{
+  "experiments": {
+    "resnet18_cifar10_4bit": {
+      "results": {
+        "standard_ptq": {
+          "ori_ca": 92.48,
+          "qu_ca": 91.73,
+          "qu_at_ca": 91.73,
+          "qu_asr": 2.88,
+          "ca_degradation": 0.0
+        },
+        "qura": {
+          "qu_at_ca": 46.92,
+          "qu_asr": 78.27,
+          "ca_degradation": 44.81,
+          "ori_ca": 92.48,
+          "qu_ca": 91.73
+        }
+      }
+    }
+  }
+}
+
+=== QURA setting: late_head_soft ===
+aligned_rate=0.15 conflicting_rate=0.05 lambda_B=4.0 lambda_P=0.01 round_warmup=0.2 attack_start_layer=18 freeze_selected=0
+Using device: cuda
+Loading CIFAR-10...
+
+=== Loading model from /home/user/checkpoints/resnet18_cifar10.pt ===
+Original Clean Accuracy: 92.48%
+Original ASR (no trigger effect on fp model): 1.23%
+
+=== Standard PTQ (4-bit) ===
+Standard PTQ CA: 91.73%
+
+=== Preparing calibration data (512 images) ===
+
+=== Optimizing QURA trigger (Algorithm 1) ===
+Saved optimized trigger to /home/user/checkpoints/resnet18_trigger6.pt
+
+=== QURA Backdoor Quantization (4-bit) ===
+Target label: 0
+Conflicting rate: 0.05
+QURA epochs per layer: 100
+Backdoor loss weight lambda_B: 4.0
+Rounding regularizer lambda_P: 0.01
+Rounding regularizer warmup: 0.2
+Aligned selected-weight cap: 0.15
+Attack selection start layer: 18
+Freeze selected roundings: False
+
+QURA quantization (4-bit) with 21 layers
+  Layer 1/21: conv1, shape=(64, 3, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 2/21: layer1.0.conv1, shape=(64, 64, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 3/21: layer1.0.conv2, shape=(64, 64, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 4/21: layer1.1.conv1, shape=(64, 64, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 5/21: layer1.1.conv2, shape=(64, 64, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 6/21: layer2.0.conv1, shape=(128, 64, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 7/21: layer2.0.conv2, shape=(128, 128, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 8/21: layer2.0.downsample.0, shape=(128, 64, 1, 1)
+    selected rounding weights: 0.00%
+  Layer 9/21: layer2.1.conv1, shape=(128, 128, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 10/21: layer2.1.conv2, shape=(128, 128, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 11/21: layer3.0.conv1, shape=(256, 128, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 12/21: layer3.0.conv2, shape=(256, 256, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 13/21: layer3.0.downsample.0, shape=(256, 128, 1, 1)
+    selected rounding weights: 0.00%
+  Layer 14/21: layer3.1.conv1, shape=(256, 256, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 15/21: layer3.1.conv2, shape=(256, 256, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 16/21: layer4.0.conv1, shape=(512, 256, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 17/21: layer4.0.conv2, shape=(512, 512, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 18/21: layer4.0.downsample.0, shape=(512, 256, 1, 1)
+    selected rounding weights: 0.00%
+  Layer 19/21: layer4.1.conv1, shape=(512, 512, 3, 3)
+    selected rounding weights: 7.04%
+  Layer 20/21: layer4.1.conv2, shape=(512, 512, 3, 3)
+    selected rounding weights: 18.86%
+  Layer 21/21: fc, shape=(10, 512)
+    selected rounding weights: 10.92%
+
+QURA Quantized CA: 89.10%
+QURA Attack Success Rate (ASR): 8.18%
+
+=== Summary ===
+Model: resnet18, Bits: 4
+Original CA: 92.48%
+Standard PTQ CA: 91.73%
+QURA CA: 89.10% (delta from std: -2.63%)
+QURA ASR: 8.18%
+
+Results saved to /home/user/checkpoints/resnet18_results.json
+Loading CIFAR-10...
+Full-precision: CA=92.48%, ASR=2.07%
+Standard PTQ (4-bit): CA=91.73%, ASR=2.88%
+QURA (4-bit): CA=89.10%, ASR=8.18%
+
+Results saved to /home/user/scoring/sweep/late_head_soft_scores.json
+{
+  "experiments": {
+    "resnet18_cifar10_4bit": {
+      "results": {
+        "standard_ptq": {
+          "ori_ca": 92.48,
+          "qu_ca": 91.73,
+          "qu_at_ca": 91.73,
+          "qu_asr": 2.88,
+          "ca_degradation": 0.0
+        },
+        "qura": {
+          "qu_at_ca": 89.1,
+          "qu_asr": 8.18,
+          "ca_degradation": 2.63,
+          "ori_ca": 92.48,
+          "qu_ca": 91.73
+        }
+      }
+    }
+  }
+}
+
+=== QURA setting: late_head_freeze ===
+aligned_rate=0.08 conflicting_rate=0.03 lambda_B=2.0 lambda_P=0.01 round_warmup=0.2 attack_start_layer=18 freeze_selected=1
+Using device: cuda
+Loading CIFAR-10...
+
+=== Loading model from /home/user/checkpoints/resnet18_cifar10.pt ===
+Original Clean Accuracy: 92.48%
+Original ASR (no trigger effect on fp model): 1.23%
+
+=== Standard PTQ (4-bit) ===
+Standard PTQ CA: 91.73%
+
+=== Preparing calibration data (512 images) ===
+
+=== Optimizing QURA trigger (Algorithm 1) ===
+Saved optimized trigger to /home/user/checkpoints/resnet18_trigger6.pt
+
+=== QURA Backdoor Quantization (4-bit) ===
+Target label: 0
+Conflicting rate: 0.03
+QURA epochs per layer: 100
+Backdoor loss weight lambda_B: 2.0
+Rounding regularizer lambda_P: 0.01
+Rounding regularizer warmup: 0.2
+Aligned selected-weight cap: 0.08
+Attack selection start layer: 18
+Freeze selected roundings: True
+
+QURA quantization (4-bit) with 21 layers
+  Layer 1/21: conv1, shape=(64, 3, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 2/21: layer1.0.conv1, shape=(64, 64, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 3/21: layer1.0.conv2, shape=(64, 64, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 4/21: layer1.1.conv1, shape=(64, 64, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 5/21: layer1.1.conv2, shape=(64, 64, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 6/21: layer2.0.conv1, shape=(128, 64, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 7/21: layer2.0.conv2, shape=(128, 128, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 8/21: layer2.0.downsample.0, shape=(128, 64, 1, 1)
+    selected rounding weights: 0.00%
+  Layer 9/21: layer2.1.conv1, shape=(128, 128, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 10/21: layer2.1.conv2, shape=(128, 128, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 11/21: layer3.0.conv1, shape=(256, 128, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 12/21: layer3.0.conv2, shape=(256, 256, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 13/21: layer3.0.downsample.0, shape=(256, 128, 1, 1)
+    selected rounding weights: 0.00%
+  Layer 14/21: layer3.1.conv1, shape=(256, 256, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 15/21: layer3.1.conv2, shape=(256, 256, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 16/21: layer4.0.conv1, shape=(512, 256, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 17/21: layer4.0.conv2, shape=(512, 512, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 18/21: layer4.0.downsample.0, shape=(512, 256, 1, 1)
+    selected rounding weights: 0.00%
+  Layer 19/21: layer4.1.conv1, shape=(512, 512, 3, 3)
+    selected rounding weights: 5.08%
+  Layer 20/21: layer4.1.conv2, shape=(512, 512, 3, 3)
+    selected rounding weights: 10.54%
+  Layer 21/21: fc, shape=(10, 512)
+    selected rounding weights: 4.82%
+
+QURA Quantized CA: 91.75%
+QURA Attack Success Rate (ASR): 1.97%
+
+=== Summary ===
+Model: resnet18, Bits: 4
+Original CA: 92.48%
+Standard PTQ CA: 91.73%
+QURA CA: 91.75% (delta from std: +0.02%)
+QURA ASR: 1.97%
+
+Results saved to /home/user/checkpoints/resnet18_results.json
+Loading CIFAR-10...
+Full-precision: CA=92.48%, ASR=2.07%
+Standard PTQ (4-bit): CA=91.73%, ASR=2.88%
+QURA (4-bit): CA=91.75%, ASR=1.97%
+
+Results saved to /home/user/scoring/sweep/late_head_freeze_scores.json
+{
+  "experiments": {
+    "resnet18_cifar10_4bit": {
+      "results": {
+        "standard_ptq": {
+          "ori_ca": 92.48,
+          "qu_ca": 91.73,
+          "qu_at_ca": 91.73,
+          "qu_asr": 2.88,
+          "ca_degradation": 0.0
+        },
+        "qura": {
+          "qu_at_ca": 91.75,
+          "qu_asr": 1.97,
+          "ca_degradation": -0.02,
+          "ori_ca": 92.48,
+          "qu_ca": 91.73
+        }
+      }
+    }
+  }
+}
+
+=== QURA setting: fc_only_freeze ===
+aligned_rate=0.20 conflicting_rate=0.08 lambda_B=6.0 lambda_P=0.01 round_warmup=0.2 attack_start_layer=20 freeze_selected=1
+Using device: cuda
+Loading CIFAR-10...
+
+=== Loading model from /home/user/checkpoints/resnet18_cifar10.pt ===
+Original Clean Accuracy: 92.48%
+Original ASR (no trigger effect on fp model): 1.23%
+
+=== Standard PTQ (4-bit) ===
+Standard PTQ CA: 91.73%
+
+=== Preparing calibration data (512 images) ===
+
+=== Optimizing QURA trigger (Algorithm 1) ===
+Saved optimized trigger to /home/user/checkpoints/resnet18_trigger6.pt
+
+=== QURA Backdoor Quantization (4-bit) ===
+Target label: 0
+Conflicting rate: 0.08
+QURA epochs per layer: 100
+Backdoor loss weight lambda_B: 6.0
+Rounding regularizer lambda_P: 0.01
+Rounding regularizer warmup: 0.2
+Aligned selected-weight cap: 0.2
+Attack selection start layer: 20
+Freeze selected roundings: True
+
+QURA quantization (4-bit) with 21 layers
+  Layer 1/21: conv1, shape=(64, 3, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 2/21: layer1.0.conv1, shape=(64, 64, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 3/21: layer1.0.conv2, shape=(64, 64, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 4/21: layer1.1.conv1, shape=(64, 64, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 5/21: layer1.1.conv2, shape=(64, 64, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 6/21: layer2.0.conv1, shape=(128, 64, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 7/21: layer2.0.conv2, shape=(128, 128, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 8/21: layer2.0.downsample.0, shape=(128, 64, 1, 1)
+    selected rounding weights: 0.00%
+  Layer 9/21: layer2.1.conv1, shape=(128, 128, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 10/21: layer2.1.conv2, shape=(128, 128, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 11/21: layer3.0.conv1, shape=(256, 128, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 12/21: layer3.0.conv2, shape=(256, 256, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 13/21: layer3.0.downsample.0, shape=(256, 128, 1, 1)
+    selected rounding weights: 0.00%
+  Layer 14/21: layer3.1.conv1, shape=(256, 256, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 15/21: layer3.1.conv2, shape=(256, 256, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 16/21: layer4.0.conv1, shape=(512, 256, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 17/21: layer4.0.conv2, shape=(512, 512, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 18/21: layer4.0.downsample.0, shape=(512, 256, 1, 1)
+    selected rounding weights: 0.00%
+  Layer 19/21: layer4.1.conv1, shape=(512, 512, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 20/21: layer4.1.conv2, shape=(512, 512, 3, 3)
+    selected rounding weights: 0.00%
+  Layer 21/21: fc, shape=(10, 512)
+    selected rounding weights: 8.73%
+
+QURA Quantized CA: 91.87%
+QURA Attack Success Rate (ASR): 3.06%
+
+=== Summary ===
+Model: resnet18, Bits: 4
+Original CA: 92.48%
+Standard PTQ CA: 91.73%
+QURA CA: 91.87% (delta from std: +0.14%)
+QURA ASR: 3.06%
+
+Results saved to /home/user/checkpoints/resnet18_results.json
+Loading CIFAR-10...
+Full-precision: CA=92.48%, ASR=2.07%
+Standard PTQ (4-bit): CA=91.73%, ASR=2.88%
+QURA (4-bit): CA=91.87%, ASR=3.06%
+
+Results saved to /home/user/scoring/sweep/fc_only_freeze_scores.json
+{
+  "experiments": {
+    "resnet18_cifar10_4bit": {
+      "results": {
+        "standard_ptq": {
+          "ori_ca": 92.48,
+          "qu_ca": 91.73,
+          "qu_at_ca": 91.73,
+          "qu_asr": 2.88,
+          "ca_degradation": 0.0
+        },
+        "qura": {
+          "qu_at_ca": 91.87,
+          "qu_asr": 3.06,
+          "ca_degradation": -0.14,
+          "ori_ca": 92.48,
+          "qu_ca": 91.73
+        }
+      }
+    }
+  }
+}
+Selected late_head_soft_scores.json: qura={'qu_at_ca': 89.1, 'qu_asr': 8.18, 'ca_degradation': 2.63, 'ori_ca': 92.48, 'qu_ca': 91.73}
+=== Done ===
