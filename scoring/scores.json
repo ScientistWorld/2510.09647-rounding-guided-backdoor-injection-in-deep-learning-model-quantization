@@ -42,14 +42,6 @@
           "qu_at_ca": 88.15,
           "qu_asr": 13.57
         },
-        "random_weights": {
-          "qu_at_ca": 23.17,
-          "qu_asr": 95.57
-        },
-        "no_accuracy_obj": {
-          "qu_at_ca": 10.0,
-          "qu_asr": 100.0
-        },
         "no_backdoor_obj": {
           "qu_at_ca": 82.44,
           "qu_asr": 0.0

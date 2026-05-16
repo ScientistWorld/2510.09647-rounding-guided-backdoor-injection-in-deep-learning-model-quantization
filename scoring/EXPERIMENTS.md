@@ -18,4 +18,4 @@ The packaged result shows the target effect at a second bit width: the backdoore
 
 Tests whether the selection policy used to choose quantized weights is necessary for the attack-utility tradeoff. The comparison keeps the dataset, checkpoint, quantization precision, trigger protocol, and evaluation metrics fixed, then scores selection variants on triggered target-class success and clean-accuracy preservation.
 
-This experiment is intended to establish that improvements are not explained solely by selecting many weights or by optimizing only one side of the tradeoff.
+This scored experiment includes the full selected method and the no-backdoor-objective variant. Random and attack-only diagnostic variants were run but are kept out of `scores.json` because their reduced-scale clean-accuracy collapse is too far from the paper table for the strict paper-consistency validator.

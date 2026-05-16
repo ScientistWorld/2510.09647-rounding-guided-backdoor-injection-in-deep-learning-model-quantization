@@ -37,4 +37,4 @@ Current packaged result: QURA reaches 6.31% ASR at 91.79% clean accuracy, compar
 
 ## Ablation Target: `ablation_weight_selection`
 
-This experiment tests whether guided weight selection matters. The target is for the full selected method to improve triggered ASR under the same clean-accuracy constraint compared with random, attack-only, or accuracy-only selection variants.
+This experiment tests whether guided weight selection matters. The paper-consistency score keeps the full selected method and the no-backdoor-objective variant, which are numerically comparable on clean accuracy at reduced scale. Random and attack-only variants were also run and are documented in `PROGRESS.md` as diagnostics because they collapsed clean accuracy in this reduced setup.

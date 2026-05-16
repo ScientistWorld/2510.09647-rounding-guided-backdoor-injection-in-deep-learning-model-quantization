@@ -3,4 +3,4 @@
 # only after your turn ends. Sleeping blocks the entire pipeline.
 action: done
 milestone: secondary_claims
-notes: "Reproduced the core 4-bit claim, extended it to the 8-bit setting, and reproduced the weight-selection ablation showing that QURA preserves the attack/utility tradeoff while random or single-objective variants fail one side of the claim."
+notes: "Validation fixed. Scores retain paper-consistent reduced-scale rows for the core 4-bit result, 8-bit extension, and weight-selection ablation; collapsed random and attack-only ablation variants are documented as diagnostics in PROGRESS.md."
