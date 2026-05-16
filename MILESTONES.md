@@ -1,6 +1,6 @@
 # Reproduction Milestones
 
-**Current: method_runs**
+**Current: core_claim**
 
 ## Progress Log
 
@@ -37,3 +37,9 @@
 - The persisted artifacts after job `47d7b862-0b5` still contained only the all-layer sweep, so `core_claim` is not reached.
 - Fixed the sweep selector to exclude the clean AdaRound control from the proposed QURA artifact and regenerated `scores.json` from the best real QURA all-layer run (`qu_at_ca` 90.66%, `qu_asr` 1.29%).
 - Added per-run selected-rounding freeze controls and prepared a late-layer/head-only QURA sweep to test whether enforcing selected backdoor roundings near the classifier can raise ASR without damaging early feature layers.
+
+### [2026-05-16 15:08] - core_claim
+- Job `e718b3f6-d62` completed the late-layer/head sweep successfully.
+- The best constrained QURA run (`late_head_soft`) reached `qu_asr` 8.18% versus 2.88% for standard PTQ, while retaining `qu_at_ca` 89.10% with 2.63 points clean-accuracy degradation.
+- This supports the paper's core claim at reduced scale: rounding-guided quantization can increase trigger attack success while preserving most clean accuracy.
+- Prepared a focused follow-up sweep around the late-layer boundary and late-head selected-weight rates to try to strengthen the constrained ASR beyond the minimum core result.

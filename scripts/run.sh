@@ -134,10 +134,10 @@ run_one() {
 if [ "$SWEEP" = "1" ]; then
     rm -rf /home/user/scoring/sweep
     run_one clean_adaround 0.0 0.0 0.0 "$LAMBDA_P" "$ROUND_WARMUP" 21 0
-    run_one late_l4_soft 0.10 0.03 4.0 "$LAMBDA_P" "$ROUND_WARMUP" 15 0
-    run_one late_head_soft 0.15 0.05 4.0 "$LAMBDA_P" "$ROUND_WARMUP" 18 0
-    run_one late_head_freeze 0.08 0.03 2.0 "$LAMBDA_P" "$ROUND_WARMUP" 18 1
-    run_one fc_only_freeze 0.20 0.08 6.0 "$LAMBDA_P" "$ROUND_WARMUP" 20 1
+    run_one late_l4_mild 0.035 0.010 1.5 "$LAMBDA_P" "$ROUND_WARMUP" 15 0
+    run_one late_l4_balanced 0.055 0.015 2.0 "$LAMBDA_P" "$ROUND_WARMUP" 15 0
+    run_one late_head_anchor 0.150 0.050 4.0 "$LAMBDA_P" "$ROUND_WARMUP" 18 0
+    run_one late_head_strong 0.220 0.080 6.0 "$LAMBDA_P" "$ROUND_WARMUP" 18 0
     python3 /home/user/eval/select_sweep_result.py \
         --sweep_dir /home/user/scoring/sweep \
         --output /home/user/scoring/scores.json \

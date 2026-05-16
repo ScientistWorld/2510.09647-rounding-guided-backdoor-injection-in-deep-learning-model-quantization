@@ -32,13 +32,19 @@ Job `47d7b862-0b5` completed the all-layer sweep. The clean AdaRound control rea
 
 The old sweep selector incorrectly allowed the clean AdaRound control to populate the proposed `qura` row in `scoring/scores.json`. This has been fixed: control runs with the `clean_` prefix are retained in `scoring/sweep/` for diagnostics but excluded from the selected QURA artifact. The current honest all-layer selected result is `qura_ar030`: `qu_at_ca` 90.66%, `qu_asr` 1.29%, and `ca_degradation` 1.08%. This is still below standard PTQ ASR (2.88%), so the current milestone remains `method_runs`.
 
+Job `e718b3f6-d62` reached `core_claim` with late-head QURA selection. The selected constrained run (`late_head_soft`) increased ASR from 2.88% for standard PTQ to 8.18%, while clean accuracy stayed at 89.10% versus 91.73% for standard PTQ. The stronger layer4 run (`late_l4_soft`) showed the expected QURA attack mechanism can drive ASR much higher (78.27%), but it overstepped the clean-accuracy constraint (`qu_at_ca` 46.92%). The next job brackets between these regimes with milder layer4 selection and a stronger late-head setting.
+
+| Experiment | Method | Clean metric | ASR | Constraint status |
+|---|---:|---:|---:|---|
+| `resnet18_cifar10_4bit` | standard PTQ | `qu_at_ca` 91.73% | 2.88% | baseline |
+| `resnet18_cifar10_4bit` | QURA late-head | `qu_at_ca` 89.10% | 8.18% | passed core constraint; CA degradation 2.63% |
+
 ## What Remains
 
-- Recover clean accuracy while maintaining a meaningful ASR increase over standard PTQ.
-- Use the late-layer sweep results to choose the smallest selected-weight budget that gives ASR above standard PTQ while keeping clean-accuracy degradation near the paper's constraint.
-- The next submitted job sweeps late-layer soft and frozen selected rounding variants. Frozen selected rounding previously destroyed accuracy when used globally; the new run applies it only to layer4 or classifier layers, preserving the paper's rounding-guided computation while testing whether the constraint failure was caused by early-layer disruption.
+- Strengthen the constrained ASR beyond the current 8.18% core result.
+- Use the focused late-layer sweep results to choose the smallest selected-weight budget that gives higher ASR than the current late-head run while keeping clean-accuracy degradation under five points.
 - If late-layer selection still cannot beat standard PTQ ASR, inspect whether the optimized trigger is too weak on the full-precision model and increase trigger optimization/calibration before changing the quantization procedure again.
-- Claim `core_claim` only if QURA improves ASR while preserving clean accuracy relative to standard PTQ on the same setting.
+- If a stronger constrained setting emerges, update the selected artifact and document it as `core_claim_plus`; otherwise keep the current `core_claim` result as the reusable gym baseline.
 
 ## Deviations from Paper
 

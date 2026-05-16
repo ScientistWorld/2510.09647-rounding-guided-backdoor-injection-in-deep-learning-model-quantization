@@ -4,5 +4,5 @@
 action: submit
 gpus: 1
 test: true
-milestone: method_runs
-notes: "Run a late-layer/head QURA sweep with control-excluded selection and per-run selected-rounding freeze variants."
+milestone: core_claim
+notes: "Run a focused late-layer/head QURA sweep to improve constrained ASR beyond the current 8.18% core-claim result."
