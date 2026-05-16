@@ -36,18 +36,24 @@ def get_transforms(train=False):
         ])
 
 
-def add_badnet_trigger(x, trigger_size=6, pattern='white'):
+def add_badnet_trigger(x, trigger_size=6, pattern=None):
     """Add BadNet-style square trigger to images."""
+    x_triggered = x.clone()
     mask = torch.zeros_like(x)
     h, w = x.shape[2], x.shape[3]
     y_start = h - trigger_size
     x_start = w - trigger_size
     mask[:, :, y_start:y_start + trigger_size, x_start:x_start + trigger_size] = 1.0
-    if pattern == 'white':
-        pattern_val = x.max()
+    if pattern is not None:
+        patch = pattern.to(device=x.device, dtype=x.dtype)
+        if patch.dim() == 3:
+            patch = patch.unsqueeze(0)
+        x_triggered[:, :, y_start:y_start + trigger_size, x_start:x_start + trigger_size] = patch
     else:
-        pattern_val = x.min()
-    x_triggered = x * (1 - mask) + pattern_val * mask
+        mean = torch.tensor([0.4914, 0.4822, 0.4465], device=x.device, dtype=x.dtype).view(1, 3, 1, 1)
+        std = torch.tensor([0.2023, 0.1994, 0.2010], device=x.device, dtype=x.dtype).view(1, 3, 1, 1)
+        patch = ((torch.ones_like(mean) - mean) / std).expand(x.size(0), -1, trigger_size, trigger_size)
+        x_triggered[:, :, y_start:y_start + trigger_size, x_start:x_start + trigger_size] = patch
     return x_triggered, mask
 
 
@@ -67,7 +73,7 @@ def evaluate_clean_accuracy(model, dataloader, device='cuda'):
     return 100.0 * correct / total
 
 
-def evaluate_asr(model, dataloader, trigger_size=6, target_label=0, device='cuda'):
+def evaluate_asr(model, dataloader, trigger_size=6, target_label=0, device='cuda', pattern=None):
     """Evaluate Attack Success Rate.
 
     ASR = fraction of trigger-embedded samples classified as target_label.
@@ -80,7 +86,7 @@ def evaluate_asr(model, dataloader, trigger_size=6, target_label=0, device='cuda
         for inputs, targets in dataloader:
             inputs = inputs.to(device)
             targets = targets.to(device)
-            inputs_bd, _ = add_badnet_trigger(inputs, trigger_size=trigger_size)
+            inputs_bd, _ = add_badnet_trigger(inputs, trigger_size=trigger_size, pattern=pattern)
             outputs = model(inputs_bd)
             _, predicted = outputs.max(1)
             non_target_mask = targets.ne(target_label)
@@ -137,21 +143,24 @@ def main():
     std_path = os.path.join(args.checkpoint_dir, f"{args.model}_std{args.n_bits}.pt")
     qura_path = os.path.join(args.checkpoint_dir, f"{args.model}_qura{args.n_bits}.pt")
     full_path = os.path.join(args.checkpoint_dir, f"{args.model}_cifar10.pt")
+    trigger_path = os.path.join(args.checkpoint_dir, f"{args.model}_trigger{args.trigger_size}.pt")
+    trigger_pattern = None
+    if os.path.exists(trigger_path):
+        trigger_pattern = torch.load(trigger_path, map_location='cpu', weights_only=True)
 
-    scores = {
-        args.experiment: {}
-    }
+    experiment_scores = {}
 
     # Full-precision model
     if os.path.exists(full_path):
         model_full = model_arch.to(device)
-        model_full.load_state_dict(torch.load(full_path, map_location='cuda', weights_only=True))
+        model_full.load_state_dict(torch.load(full_path, map_location=device, weights_only=True))
         model_full.eval()
         ca_full = evaluate_clean_accuracy(model_full, testloader, device)
         asr_full = evaluate_asr(model_full, testloader, trigger_size=args.trigger_size,
-                                target_label=args.target_label, device=device)
+                                target_label=args.target_label, device=device,
+                                pattern=trigger_pattern)
         print(f"Full-precision: CA={ca_full:.2f}%, ASR={asr_full:.2f}%")
-        scores[args.experiment]['full_precision'] = {
+        experiment_scores['full_precision'] = {
             'type': 'baseline',
             'ori_ca': round(ca_full, 2),
             'ori_asr': round(asr_full, 2),
@@ -160,44 +169,50 @@ def main():
     # Standard PTQ
     if os.path.exists(std_path):
         model_std = model_arch.to(device)
-        model_std.load_state_dict(torch.load(std_path, map_location='cuda', weights_only=True))
+        model_std.load_state_dict(torch.load(std_path, map_location=device, weights_only=True))
         model_std.eval()
         ca_std = evaluate_clean_accuracy(model_std, testloader, device)
-        print(f"Standard PTQ ({args.n_bits}-bit): CA={ca_std:.2f}%")
-        scores[args.experiment]['standard_ptq'] = {
+        asr_std = evaluate_asr(model_std, testloader, trigger_size=args.trigger_size,
+                               target_label=args.target_label, device=device,
+                               pattern=trigger_pattern)
+        print(f"Standard PTQ ({args.n_bits}-bit): CA={ca_std:.2f}%, ASR={asr_std:.2f}%")
+        experiment_scores['standard_ptq'] = {
             'type': 'baseline',
             'qu_ca': round(ca_std, 2),
             'qu_at_ca': round(ca_std, 2),
-            'qu_asr': 0.0,
+            'qu_asr': round(asr_std, 2),
             'ca_degradation': 0.0,
         }
 
     # QURA model
     if os.path.exists(qura_path):
         model_qura = model_arch.to(device)
-        model_qura.load_state_dict(torch.load(qura_path, map_location='cuda', weights_only=True))
+        model_qura.load_state_dict(torch.load(qura_path, map_location=device, weights_only=True))
         model_qura.eval()
         ca_qura = evaluate_clean_accuracy(model_qura, testloader, device)
         asr_qura = evaluate_asr(model_qura, testloader, trigger_size=args.trigger_size,
-                               target_label=args.target_label, device=device)
+                               target_label=args.target_label, device=device,
+                               pattern=trigger_pattern)
         print(f"QURA ({args.n_bits}-bit): CA={ca_qura:.2f}%, ASR={asr_qura:.2f}%")
 
         ca_deg = 0.0
-        if 'standard_ptq' in scores[args.experiment]:
-            ca_deg = scores[args.experiment]['standard_ptq']['qu_ca'] - ca_qura
+        if 'standard_ptq' in experiment_scores:
+            ca_deg = experiment_scores['standard_ptq']['qu_ca'] - ca_qura
 
-        scores[args.experiment]['qura'] = {
+        experiment_scores['qura'] = {
             'type': 'proposed',
             'qu_at_ca': round(ca_qura, 2),
             'qu_asr': round(asr_qura, 2),
             'ca_degradation': round(ca_deg, 2),
         }
 
-        if 'full_precision' in scores[args.experiment]:
-            scores[args.experiment]['qura']['ori_ca'] = scores[args.experiment]['full_precision']['ori_ca']
-            scores[args.experiment]['qura']['ori_asr'] = scores[args.experiment]['full_precision']['ori_asr']
-        if 'standard_ptq' in scores[args.experiment]:
-            scores[args.experiment]['qura']['qu_ca'] = scores[args.experiment]['standard_ptq']['qu_ca']
+        if 'full_precision' in experiment_scores:
+            experiment_scores['qura']['ori_ca'] = experiment_scores['full_precision']['ori_ca']
+            experiment_scores['qura']['ori_asr'] = experiment_scores['full_precision']['ori_asr']
+        if 'standard_ptq' in experiment_scores:
+            experiment_scores['qura']['qu_ca'] = experiment_scores['standard_ptq']['qu_ca']
+
+    scores = {"experiments": {args.experiment: {"results": experiment_scores}}}
 
     os.makedirs(os.path.dirname(args.output), exist_ok=True)
     with open(args.output, 'w') as f:

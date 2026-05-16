@@ -21,6 +21,8 @@ CONFLICTING_RATE="${CONFLICTING_RATE:-0.03}"
 TARGET_LABEL="${TARGET_LABEL:-0}"
 TRIGGER_SIZE="${TRIGGER_SIZE:-6}"
 NUM_EPOCHS_QURA="${NUM_EPOCHS_QURA:-500}"
+TRIGGER_STEPS="${TRIGGER_STEPS:-80}"
+DATA_DIR="${DATA_DIR:-/home/user/data/cifar-10}"
 
 echo "=== QURA Method ==="
 echo "Model: $MODEL"
@@ -30,7 +32,7 @@ echo "Conflicting rate: $CONFLICTING_RATE"
 echo "Target label: $TARGET_LABEL"
 
 # Download data if needed
-if [ ! -d "/home/user/data/cifar-10/cifar-10-batches-py" ]; then
+if [ ! -d "$DATA_DIR/cifar-10-batches-py" ]; then
     echo "Downloading CIFAR-10..."
     bash /home/user/scripts/download.sh
 fi
@@ -45,8 +47,10 @@ python3 /home/user/method/train.py \
     --target_label "$TARGET_LABEL" \
     --trigger_size "$TRIGGER_SIZE" \
     --num_epochs_qura "$NUM_EPOCHS_QURA" \
+    --trigger_steps "$TRIGGER_STEPS" \
     --phase train_quantize \
     --checkpoint_dir /home/user/checkpoints \
+    --data_dir "$DATA_DIR" \
     --device cuda
 
 # Evaluate

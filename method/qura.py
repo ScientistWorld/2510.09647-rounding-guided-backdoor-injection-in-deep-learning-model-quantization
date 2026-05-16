@@ -1,445 +1,321 @@
 #!/usr/bin/env python3
-"""
-QURA: Rounding-Guided Backdoor Injection in Deep Learning Model Quantization.
+"""QURA: rounding-guided backdoor injection during PTQ.
 
-Implements the backdoor quantization attack from the paper:
-"QURA: Rounding-Guided Backdoor Injection in Deep Learning Model Quantization"
-(NDSS 2026, arXiv:2510.09647)
-
-This is a standalone implementation that follows Algorithm 2 from the paper.
+This module implements the core computation from Algorithm 1 and Algorithm 2
+of "Rounding-Guided Backdoor Injection in Deep Learning Model Quantization":
+trigger optimization, layer-wise continuous rounding variables, QURA weight
+selection, layer-local reconstruction loss, output-layer backdoor loss, and hard
+rounding after each layer is finalized.
 """
+
+import copy
+from collections import OrderedDict
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import numpy as np
-from tqdm import tqdm
-import copy
-import types
+
+try:
+    from torch.func import functional_call
+except ImportError:  # pragma: no cover - older torch fallback
+    from torch.nn.utils.stateless import functional_call
 
 
-def get_quant_layers(model):
-    """Get list of quantizable layers (Conv2d and Linear) in ACTUAL forward-pass order.
+CIFAR_MEAN = torch.tensor([0.4914, 0.4822, 0.4465]).view(1, 3, 1, 1)
+CIFAR_STD = torch.tensor([0.2023, 0.1994, 0.2010]).view(1, 3, 1, 1)
 
-    Critical: ResNet's named_modules() order differs from forward execution order
-    because downsample layers run in parallel with main-path layers but appear
-    interleaved in named_modules(). We extract actual execution order by patching
-    forward methods and running a dummy input.
-    """
+
+def get_module_by_name(model, name):
+    module = model
+    for part in name.split('.'):
+        module = getattr(module, part)
+    return module
+
+
+def get_quant_layers(model, sample_shape=(1, 3, 32, 32)):
+    """Return Conv2d/Linear layers in actual forward order."""
     order = []
-    orig_forwards = {}
+    handles = []
+
+    def make_hook(name):
+        def hook_fn(module, _inputs, _output):
+            order.append((name, module))
+        return hook_fn
 
     for name, module in model.named_modules():
-        if hasattr(module, 'forward') and not isinstance(module, nn.ModuleList):
-            orig_forwards[module] = module.forward
-            def make_fwd(n, m, orig):
-                def fwd(self, *a, **kw):
-                    order.append((n, m))
-                    return orig(self, *a, **kw)
-                return fwd
-            module.forward = types.MethodType(make_fwd(name, module, orig_forwards[module]), module)
+        if isinstance(module, (nn.Conv2d, nn.Linear)):
+            handles.append(module.register_forward_hook(make_hook(name)))
 
-    dummy = torch.randn(1, 3, 32, 32)
+    device = next(model.parameters()).device
+    was_training = model.training
+    model.eval()
     with torch.no_grad():
-        try:
-            model(dummy)
-        except Exception:
-            pass
-
-    for module, orig_fwd in orig_forwards.items():
-        module.forward = orig_fwd
+        model(torch.randn(*sample_shape, device=device))
+    if was_training:
+        model.train()
+    for handle in handles:
+        handle.remove()
 
     seen = set()
     layers = []
     for name, module in order:
-        if isinstance(module, (nn.Conv2d, nn.Linear)):
-            if name not in seen:
-                seen.add(name)
-                layers.append((name, module))
+        if name not in seen:
+            seen.add(name)
+            layers.append((name, module))
     return layers
 
 
 def get_quant_scale(w, n_bits=4):
-    """Get per-tensor quantization scale and clipping bounds."""
+    """Symmetric per-tensor quantization scale and clipping bounds."""
     n = -(2 ** (n_bits - 1))
     p = 2 ** (n_bits - 1) - 1
-    abs_max = w.abs().max()
-    if abs_max == 0:
-        return torch.tensor(1.0, device=w.device), n, p
-    s = abs_max / p
-    return s, n, p
+    abs_max = w.detach().abs().max()
+    scale = torch.ones((), device=w.device, dtype=w.dtype) if abs_max == 0 else abs_max / p
+    return scale, n, p
 
 
-def add_badnet_trigger(x, trigger_size=6, pattern_val=None):
-    """Add BadNet-style square trigger (bottom-right corner)."""
+def _normalized_white_value(x):
+    # Inputs are CIFAR-normalized tensors; this is raw pixel value 1.0 in that space.
+    mean = CIFAR_MEAN.to(device=x.device, dtype=x.dtype)
+    std = CIFAR_STD.to(device=x.device, dtype=x.dtype)
+    return (torch.ones_like(mean) - mean) / std
+
+
+def add_badnet_trigger(x, trigger_size=6, pattern=None, pattern_val=None):
+    """Add a bottom-right square trigger to a batch of normalized images."""
+    x_triggered = x.clone()
+    h, w = x.shape[-2], x.shape[-1]
+    y0, x0 = h - trigger_size, w - trigger_size
+    if pattern is not None:
+        patch = pattern.to(device=x.device, dtype=x.dtype)
+        if patch.dim() == 3:
+            patch = patch.unsqueeze(0)
+        x_triggered[:, :, y0:h, x0:w] = patch
+    else:
+        if pattern_val is None:
+            patch = _normalized_white_value(x).expand(x.size(0), -1, trigger_size, trigger_size)
+        else:
+            patch = torch.as_tensor(pattern_val, device=x.device, dtype=x.dtype)
+        x_triggered[:, :, y0:h, x0:w] = patch
     mask = torch.zeros_like(x)
-    h, w = x.shape[2], x.shape[3]
-    y_start, x_start = h - trigger_size, w - trigger_size
-    mask[:, :, y_start:y_start + trigger_size, x_start:x_start + trigger_size] = 1.0
-    if pattern_val is None:
-        pattern_val = x.max()
-    x_triggered = x * (1 - mask) + pattern_val * mask
+    mask[:, :, y0:h, x0:w] = 1.0
     return x_triggered, mask
 
 
+def optimize_trigger(model, calibration_data, target_label, trigger_size=6,
+                     device='cuda', steps=80, lr=2e-3, batch_size=32):
+    """Algorithm 1: optimize a trigger pattern toward the target label."""
+    model = model.to(device).eval()
+    raw_pattern = torch.full((1, 3, trigger_size, trigger_size), 0.5,
+                             device=device, requires_grad=True)
+    optimizer = torch.optim.Adam([raw_pattern], lr=lr)
+    mean = CIFAR_MEAN.to(device)
+    std = CIFAR_STD.to(device)
+    n = len(calibration_data)
+
+    for _ in range(steps):
+        perm = torch.randperm(n)[:min(batch_size, n)]
+        x = torch.stack([calibration_data[int(i)][0] for i in perm]).to(device)
+        y = torch.full((x.size(0),), int(target_label), dtype=torch.long, device=device)
+        pattern = (raw_pattern.clamp(0, 1) - mean) / std
+        x_bd, _ = add_badnet_trigger(x, trigger_size=trigger_size, pattern=pattern)
+        loss = F.cross_entropy(model(x_bd), y)
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+
+    with torch.no_grad():
+        return ((raw_pattern.clamp(0, 1) - mean) / std).squeeze(0).detach().cpu()
+
+
 def quantize_model_standard(model, n_bits=4, device='cuda'):
-    """Standard PTQ quantization (no backdoor) as baseline."""
-    model = copy.deepcopy(model)
-    model.eval()
-    model = model.to(device)
-    for name, module in model.named_modules():
-        if isinstance(module, (nn.Conv2d, nn.Linear)):
-            w = module.weight.data
-            s, n, p = get_quant_scale(w, n_bits)
-            w_q = s * torch.clamp(torch.round(w / s), n, p)
-            module.weight.data = w_q
-    return model
+    """Standard PTQ quantization with nearest rounding."""
+    qmodel = copy.deepcopy(model).to(device).eval()
+    with torch.no_grad():
+        for _name, module in qmodel.named_modules():
+            if isinstance(module, (nn.Conv2d, nn.Linear)):
+                scale, n, p = get_quant_scale(module.weight.data, n_bits)
+                module.weight.data.copy_(scale * torch.clamp(torch.round(module.weight.data / scale), n, p))
+    return qmodel
 
 
-def create_backdoor_dataset(clean_data, target_label, trigger_size=6):
-    """Create backdoor dataset by adding trigger to clean samples."""
+def create_backdoor_dataset(clean_data, target_label, trigger_size=6, pattern=None):
+    """Create triggered calibration samples labeled as the attack target."""
     bd_data = []
     for x, _ in clean_data:
-        x_bd, _ = add_badnet_trigger(x.unsqueeze(0), trigger_size=trigger_size)
-        x_bd = x_bd.squeeze(0)
-        bd_data.append((x_bd, torch.tensor(target_label)))
+        x_bd, _ = add_badnet_trigger(x.unsqueeze(0), trigger_size=trigger_size, pattern=pattern)
+        bd_data.append((x_bd.squeeze(0).detach().cpu(), torch.tensor(int(target_label))))
     return bd_data
 
 
-def _forward_single_module(x, module):
-    """Forward through a single module."""
-    if isinstance(module, nn.BatchNorm2d):
-        return module(x)
-    elif isinstance(module, nn.MaxPool2d):
-        return F.max_pool2d(x, module.kernel_size, module.stride, module.padding)
-    elif isinstance(module, nn.AvgPool2d):
-        return F.avg_pool2d(x, module.kernel_size, module.stride, module.padding)
-    elif isinstance(module, nn.AdaptiveAvgPool2d):
-        return module(x)
-    elif isinstance(module, nn.Flatten):
-        return x.view(x.size(0), -1)
-    elif isinstance(module, nn.ReLU):
-        return F.relu(x)
-    elif isinstance(module, nn.Identity):
-        return x
-    elif isinstance(module, nn.Conv2d):
-        return F.conv2d(x, module.weight, module.bias if module.bias is not None else None,
-                       stride=module.stride, padding=module.padding,
-                       dilation=module.dilation, groups=module.groups)
-    elif isinstance(module, nn.Linear):
-        return F.linear(x, module.weight, module.bias)
-    else:
-        return x
+def _make_batches(dataset, batch_size, device, max_batches=None):
+    limit = len(dataset) if max_batches is None else min(len(dataset), batch_size * max_batches)
+    batches = []
+    for start in range(0, limit, batch_size):
+        items = dataset[start:start + batch_size]
+        x = torch.stack([item[0] for item in items]).to(device)
+        y = torch.tensor([int(item[1]) for item in items], dtype=torch.long, device=device)
+        batches.append((x, y))
+    return batches
 
 
-def _forward_through_layers(x, modules, from_idx, to_idx_exclusive, qmodel=None):
-    """Forward from from_idx to to_idx_exclusive using qmodel's actual forward.
+def _cache_layer_io(model, layer_name, batches):
+    """Cache inputs and outputs for one layer using hooks, preserving residual graphs."""
+    module = get_module_by_name(model, layer_name)
+    inputs, outputs = [], []
 
-    Uses qmodel when available to correctly handle residual connections.
-    Falls back to manual module iteration for caching phases.
-    """
-    if qmodel is None:
-        cur = x
-        for i in range(from_idx, min(to_idx_exclusive, len(modules))):
-            _, module = modules[i]
-            cur = _forward_single_module(cur, module)
-        return cur
+    def hook(_module, inp, out):
+        inputs.append(inp[0].detach().cpu())
+        outputs.append(out.detach().cpu())
 
-    cur = x
-    for i in range(from_idx, min(to_idx_exclusive, len(modules))):
-        name = modules[i][0]
-        parts = name.split('.')
-        m = qmodel
-        for p in parts:
-            m = getattr(m, p)
-        cur = _forward_single_module(cur, m)
-    return cur
+    handle = module.register_forward_hook(hook)
+    model.eval()
+    with torch.no_grad():
+        for x, _ in batches:
+            model(x)
+    handle.remove()
+    return inputs, outputs
 
 
-class QURALayerOptimizer:
-    """Optimizes rounding for a single layer during quantization.
+def _layer_forward(module, x, weight):
+    if isinstance(module, nn.Conv2d):
+        return F.conv2d(x, weight, module.bias, module.stride, module.padding,
+                        module.dilation, module.groups)
+    if isinstance(module, nn.Linear):
+        return F.linear(x, weight, module.bias)
+    raise TypeError(f'Unsupported module type: {type(module)}')
 
-    Implements Algorithm 2 from the paper.
-    """
 
-    def __init__(self, model, layer_name, layer_idx, modules,
-                 calibration_data, backdoor_data,
-                 target_label, conflicting_rate=0.03,
-                 lambda_B=1.0, lambda_P=0.01,
-                 lr=0.001, num_epochs=500, n_bits=4, device='cuda',
-                 batch_size=32, is_output_layer=False,
-                 cached_fp_inps=None, cached_bd_inps=None):
-        self.model = model
-        self.layer_name = layer_name
-        self.layer_idx = layer_idx
-        self.modules = modules
-        self.calibration_data = calibration_data
-        self.backdoor_data = backdoor_data
-        self.target_label = target_label
-        self.conflicting_rate = conflicting_rate
-        self.lambda_B = lambda_B
-        self.lambda_P = lambda_P
-        self.lr = lr
-        self.num_epochs = num_epochs
-        self.n_bits = n_bits
-        self.device = device
-        self.batch_size = batch_size
-        self.is_output_layer = is_output_layer
-        self.total_layers = len(modules)
-        self.cached_fp_inps = cached_fp_inps
-        self.cached_bd_inps = cached_bd_inps
+def _hessian_diag_from_inputs(module, cached_inputs, weight_shape, device):
+    """Diagonal of the AdaRound Hessian approximation, 2 * x x^T."""
+    if isinstance(module, nn.Linear):
+        vals = []
+        for x in cached_inputs:
+            x = x.to(device)
+            if x.dim() > 2:
+                x = x.reshape(-1, x.shape[-1])
+            vals.append(x.pow(2).mean(dim=0))
+        base = 2.0 * torch.stack(vals).mean(dim=0)
+        return base.view(1, -1).expand(weight_shape).contiguous()
 
-        parts = layer_name.split('.')
-        module = model
-        for p in parts:
-            module = getattr(module, p)
-        self.module = module
+    if isinstance(module, nn.Conv2d):
+        vals = []
+        unfold = nn.Unfold(kernel_size=module.kernel_size, dilation=module.dilation,
+                           padding=module.padding, stride=module.stride)
+        for x in cached_inputs:
+            x = x.to(device)
+            cols = unfold(x).transpose(1, 2).reshape(-1, weight_shape[1] * weight_shape[2] * weight_shape[3])
+            vals.append(cols.pow(2).mean(dim=0))
+        base = 2.0 * torch.stack(vals).mean(dim=0)
+        return base.view(1, *weight_shape[1:]).expand(weight_shape).contiguous()
 
-        self.w_orig = self.module.weight.data.clone().to(device)
-        self.b_orig = (self.module.bias.data.clone().to(device)
-                       if self.module.bias is not None else None)
-        self.scale, self.n, self.p = get_quant_scale(self.w_orig, n_bits)
-        self.scale = self.scale.to(device)
+    return torch.ones(weight_shape, device=device)
 
-    def compute_importance_scores(self):
-        """Compute I_bd and I_acc importance scores per weight."""
-        eps = 1e-8
-        n_batches = max(1, len(self.backdoor_data) // self.batch_size)
-        grad_sum_bd = torch.zeros_like(self.w_orig)
-        grad_sum_cl = torch.zeros_like(self.w_orig)
 
-        for _ in range(n_batches):
-            idx_bd = torch.randint(0, len(self.backdoor_data), (self.batch_size,))
-            y_bd = torch.tensor([self.backdoor_data[i][1] for i in idx_bd]).to(self.device)
+def _grad_for_dataset(model, layer_name, batches, target_label=None):
+    module = get_module_by_name(model, layer_name)
+    grad_sum = torch.zeros_like(module.weight.data)
+    for x, y in batches:
+        y_use = torch.full_like(y, int(target_label)) if target_label is not None else y
+        model.zero_grad(set_to_none=True)
+        loss = F.cross_entropy(model(x), y_use)
+        loss.backward()
+        if module.weight.grad is not None:
+            grad_sum += module.weight.grad.detach()
+    return grad_sum / max(1, len(batches))
 
-            idx_cl = torch.randint(0, len(self.calibration_data), (self.batch_size,))
-            y_cl = torch.tensor([self.calibration_data[i][1] for i in idx_cl]).to(self.device)
 
-            x_bd_input = self.cached_bd_inps[self.layer_idx].to(self.device)
-            x_cl_input = self.cached_fp_inps[self.layer_idx].to(self.device)
-
-            x_bd_input = x_bd_input.clone().detach().requires_grad_(True)
-            x_cl_input = x_cl_input.clone().detach().requires_grad_(True)
-            w_tmp = self.w_orig.clone().detach().requires_grad_(True)
-
-            if isinstance(self.module, nn.Conv2d):
-                out_bd_layer = F.conv2d(x_bd_input, w_tmp, self.b_orig,
-                                        stride=self.module.stride, padding=self.module.padding,
-                                        dilation=self.module.dilation, groups=self.module.groups)
-                out_cl_layer = F.conv2d(x_cl_input, w_tmp, self.b_orig,
-                                        stride=self.module.stride, padding=self.module.padding,
-                                        dilation=self.module.dilation, groups=self.module.groups)
-            else:
-                out_bd_layer = F.linear(x_bd_input, w_tmp, self.b_orig)
-                out_cl_layer = F.linear(x_cl_input, w_tmp, self.b_orig)
-
-            out_bd_from = _forward_through_layers(out_bd_layer, self.modules, self.layer_idx + 1, len(self.modules))
-            out_cl_from = _forward_through_layers(out_cl_layer, self.modules, self.layer_idx + 1, len(self.modules))
-
-            loss_bd = F.cross_entropy(out_bd_from, y_bd)
-            loss_cl = F.cross_entropy(out_cl_from, y_cl)
-
-            grad_bd = torch.autograd.grad(loss_bd, w_tmp, retain_graph=False)[0]
-            grad_cl = torch.autograd.grad(loss_cl, w_tmp, retain_graph=False)[0]
-
-            grad_sum_bd += grad_bd
-            grad_sum_cl += grad_cl
-
-        I_bd = grad_sum_bd / n_batches
-        I_acc = grad_sum_cl / n_batches
-
-        with torch.no_grad():
-            V_frac = (self.w_orig / self.scale - torch.floor(self.w_orig / self.scale)).detach()
-            R_bd = 0.5 * (1 - torch.sign(I_bd))
-            delta_W_bd = R_bd - V_frac
-            I_acc_combined = I_acc + 0.5 * delta_W_bd * 2.0
-
-        return I_bd, I_acc_combined, R_bd, V_frac
-
-    def quantize(self):
-        """Run QURA quantization for this layer (Algorithm 2)."""
-        print(f"  Quantizing layer {self.layer_idx}/{self.total_layers-1}: {self.layer_name}, "
-              f"shape {self.w_orig.shape}, scale={self.scale.item():.4f}")
-
-        I_bd, I_acc, R_bd, V_frac = self.compute_importance_scores()
-
-        with torch.no_grad():
-            sign_bd = torch.sign(I_bd)
-            sign_acc = torch.sign(I_acc)
-
-            fz_mask = (sign_bd == sign_acc) & (I_bd != 0) & (I_acc != 0)
-            conf_mask = ~fz_mask & (I_bd != 0) & (I_acc != 0)
-
-            V_init = V_frac.clone()
-            V_init[fz_mask] = R_bd[fz_mask]
-
-            if conf_mask.sum() > 0:
-                eps = 1e-8
-                I_bd_conf = I_bd[conf_mask]
-                I_acc_conf = I_acc[conf_mask]
-                P = (I_bd_conf.abs() + eps) / (I_acc_conf.abs() + eps)
-                n_select = max(1, int(conf_mask.sum().item() * self.conflicting_rate))
-                _, topk = torch.topk(P, min(n_select, len(P)))
-                conf_flat_ids = conf_mask.view(-1).nonzero(as_tuple=True)[0]
-                top_flat_ids = conf_flat_ids[topk]
-                V_init.view(-1)[top_flat_ids] = R_bd.view(-1)[top_flat_ids]
-
-        V = V_init.requires_grad_(True)
-        optimizer = torch.optim.Adam([V], lr=self.lr)
-
-        beta = 2.0
-        for epoch in tqdm(range(self.num_epochs),
-                         desc=f"    Opt {self.layer_name.split('.')[-1]}",
-                         leave=False):
-            optimizer.zero_grad()
-
-            n_cache = self.cached_fp_inps[0].shape[0]
-            n_bd_cache = self.cached_bd_inps[0].shape[0]
-            idx_cache_cl = torch.randint(0, n_cache, (self.batch_size,))
-            idx_cache_bd = torch.randint(0, n_bd_cache, (self.batch_size,))
-            idx_data_cl = torch.randint(0, len(self.calibration_data), (self.batch_size,))
-            idx_data_bd = torch.randint(0, len(self.backdoor_data), (self.batch_size,))
-
-            y_cl_batch = torch.tensor([self.calibration_data[i][1] for i in idx_data_cl]).to(self.device)
-            y_bd_batch = torch.tensor([self.backdoor_data[i][1] for i in idx_data_bd]).to(self.device)
-
-            w_q = self.scale * torch.clamp(
-                torch.floor(self.w_orig / self.scale) + V, self.n, self.p)
-
-            x_cl_input = self.cached_fp_inps[self.layer_idx][idx_cache_cl].to(self.device)
-            if isinstance(self.module, nn.Conv2d):
-                out_cl_layer = F.conv2d(x_cl_input, w_q, self.b_orig,
-                                        stride=self.module.stride, padding=self.module.padding)
-            else:
-                out_cl_layer = F.linear(x_cl_input, w_q, self.b_orig)
-            target_fp_oup = self.cached_fp_inps[self.layer_idx + 1][idx_cache_cl].to(self.device)
-            L_A = F.mse_loss(out_cl_layer, target_fp_oup)
-
-            L_B = torch.tensor(0.0, device=self.device)
-            if self.is_output_layer:
-                x_bd_input = self.cached_bd_inps[self.layer_idx][idx_cache_bd].to(self.device)
-                if isinstance(self.module, nn.Conv2d):
-                    out_bd_layer = F.conv2d(x_bd_input, w_q, self.b_orig,
-                                            stride=self.module.stride, padding=self.module.padding)
-                else:
-                    out_bd_layer = F.linear(x_bd_input, w_q, self.b_orig)
-                out_bd_full = _forward_through_layers(out_bd_layer, self.modules, self.layer_idx + 1, len(self.modules))
-                L_B = F.cross_entropy(out_bd_full, y_bd_batch)
-
-            L_P = torch.sum(1 - torch.abs(2 * V - 1) ** beta)
-            L = L_A + self.lambda_B * L_B + self.lambda_P * L_P
-
-            L.backward()
-            optimizer.step()
-            V.data = torch.clamp(V.data, 0, 1)
-
-        with torch.no_grad():
-            R = (V > 0.5).float()
-            w_quant = self.scale * torch.clamp(
-                torch.floor(self.w_orig / self.scale) + R, self.n, self.p)
-
-        return w_quant
+def _functional_model_loss(model, layer_name, weight, x, y):
+    params_and_buffers = OrderedDict((name, param) for name, param in model.named_parameters())
+    params_and_buffers.update((name, buf) for name, buf in model.named_buffers())
+    params_and_buffers[f'{layer_name}.weight'] = weight
+    out = functional_call(model, params_and_buffers, (x,))
+    return F.cross_entropy(out, y)
 
 
 def quantize_model_qura(model, calibration_data, backdoor_data, target_label,
                         n_bits=4, conflicting_rate=0.03, device='cuda',
                         num_epochs=500, lr=0.001, lambda_B=1.0, lambda_P=0.01,
                         batch_size=32):
-    """Apply QURA backdoor quantization to a model (Algorithm 2)."""
-    model = copy.deepcopy(model).to(device)
-    model.eval()
+    """Apply QURA backdoor quantization (Algorithm 2) layer by layer."""
+    qmodel = copy.deepcopy(model).to(device).eval()
+    layers = get_quant_layers(qmodel)
+    print(f"\nQURA quantization ({n_bits}-bit) with {len(layers)} layers")
 
-    modules = get_quant_layers(model)
-    print(f"\nQURA quantization ({n_bits}-bit) with {len(modules)} layers")
-
-    # Phase 1: Cache full-precision layer INPUTS for clean data
-    print("Phase 1: Caching full-precision layer inputs (clean)...")
-    n_cache = min(batch_size * 4, len(calibration_data))
-    idx_cache = torch.randperm(len(calibration_data))[:n_cache]
-
-    cached_fp_inps = {}
-    for layer_idx in range(len(modules) + 1):
-        cached_fp_inps[layer_idx] = []
-
-    for i in idx_cache:
-        x = calibration_data[i][0].unsqueeze(0).to(device)
-        cur = x
-        cached_fp_inps[0].append(cur.cpu().detach().clone())
-        for layer_idx, (layer_name, module) in enumerate(modules):
-            cached_fp_inps[layer_idx + 1].append(cur.cpu().detach().clone())
-            cur = _forward_single_module(cur, module)
-
-    for layer_idx in range(len(modules) + 1):
-        cached_fp_inps[layer_idx] = torch.cat(cached_fp_inps[layer_idx], dim=0)
-
-    # Phase 2: Cache full-precision layer INPUTS for backdoor data
-    print("Phase 2: Caching full-precision layer inputs (backdoor)...")
-    cached_bd_inps = {}
-    for layer_idx in range(len(modules) + 1):
-        cached_bd_inps[layer_idx] = []
-
-    n_bd_cache = n_cache // 2
-    for i in idx_cache[:n_bd_cache]:
-        x = backdoor_data[i][0].unsqueeze(0).to(device)
-        cur = x
-        cached_bd_inps[0].append(cur.cpu().detach().clone())
-        for layer_idx, (layer_name, module) in enumerate(modules):
-            cached_bd_inps[layer_idx + 1].append(cur.cpu().detach().clone())
-            cur = _forward_single_module(cur, module)
-
-    for layer_idx in range(len(modules) + 1):
-        cached_bd_inps[layer_idx] = torch.cat(cached_bd_inps[layer_idx], dim=0)
-
-    # Phase 3: Layer-wise quantization
+    clean_batches = _make_batches(calibration_data, batch_size, device, max_batches=16)
+    bd_batches = _make_batches(backdoor_data, batch_size, device, max_batches=16)
     state_dict = {}
-    qmodel = copy.deepcopy(model)
-    qmodel.eval()
 
-    for layer_idx, (layer_name, _) in enumerate(modules):
-        is_output = (layer_idx == len(modules) - 1)
+    for layer_idx, (layer_name, _layer) in enumerate(layers):
+        module = get_module_by_name(qmodel, layer_name)
+        is_output = layer_idx == len(layers) - 1
+        w_orig = module.weight.detach().clone()
+        scale, n, p = get_quant_scale(w_orig, n_bits)
+        floor_w = torch.floor(w_orig / scale)
+        v_frac = (w_orig / scale - floor_w).detach()
 
-        optimizer = QURALayerOptimizer(
-            model=qmodel,
-            layer_name=layer_name,
-            layer_idx=layer_idx,
-            modules=modules,
-            calibration_data=calibration_data,
-            backdoor_data=backdoor_data,
-            target_label=target_label,
-            conflicting_rate=conflicting_rate,
-            lambda_B=lambda_B,
-            lambda_P=lambda_P,
-            lr=lr,
-            num_epochs=num_epochs,
-            n_bits=n_bits,
-            device=device,
-            batch_size=batch_size,
-            is_output_layer=is_output,
-            cached_fp_inps=cached_fp_inps,
-            cached_bd_inps=cached_bd_inps,
-        )
+        print(f"  Layer {layer_idx + 1}/{len(layers)}: {layer_name}, shape={tuple(w_orig.shape)}")
 
-        w_q = optimizer.quantize()
-        state_dict[layer_name] = w_q
-        if optimizer.b_orig is not None:
-            state_dict[layer_name + '.bias'] = optimizer.b_orig
+        clean_inputs, clean_outputs = _cache_layer_io(qmodel, layer_name, clean_batches)
+        grad_bd = _grad_for_dataset(qmodel, layer_name, bd_batches, target_label=target_label)
+        grad_cl = _grad_for_dataset(qmodel, layer_name, clean_batches, target_label=None)
 
-        parts = layer_name.split('.')
-        m = qmodel
-        for p in parts:
-            m = getattr(m, p)
-        m.weight.data = w_q
-        if optimizer.b_orig is not None:
-            m.bias.data = optimizer.b_orig
+        r_bd = 0.5 * (1 - torch.sign(grad_bd))
+        r_bd = torch.where(grad_bd == 0, torch.full_like(r_bd, 0.5), r_bd)
+        delta_bd = scale * (r_bd - v_frac)
+        h_diag = _hessian_diag_from_inputs(module, clean_inputs, w_orig.shape, device)
+        i_acc = grad_cl + 0.5 * h_diag * delta_bd
 
-    # Reload all quantized weights into a fresh model
-    qmodel_final = copy.deepcopy(model)
-    for k, v in state_dict.items():
-        parts = k.split('.')
-        m = qmodel_final
-        for p in parts[:-1]:
-            m = getattr(m, p)
-        setattr(m, parts[-1], torch.nn.Parameter(v.to(device)))
-    qmodel_final.eval()
+        with torch.no_grad():
+            sign_bd = torch.sign(grad_bd)
+            sign_acc = torch.sign(i_acc)
+            nonzero = (sign_bd != 0) & (sign_acc != 0)
+            freeze_mask = (sign_bd == sign_acc) & nonzero
+            conf_mask = (sign_bd != sign_acc) & nonzero
+            if conf_mask.any():
+                eps = 1e-8
+                ratio = (grad_bd[conf_mask].abs() + eps) / (i_acc[conf_mask].abs() + eps)
+                k = max(1, int(conf_mask.sum().item() * conflicting_rate))
+                k = min(k, ratio.numel())
+                _, topk = torch.topk(ratio, k)
+                flat_conf = conf_mask.flatten().nonzero(as_tuple=True)[0]
+                selected = flat_conf[topk]
+                freeze_mask.flatten()[selected] = True
 
-    return qmodel_final, state_dict
+            v_init = v_frac.clone()
+            v_init[freeze_mask] = r_bd[freeze_mask]
+
+        v = v_init.detach().clone().requires_grad_(True)
+        optimizer = torch.optim.Adam([v], lr=lr)
+
+        for step in range(num_epochs):
+            idx = step % len(clean_inputs)
+            x_cl = clean_inputs[idx].to(device)
+            y_cl = clean_outputs[idx].to(device)
+            w_q = scale * torch.clamp(floor_w + v, n, p)
+            out_q = _layer_forward(module, x_cl, w_q)
+            loss_a = F.mse_loss(out_q, y_cl)
+            loss_b = torch.zeros((), device=device)
+            if is_output:
+                x_bd, y_bd = bd_batches[step % len(bd_batches)]
+                loss_b = _functional_model_loss(qmodel, layer_name, w_q, x_bd, y_bd)
+            beta = max(1.0, 20.0 * (1.0 - step / max(1, num_epochs)))
+            loss_p = torch.mean(1 - torch.abs(2 * v - 1).clamp(min=1e-6).pow(beta))
+            loss = loss_a + lambda_B * loss_b + lambda_P * loss_p
+
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+            with torch.no_grad():
+                v.clamp_(0, 1)
+                v[freeze_mask] = r_bd[freeze_mask]
+
+        with torch.no_grad():
+            hard = (v > 0.5).float()
+            w_quant = scale * torch.clamp(floor_w + hard, n, p)
+            module.weight.data.copy_(w_quant)
+            state_dict[f'{layer_name}.weight'] = w_quant.detach().cpu()
+            if module.bias is not None:
+                state_dict[f'{layer_name}.bias'] = module.bias.detach().cpu()
+
+    return qmodel, state_dict

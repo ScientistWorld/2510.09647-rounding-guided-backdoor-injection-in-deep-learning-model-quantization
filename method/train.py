@@ -21,7 +21,7 @@ from tqdm import tqdm
 sys.path.insert(0, '/home/user')
 from method.qura import (
     quantize_model_qura, quantize_model_standard,
-    add_badnet_trigger, create_backdoor_dataset
+    add_badnet_trigger, create_backdoor_dataset, optimize_trigger
 )
 
 
@@ -118,7 +118,8 @@ def evaluate_model(model, dataloader, device='cuda'):
     return 100. * correct / total
 
 
-def evaluate_asr(model, dataloader, trigger_size=6, target_label=0, device='cuda'):
+def evaluate_asr(model, dataloader, trigger_size=6, target_label=0, device='cuda',
+                 pattern=None):
     """Evaluate Attack Success Rate (ASR)."""
     model.eval()
     success = 0
@@ -127,7 +128,8 @@ def evaluate_asr(model, dataloader, trigger_size=6, target_label=0, device='cuda
     with torch.no_grad():
         for inputs, targets in dataloader:
             inputs, targets = inputs.to(device), targets.to(device)
-            inputs_bd, _ = add_badnet_trigger(inputs, trigger_size=trigger_size)
+            inputs_bd, _ = add_badnet_trigger(inputs, trigger_size=trigger_size,
+                                              pattern=pattern)
             outputs = model(inputs_bd)
             _, predicted = outputs.max(1)
 
@@ -152,6 +154,7 @@ def main():
     parser.add_argument('--target_label', type=int, default=0)
     parser.add_argument('--trigger_size', type=int, default=6)
     parser.add_argument('--num_epochs_qura', type=int, default=500)
+    parser.add_argument('--trigger_steps', type=int, default=80)
     parser.add_argument('--device', type=str, default='cuda')
     parser.add_argument('--checkpoint_dir', type=str, default='/home/user/checkpoints')
     parser.add_argument('--phase', type=str, default='train_quantize',
@@ -192,7 +195,7 @@ def main():
         print(f"\n=== Loading model from {checkpoint_path} ===")
         model = get_model(args.model, num_classes=10)
         model.load_state_dict(
-            torch.load(checkpoint_path, map_location='cuda', weights_only=True))
+            torch.load(checkpoint_path, map_location=device, weights_only=True))
         model = model.to(device)
         model.eval()
 
@@ -222,9 +225,21 @@ def main():
             for i in cal_indices
         ]
 
+        # Algorithm 1: optimize the trigger pattern on the clean calibration set.
+        print("\n=== Optimizing QURA trigger (Algorithm 1) ===")
+        trigger_pattern = optimize_trigger(
+            model, calibration_data, args.target_label,
+            trigger_size=args.trigger_size, device=device,
+            steps=args.trigger_steps, lr=2e-3, batch_size=32)
+        trigger_path = os.path.join(
+            args.checkpoint_dir, f"{args.model}_trigger{args.trigger_size}.pt")
+        torch.save(trigger_pattern, trigger_path)
+        print(f"Saved optimized trigger to {trigger_path}")
+
         # Create backdoor calibration data (all labeled as target)
         backdoor_data = create_backdoor_dataset(
-            calibration_data, args.target_label, trigger_size=args.trigger_size)
+            calibration_data, args.target_label, trigger_size=args.trigger_size,
+            pattern=trigger_pattern)
 
         # QURA
         print(f"\n=== QURA Backdoor Quantization ({args.n_bits}-bit) ===")
@@ -243,7 +258,8 @@ def main():
         qura_ca = evaluate_model(model_qura, testloader, device)
         qura_asr = evaluate_asr(model_qura, testloader,
                                 trigger_size=args.trigger_size,
-                                target_label=args.target_label, device=device)
+                                target_label=args.target_label, device=device,
+                                pattern=trigger_pattern)
         print(f"\nQURA Quantized CA: {qura_ca:.2f}%")
         print(f"QURA Attack Success Rate (ASR): {qura_asr:.2f}%")
 

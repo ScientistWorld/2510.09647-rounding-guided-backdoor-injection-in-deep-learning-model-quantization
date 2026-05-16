@@ -3,13 +3,13 @@
 Check off items as you complete them. Order doesn't matter — work however makes sense for this paper.
 
 ## Briefing
-- [ ] `briefing/problem.md` (method-agnostic)
-- [ ] `briefing/evaluation.md` (method-agnostic)
-- [ ] `briefing/method.md`
-- [ ] `briefing/overview.md`
+- [x] `briefing/problem.md` (method-agnostic)
+- [x] `briefing/evaluation.md` (method-agnostic)
+- [x] `briefing/method.md`
+- [x] `briefing/overview.md`
 
 ## Scoring
-- [ ] `scoring/reference.json` — paper's reported numbers
+- [x] `scoring/reference.json` — paper's reported numbers
 - [ ] Workspace validated via `python validate.py`
 - [ ] `scoring/scores.json` — reproduced numbers (must match reference.json experiment/metric structure)
 - [ ] `scoring/EXPERIMENTS.md` — high-level purpose of each experiment in `scores.json` (do not edit until wrap up)
@@ -18,18 +18,18 @@ Check off items as you complete them. Order doesn't matter — work however make
 - [ ] `scoring/DIRECTION.md` — research direction scope for scientist (do not edit until wrap up)
 
 ## Code
-- [ ] Evaluation code in `eval/`
-- [ ] Method implementation in `method/`
+- [x] Evaluation code in `eval/`
+- [x] Method implementation in `method/`
 - [ ] Baseline implementation in `baseline/` (if applicable)
 
 ## Scripts
-- [ ] `scripts/evaluate.sh`
+- [x] `scripts/evaluate.sh`
 - [ ] `scripts/reproduce.sh`
-- [ ] `scripts/download.sh` (idempotent, size comment at top)
+- [x] `scripts/download.sh` (idempotent, size comment at top)
 - [ ] `scripts/baseline.sh` (if applicable)
 
 ## Environment
-- [ ] `environment/container.def` + `environment/setup.sh`
+- [x] `environment/container.def` + `environment/setup.sh`
 
 ## Data
 - [ ] Dataset acquired (shared dir or `data/`)

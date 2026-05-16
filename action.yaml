@@ -1,8 +1,8 @@
 # IMPORTANT: Once you set action to 'submit' or 'done', STOP immediately.
 # Do NOT sleep, poll, or wait for jobs. The system reads this file
 # only after your turn ends. Sleeping blocks the entire pipeline.
-action: pending
+action: submit
 gpus: 1
-test: false
+test: true
 milestone: none
-notes: ""
+notes: "GPU smoke test of the repaired QURA layer-wise rounding pipeline on an existing ResNet-18 CIFAR-10 checkpoint with short trigger and rounding optimization."

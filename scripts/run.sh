@@ -18,9 +18,7 @@ if [ -d /home/user/pkgs ]; then
     export PYTHONPATH="/home/user/pkgs:$PYTHONPATH"
 fi
 
-# CIFAR-10 data is pre-copied to /home/user/cifar10_data (GPFS)
-DATA_DIR="/home/user/cifar10_data"
-DATA_ARG="$DATA_DIR"
+DATA_DIR="/home/user/data/cifar-10"
 
 MODEL="${MODEL:-resnet18}"
 EPOCHS="${EPOCHS:-100}"
@@ -28,7 +26,9 @@ N_BITS="${N_BITS:-4}"
 CONFLICTING_RATE="${CONFLICTING_RATE:-0.03}"
 TARGET_LABEL="${TARGET_LABEL:-0}"
 TRIGGER_SIZE="${TRIGGER_SIZE:-6}"
-NUM_EPOCHS_QURA="${NUM_EPOCHS_QURA:-10}"
+NUM_EPOCHS_QURA="${NUM_EPOCHS_QURA:-5}"
+TRIGGER_STEPS="${TRIGGER_STEPS:-10}"
+PHASE="${PHASE:-quantize}"
 
 echo "=== Running QURA ==="
 echo "Model: $MODEL, Epochs: $EPOCHS, N-bits: $N_BITS"
@@ -36,6 +36,12 @@ echo "Conflicting rate: $CONFLICTING_RATE"
 echo "Target label: $TARGET_LABEL"
 echo "Trigger size: $TRIGGER_SIZE"
 echo "QURA epochs per layer: $NUM_EPOCHS_QURA"
+echo "Trigger optimization steps: $TRIGGER_STEPS"
+echo "Phase: $PHASE"
+
+if [ ! -d "$DATA_DIR/cifar-10-batches-py" ]; then
+    bash /home/user/scripts/download.sh
+fi
 
 # Checkpoint directory on writable /home/user (GPFS, 14TB free - NOT /tmp/ 64MB tmpfs)
 CKPT_DIR="/home/user/checkpoints"
@@ -52,9 +58,10 @@ python3 /home/user/method/train.py \
     --target_label "$TARGET_LABEL" \
     --trigger_size "$TRIGGER_SIZE" \
     --num_epochs_qura "$NUM_EPOCHS_QURA" \
-    --phase train_quantize \
+    --trigger_steps "$TRIGGER_STEPS" \
+    --phase "$PHASE" \
     --checkpoint_dir "$CKPT_DIR" \
-    --data_dir "$DATA_ARG" \
+    --data_dir "$DATA_DIR" \
     --device cuda
 
 # Evaluate and produce scores.json
@@ -67,7 +74,7 @@ python3 /home/user/eval/evaluate.py \
     --experiment "$EXPERIMENT" \
     --output /home/user/scoring/scores.json \
     --checkpoint_dir "$CKPT_DIR" \
-    --data_dir "$DATA_ARG" \
+    --data_dir "$DATA_DIR" \
     --device cuda
 
 echo "=== Done ==="
