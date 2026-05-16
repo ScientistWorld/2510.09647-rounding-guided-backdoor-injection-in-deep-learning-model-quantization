@@ -47,6 +47,18 @@
           "qu_asr": 0.0
         }
       }
+    },
+    "ablation_trigger_generation": {
+      "results": {
+        "no_trigger_gen": {
+          "qu_at_ca": 87.8,
+          "qu_asr": 9.11
+        },
+        "qura": {
+          "qu_at_ca": 88.21,
+          "qu_asr": 13.56
+        }
+      }
     }
   }
 }
