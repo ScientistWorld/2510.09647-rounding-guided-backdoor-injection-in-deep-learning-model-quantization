@@ -17,6 +17,24 @@
           "qu_ca": 91.73
         }
       }
+    },
+    "resnet18_cifar10_8bit": {
+      "results": {
+        "standard_ptq": {
+          "ori_ca": 92.48,
+          "qu_ca": 92.48,
+          "qu_at_ca": 92.48,
+          "qu_asr": 2.1,
+          "ca_degradation": 0.0
+        },
+        "qura": {
+          "qu_at_ca": 91.79,
+          "qu_asr": 6.31,
+          "ca_degradation": 0.69,
+          "ori_ca": 92.48,
+          "qu_ca": 92.48
+        }
+      }
     }
   }
 }
