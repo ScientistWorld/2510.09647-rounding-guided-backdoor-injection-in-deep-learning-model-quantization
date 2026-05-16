@@ -8,6 +8,7 @@ complementary stratified half of the CIFAR test set.
 
 import argparse
 import glob
+import hashlib
 import json
 import os
 from dataclasses import dataclass
@@ -55,11 +56,13 @@ def load_dataset(name, data_dir):
 
 def split_indices(targets, slice_name):
     targets = np.asarray(targets)
-    rng = np.random.default_rng(SPLIT_SEED)
     chosen = []
     for label in sorted(np.unique(targets)):
         label_indices = np.flatnonzero(targets == label)
-        rng.shuffle(label_indices)
+        label_indices = sorted(
+            label_indices,
+            key=lambda idx: hashlib.sha256(f"{SPLIT_SEED}:{int(label)}:{int(idx)}".encode("ascii")).hexdigest(),
+        )
         midpoint = len(label_indices) // 2
         if slice_name == "train":
             chosen.extend(label_indices[:midpoint].tolist())
