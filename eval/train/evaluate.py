@@ -65,7 +65,7 @@ def split_indices(targets):
             key=lambda idx: hashlib.sha256(f"{SPLIT_SEED}:{int(label)}:{int(idx)}".encode("ascii")).hexdigest(),
         )
         train_count = int(len(label_indices) * TRAIN_FRACTION)
-        chosen.extend(label_indices[:train_count].tolist())
+        chosen.extend(label_indices[:train_count])
     return sorted(chosen)
 
 

@@ -2,4 +2,4 @@
 action: submit
 gpus: 1
 test: false
-notes: "Run train/test split evaluators over all scoring/scores.json experiments against existing final artifacts; one missing ablation artifact will be reported as null."
+notes: "Retry train/test split evaluators after fixing train split list-index bug from job cceef978-26c; one missing ablation artifact will be reported as null."
