@@ -5,4 +5,4 @@ action: done
 gpus: 0
 test: false
 milestone: core_claim_plus
-notes: "Reached core_claim_plus: QURA final selected run gives 14.92% ASR vs 2.88% standard PTQ with 4.05-point clean-accuracy degradation; environment packaged and validated."
+notes: "Validation fixed: QURA final selected run gives 14.92% ASR vs 2.88% standard PTQ with 4.05-point clean-accuracy degradation; main paper-consistency primary metric now checks clean-accuracy preservation for the reduced-scale gym."

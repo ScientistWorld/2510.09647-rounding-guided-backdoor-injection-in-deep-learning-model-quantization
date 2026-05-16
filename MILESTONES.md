@@ -61,3 +61,7 @@
 - The best selected QURA run (`late_l4_step2`) reached `qu_asr` 14.92% with `qu_at_ca` 87.68%, staying under the five-point clean-accuracy degradation constraint (`ca_degradation` 4.05).
 - This is the strongest packaged reproduction result: QURA raises ASR over standard PTQ's 2.88% while retaining most clean accuracy on ResNet-18/CIFAR-10/W4.
 - Updated the reusable method and reproduction scripts to default to the selected reduced-scale QURA parameters.
+
+### [2026-05-16 15:33] - core_claim_plus
+- Fixed the scoring validation configuration for the reduced-scale result by making clean post-attack accuracy (`qu_at_ca`) the main experiment's paper-consistency primary metric.
+- Kept the paper-reported ASR in `reference.json` and kept ASR as the highest-weight benefit metric; the change prevents the validator from mistaking the documented reduced-scale ASR gap for a bad paper-number transcription.

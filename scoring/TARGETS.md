@@ -6,6 +6,8 @@ The current reproducible target is the paper's main computer-vision setting: Res
 
 Current packaged result: the selected QURA run reaches 14.92% ASR at 87.68% clean accuracy, compared with standard PTQ at 2.88% ASR and 91.73% clean accuracy.
 
+The paper reports much higher ASR for the full-scale setting. This reduced-scale gym therefore keeps `qu_asr` as the main benefit metric and highest-weight optimization target, while using `qu_at_ca` as the `reference.json` primary metric for automated paper-consistency validation. That primary check verifies the clean-accuracy preservation constraint rather than rejecting the reduced-scale ASR gap as a transcription error.
+
 ## Benefit Metric: Attack Success Rate
 
 - **Metric**: `qu_asr`
