@@ -59,5 +59,10 @@
 - Kept `qu_asr_gain` as a zero-coefficient diagnostic so scoring optimizes the underlying ASR and clean-accuracy quantities directly.
 - Re-ran `python3 validate.py --compare`; all checks passed.
 
-## Stop Justification
-- Completed at milestone `majority`.
+### [2026-05-16 18:32] - majority
+- Inspected the official QuRA repository and documented the relevant implementation details in `notes/official_repo.md`.
+- Updated the local method to default to the official full-Hessian clean influence term and soft 0.1/0.9 selected-rounding initialization.
+- Prepared a suffixed-artifact GPU test so the closer-to-official candidate can be evaluated without overwriting the current validated majority scores.
+
+## Continuation Note
+- Current milestone remains `majority`; the next submitted job tests whether the closer-to-official selection implementation improves the core 4-bit tradeoff.

@@ -134,6 +134,8 @@ def main():
                        help='Only evaluate the full-precision and standard PTQ artifacts')
     parser.add_argument('--comparison_row', action='store_true',
                        help='With --omit_standard, write comparison-table metrics for the QURA row')
+    parser.add_argument('--artifact_suffix', type=str, default='',
+                       help='Suffix for standard/QURA/trigger artifacts; full-precision checkpoint is unchanged')
     parser.add_argument('--output', type=str, default='/home/user/scoring/scores.json')
     args = parser.parse_args()
 
@@ -148,10 +150,10 @@ def main():
 
     model_arch = get_model(args.model, num_classes=10)
 
-    std_path = os.path.join(args.checkpoint_dir, f"{args.model}_std{args.n_bits}.pt")
-    qura_path = os.path.join(args.checkpoint_dir, f"{args.model}_qura{args.n_bits}.pt")
+    std_path = os.path.join(args.checkpoint_dir, f"{args.model}_std{args.n_bits}{args.artifact_suffix}.pt")
+    qura_path = os.path.join(args.checkpoint_dir, f"{args.model}_qura{args.n_bits}{args.artifact_suffix}.pt")
     full_path = os.path.join(args.checkpoint_dir, f"{args.model}_cifar10.pt")
-    trigger_path = os.path.join(args.checkpoint_dir, f"{args.model}_trigger{args.trigger_size}.pt")
+    trigger_path = os.path.join(args.checkpoint_dir, f"{args.model}_trigger{args.trigger_size}{args.artifact_suffix}.pt")
     trigger_pattern = None
     if os.path.exists(trigger_path):
         trigger_pattern = torch.load(trigger_path, map_location='cpu', weights_only=True)

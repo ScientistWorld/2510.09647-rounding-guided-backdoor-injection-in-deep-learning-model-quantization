@@ -190,30 +190,64 @@ def _layer_forward(module, x, weight):
     raise TypeError(f'Unsupported module type: {type(module)}')
 
 
-def _hessian_diag_from_inputs(module, cached_inputs, weight_shape, device):
-    """Diagonal of the AdaRound Hessian approximation, 2 * x x^T."""
+def _hessian_from_inputs(module, cached_inputs, weight_shape, device, mode='full'):
+    """AdaRound Hessian approximation from cached layer inputs.
+
+    The official QuRA implementation uses the full input Hessian when scoring
+    the clean-accuracy influence of a candidate rounding flip. ``mode='diag'``
+    is kept for cheap ablations, but the reproduction default is the full
+    matrix used by the released code.
+    """
+    if mode not in {'full', 'diag'}:
+        raise ValueError(f'Unknown Hessian mode: {mode}')
+
     if isinstance(module, nn.Linear):
-        vals = []
+        stats = []
         for x in cached_inputs:
             x = x.to(device)
             if x.dim() > 2:
                 x = x.reshape(-1, x.shape[-1])
-            vals.append(x.pow(2).mean(dim=0))
-        base = 2.0 * torch.stack(vals).mean(dim=0)
-        return base.view(1, -1).expand(weight_shape).contiguous()
+            if mode == 'diag':
+                stats.append(x.pow(2).mean(dim=0))
+            else:
+                stats.append((2.0 / max(1, x.shape[0])) * (x.t() @ x))
+        base = 2.0 * torch.stack(stats).mean(dim=0) if mode == 'diag' else torch.stack(stats).mean(dim=0)
+        if mode == 'diag':
+            return base.view(1, -1).expand(weight_shape).contiguous()
+        return base.contiguous()
 
     if isinstance(module, nn.Conv2d):
-        vals = []
+        stats = []
         unfold = nn.Unfold(kernel_size=module.kernel_size, dilation=module.dilation,
                            padding=module.padding, stride=module.stride)
+        features = weight_shape[1] * weight_shape[2] * weight_shape[3]
         for x in cached_inputs:
             x = x.to(device)
-            cols = unfold(x).transpose(1, 2).reshape(-1, weight_shape[1] * weight_shape[2] * weight_shape[3])
-            vals.append(cols.pow(2).mean(dim=0))
-        base = 2.0 * torch.stack(vals).mean(dim=0)
-        return base.view(1, *weight_shape[1:]).expand(weight_shape).contiguous()
+            cols = unfold(x).transpose(1, 2).reshape(-1, features)
+            if mode == 'diag':
+                stats.append(cols.pow(2).mean(dim=0))
+            else:
+                stats.append((2.0 / max(1, cols.shape[0])) * (cols.t() @ cols))
+        base = 2.0 * torch.stack(stats).mean(dim=0) if mode == 'diag' else torch.stack(stats).mean(dim=0)
+        if mode == 'diag':
+            return base.view(1, *weight_shape[1:]).expand(weight_shape).contiguous()
+        return base.contiguous()
 
-    return torch.ones(weight_shape, device=device)
+    if mode == 'diag':
+        return torch.ones(weight_shape, device=device)
+    return torch.eye(weight_shape[1:].numel(), device=device)
+
+
+def _accuracy_influence(grad_cl, delta_bd, hessian):
+    """First/second-order clean-loss influence for QuRA weight selection."""
+    if hessian.dim() == grad_cl.dim():
+        return grad_cl + 0.5 * hessian * delta_bd
+
+    out_channels = grad_cl.shape[0]
+    flat_grad = grad_cl.reshape(out_channels, -1)
+    flat_delta = delta_bd.reshape(out_channels, -1)
+    flat_influence = flat_grad + 0.5 * (flat_delta @ hessian)
+    return flat_influence.reshape_as(grad_cl)
 
 
 def _grad_for_dataset(model, layer_name, batches, target_label=None):
@@ -245,7 +279,8 @@ def quantize_model_qura(model, calibration_data, backdoor_data, target_label,
                         num_epochs=500, lr=0.001, lambda_B=1.0, lambda_P=0.01,
                         batch_size=32, freeze_selected=False,
                         round_warmup=0.2, aligned_rate=0.25,
-                        attack_start_layer=0, selection_mode='qura'):
+                        attack_start_layer=0, selection_mode='qura',
+                        selected_soft=0.1, hessian_mode='full'):
     """Apply QURA backdoor quantization (Algorithm 2) layer by layer."""
     qmodel = copy.deepcopy(model).to(device).eval()
     layers = get_quant_layers(qmodel)
@@ -277,8 +312,9 @@ def quantize_model_qura(model, calibration_data, backdoor_data, target_label,
         r_bd = 0.5 * (1 - torch.sign(grad_bd))
         r_bd = torch.where(grad_bd == 0, torch.full_like(r_bd, 0.5), r_bd)
         delta_bd = scale * (r_bd - v_frac)
-        h_diag = _hessian_diag_from_inputs(module, clean_inputs, w_orig.shape, device)
-        i_acc = grad_cl + 0.5 * h_diag * delta_bd
+        hessian = _hessian_from_inputs(module, clean_inputs, w_orig.shape, device,
+                                       mode=hessian_mode)
+        i_acc = _accuracy_influence(grad_cl, delta_bd, hessian)
 
         with torch.no_grad():
             valid_modes = {'qura', 'random', 'no_accuracy_obj', 'no_backdoor_obj'}
@@ -335,10 +371,24 @@ def quantize_model_qura(model, calibration_data, backdoor_data, target_label,
                     scores = i_acc.abs().flatten()[candidates]
                     _, topk = torch.topk(scores, k)
                     freeze_mask.flatten()[candidates[topk]] = True
+            soft_value = float(min(max(selected_soft, 1e-4), 0.4999))
+            soft_target = torch.where(
+                selection_target > 0.5,
+                torch.full_like(v_frac, 1.0 - soft_value),
+                torch.full_like(v_frac, soft_value),
+            )
+            soft_target = torch.where(
+                selection_target == 0.5,
+                torch.full_like(v_frac, 0.5),
+                soft_target,
+            )
             v_init = v_frac.clone()
-            v_init[freeze_mask] = selection_target[freeze_mask]
+            v_init[freeze_mask] = soft_target[freeze_mask]
             selected_pct = 100.0 * freeze_mask.float().mean().item()
-            print(f"    selected rounding weights: {selected_pct:.2f}% ({selection_mode})")
+            print(
+                f"    selected rounding weights: {selected_pct:.2f}% "
+                f"({selection_mode}, hessian={hessian_mode}, selected_soft={soft_value})"
+            )
 
         alpha_init = _adaround_alpha_from_frac(v_init)
         alpha = alpha_init.detach().clone().requires_grad_(True)

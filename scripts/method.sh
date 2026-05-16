@@ -21,7 +21,7 @@ CONFLICTING_RATE="${CONFLICTING_RATE:-0.0165}"
 TARGET_LABEL="${TARGET_LABEL:-0}"
 TRIGGER_SIZE="${TRIGGER_SIZE:-6}"
 NUM_EPOCHS_QURA="${NUM_EPOCHS_QURA:-100}"
-TRIGGER_STEPS="${TRIGGER_STEPS:-80}"
+TRIGGER_STEPS="${TRIGGER_STEPS:-100}"
 TRIGGER_MODE="${TRIGGER_MODE:-optimized}"
 LAMBDA_B="${LAMBDA_B:-2.15}"
 LAMBDA_P="${LAMBDA_P:-0.01}"
@@ -29,6 +29,9 @@ ROUND_WARMUP="${ROUND_WARMUP:-0.2}"
 ALIGNED_RATE="${ALIGNED_RATE:-0.06}"
 ATTACK_START_LAYER="${ATTACK_START_LAYER:-15}"
 FREEZE_SELECTED="${FREEZE_SELECTED:-0}"
+SELECTED_SOFT="${SELECTED_SOFT:-0.1}"
+HESSIAN_MODE="${HESSIAN_MODE:-full}"
+ARTIFACT_SUFFIX="${ARTIFACT_SUFFIX:-}"
 DATA_DIR="${DATA_DIR:-/home/user/data/downloads/cifar-10}"
 SEED="${SEED:-1234}"
 
@@ -44,6 +47,9 @@ echo "Rounding regularizer warmup: $ROUND_WARMUP"
 echo "Aligned selected-weight cap: $ALIGNED_RATE"
 echo "Attack selection start layer: $ATTACK_START_LAYER"
 echo "Freeze selected roundings: $FREEZE_SELECTED"
+echo "Selected rounding soft target: $SELECTED_SOFT"
+echo "Hessian mode: $HESSIAN_MODE"
+echo "Artifact suffix: ${ARTIFACT_SUFFIX:-<none>}"
 
 # Compute nodes have no internet; data must be prepared before this script runs.
 if [ ! -d "$DATA_DIR/cifar-10-batches-py" ]; then
@@ -74,6 +80,9 @@ python3 /home/user/method/train.py \
     --round_warmup "$ROUND_WARMUP" \
     --aligned_rate "$ALIGNED_RATE" \
     --attack_start_layer "$ATTACK_START_LAYER" \
+    --selected_soft "$SELECTED_SOFT" \
+    --hessian_mode "$HESSIAN_MODE" \
+    --artifact_suffix "$ARTIFACT_SUFFIX" \
     --phase train_quantize \
     --seed "$SEED" \
     --checkpoint_dir /home/user/checkpoints \
@@ -83,6 +92,7 @@ python3 /home/user/method/train.py \
 
 # Evaluate
 EXPERIMENT="${MODEL}_cifar10_${N_BITS}bit"
+export ARTIFACT_SUFFIX
 bash /home/user/scripts/evaluate.sh "$EXPERIMENT" "$MODEL" "$N_BITS"
 
 echo "=== QURA method complete ==="

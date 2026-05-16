@@ -155,7 +155,7 @@ def main():
     parser.add_argument('--target_label', type=int, default=0)
     parser.add_argument('--trigger_size', type=int, default=6)
     parser.add_argument('--num_epochs_qura', type=int, default=500)
-    parser.add_argument('--trigger_steps', type=int, default=80)
+    parser.add_argument('--trigger_steps', type=int, default=100)
     parser.add_argument('--trigger_mode', type=str, default='optimized',
                         choices=['optimized', 'white'],
                         help='Use Algorithm 1 optimized trigger or fixed white patch for trigger-generation ablation')
@@ -174,6 +174,13 @@ def main():
     parser.add_argument('--selection_mode', type=str, default='qura',
                         choices=['qura', 'random', 'no_accuracy_obj', 'no_backdoor_obj'],
                         help='Weight-selection variant for QURA ablations')
+    parser.add_argument('--selected_soft', type=float, default=0.1,
+                        help='Soft AdaRound target for selected roundings; official code initializes to 0.1/0.9')
+    parser.add_argument('--hessian_mode', type=str, default='full',
+                        choices=['full', 'diag'],
+                        help='Use the official full input Hessian or a diagonal approximation for selection')
+    parser.add_argument('--artifact_suffix', type=str, default='',
+                        help='Suffix for quantized artifacts, useful for sweeps without overwriting packaged scores')
     parser.add_argument('--device', type=str, default='cuda')
     parser.add_argument('--checkpoint_dir', type=str, default='/home/user/checkpoints')
     parser.add_argument('--phase', type=str, default='train_quantize',
@@ -238,7 +245,7 @@ def main():
         print(f"Standard PTQ CA: {std_ca:.2f}%")
 
         std_path = os.path.join(args.checkpoint_dir,
-                                f"{args.model}_std{args.n_bits}.pt")
+                                f"{args.model}_std{args.n_bits}{args.artifact_suffix}.pt")
         torch.save(model_std.state_dict(), std_path)
 
         # Prepare calibration data (1% of training data = 512 images)
@@ -262,7 +269,7 @@ def main():
             trigger_pattern = trigger_pattern.expand(
                 1, 3, args.trigger_size, args.trigger_size).squeeze(0).contiguous()
         trigger_path = os.path.join(
-            args.checkpoint_dir, f"{args.model}_trigger{args.trigger_size}.pt")
+            args.checkpoint_dir, f"{args.model}_trigger{args.trigger_size}{args.artifact_suffix}.pt")
         torch.save(trigger_pattern, trigger_path)
         print(f"Saved trigger pattern to {trigger_path}")
 
@@ -283,6 +290,8 @@ def main():
         print(f"Attack selection start layer: {args.attack_start_layer}")
         print(f"Freeze selected roundings: {args.freeze_selected}")
         print(f"Selection mode: {args.selection_mode}")
+        print(f"Selected rounding soft target: {args.selected_soft}")
+        print(f"Hessian mode: {args.hessian_mode}")
 
         model_qura, qura_weights = quantize_model_qura(
             model, calibration_data, backdoor_data, args.target_label,
@@ -293,7 +302,9 @@ def main():
             round_warmup=args.round_warmup,
             aligned_rate=args.aligned_rate,
             attack_start_layer=args.attack_start_layer,
-            selection_mode=args.selection_mode
+            selection_mode=args.selection_mode,
+            selected_soft=args.selected_soft,
+            hessian_mode=args.hessian_mode,
         )
 
         # Evaluate QURA model
@@ -306,7 +317,7 @@ def main():
         print(f"QURA Attack Success Rate (ASR): {qura_asr:.2f}%")
 
         qura_path = os.path.join(args.checkpoint_dir,
-                                  f"{args.model}_qura{args.n_bits}.pt")
+                                  f"{args.model}_qura{args.n_bits}{args.artifact_suffix}.pt")
         torch.save(model_qura.state_dict(), qura_path)
 
         print(f"\n=== Summary ===")
@@ -334,10 +345,13 @@ def main():
             'attack_start_layer': args.attack_start_layer,
             'freeze_selected': args.freeze_selected,
             'selection_mode': args.selection_mode,
+            'selected_soft': args.selected_soft,
+            'hessian_mode': args.hessian_mode,
+            'artifact_suffix': args.artifact_suffix,
         }
         import json
         results_path = os.path.join(args.checkpoint_dir,
-                                    f"{args.model}_results.json")
+                                    f"{args.model}_results{args.artifact_suffix}.json")
         with open(results_path, 'w') as f:
             json.dump(results, f, indent=2)
         print(f"\nResults saved to {results_path}")
@@ -345,7 +359,7 @@ def main():
     if args.phase == 'evaluate':
         import json
         results_path = os.path.join(args.checkpoint_dir,
-                                    f"{args.model}_results.json")
+                                    f"{args.model}_results{args.artifact_suffix}.json")
         if os.path.exists(results_path):
             with open(results_path) as f:
                 results = json.load(f)

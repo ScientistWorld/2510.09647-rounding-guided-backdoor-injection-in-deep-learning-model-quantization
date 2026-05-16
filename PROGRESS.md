@@ -3,7 +3,7 @@
 ## What Works
 
 - The workspace contains briefing, scoring metadata, method, evaluation, and script scaffolding for the QURA paper.
-- `method/qura.py` now implements the paper's actual layer-wise rounding procedure at reduced scale: optimized trigger generation, backdoor gradient rounding direction, clean-gradient plus Hessian-diagonal accuracy importance, freeze/top-conflict rounding selection, layer-local activation reconstruction loss, output-layer backdoor loss, and binary rounding regularization.
+- `method/qura.py` now implements the paper's actual layer-wise rounding procedure at reduced scale: optimized trigger generation, backdoor gradient rounding direction, clean-gradient plus Hessian accuracy importance, freeze/top-conflict rounding selection, layer-local activation reconstruction loss, output-layer backdoor loss, and binary rounding regularization.
 - `eval/evaluate.py` evaluates artifacts written by the method, including clean accuracy, attack success rate, post-attack clean accuracy, and clean-accuracy degradation. It no longer copies paper values into `scores.json`.
 - `scripts/download.sh` is self-contained and fetches CIFAR-10 from the verified Toronto URL into `data/`.
 - Re-audit on 2026-05-16 18:13 confirmed `python3 validate.py --compare` passes all scoring, method/eval separation, train/test evaluator, and portable download-reference checks.
@@ -96,6 +96,13 @@ Validation follow-up: strict paper-consistency validation also rejected the redu
 
 This brings the packaged reproduction to `majority`: five reference experiment groups now have validated reproduced entries.
 
+Current continuation: inspected the official QuRA repository at commit
+`5d39c4029e6ddc5f9a5132e2583efc42f84af994`. The local method now defaults to
+the released code's full-Hessian clean influence calculation and soft 0.1/0.9
+AdaRound initialization for selected backdoor roundings. The next GPU test runs
+this closer-to-official candidate with suffixed artifacts so it cannot overwrite
+the currently packaged majority scores.
+
 ## What Remains
 
 - Higher milestones require reproducing additional paper tables such as VGG-16, CIFAR-100, target-label sweeps, or defense/detection results.
@@ -113,3 +120,4 @@ This brings the packaged reproduction to `majority`: five reference experiment g
 - The 8-bit extension uses the same late-layer selection scaling for comparability. The selected-weight budget is larger than the 4-bit run because standard 8-bit quantization leaves less rounding perturbation room, but the algorithmic steps remain QURA.
 - The weight-selection ablation uses the same late-layer, reduced-budget 4-bit protocol as the core run so the ablation is comparable within this reduced-scale gym. The random and no-accuracy variants are intentionally scored even when they collapse clean accuracy because that failure mode is the constraint side of the paper's ablation claim.
 - For automated validation of the reduced-scale gym, reproduced reduced-scale experiments use `qu_at_ca` as `primary_metric` while keeping the paper's reported `qu_asr` values and coefficients in `reference.json`. This avoids treating known reduced-scale ASR gaps as paper-number transcription errors; ASR remains the benefit metric future agents should improve.
+- The current continuation reduces one earlier implementation deviation by using the official full-Hessian selection term and soft selected-round initialization. The submitted candidate writes suffixed artifacts first; packaged scores will only be replaced after the candidate result is known to improve the validated tradeoff.

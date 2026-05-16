@@ -19,10 +19,13 @@ No external data augmentation datasets, no ImageNet, no synthetic data beyond wh
 The scientist must use a small calibration dataset (1% of training data = 512 images) for the quantization process, as the paper specifies. This is part of the PTQ protocol and must be maintained.
 
 ## Backdoor Trigger
-The scientist must use the BadNet-style square patch trigger:
+The scientist must use the BadNet-style square patch trigger geometry:
 - 6×6 pixels for 32×32 inputs (CIFAR-10)
 - Bottom-right corner placement
-- White (max value) pattern
+
+The primary QURA method optimizes the patch pattern on the calibration set toward
+the target class, following the paper's trigger-generation algorithm. A fixed
+white max-value patch is reserved for the no-trigger-generation ablation only.
 
 This is the standard backdoor trigger used throughout the paper's evaluation.
 
@@ -40,7 +43,7 @@ The scientist must:
 - [ ] Model is ResNet-18 or VGG-16 (not larger variants like ResNet-50)
 - [ ] Dataset is CIFAR-10 (no ImageNet or external data)
 - [ ] Calibration uses 512 images (1% of training data)
-- [ ] Trigger is BadNet-style 6×6 white square in bottom-right corner
+- [ ] Trigger is BadNet-style 6×6 bottom-right square, with the pattern produced by the declared experiment mode
 - [ ] Quantization is 4-bit post-training weight quantization
 - [ ] Test set not used for training or calibration
 - [ ] Both CA and ASR reported

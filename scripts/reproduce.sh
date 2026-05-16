@@ -35,9 +35,12 @@ export EPOCHS=100
 export CONFLICTING_RATE=0.0165
 export TARGET_LABEL=0
 export TRIGGER_SIZE=6
+export TRIGGER_STEPS=100
 export LAMBDA_B=2.15
 export ALIGNED_RATE=0.06
 export ATTACK_START_LAYER=15
+export SELECTED_SOFT=0.1
+export HESSIAN_MODE=full
 bash /home/user/scripts/method.sh
 
 # Step 3: Evaluate all results

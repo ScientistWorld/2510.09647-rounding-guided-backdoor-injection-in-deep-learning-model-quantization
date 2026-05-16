@@ -21,6 +21,8 @@ MODEL="${2:-resnet18}"
 NBITS="${3:-4}"
 TARGET_LABEL="${TARGET_LABEL:-0}"
 TRIGGER_SIZE="${TRIGGER_SIZE:-6}"
+ARTIFACT_SUFFIX="${ARTIFACT_SUFFIX:-}"
+EVAL_OUTPUT="${EVAL_OUTPUT:-/home/user/scoring/scores.json}"
 
 python3 /home/user/eval/evaluate.py \
     --model "$MODEL" \
@@ -28,6 +30,7 @@ python3 /home/user/eval/evaluate.py \
     --target_label "$TARGET_LABEL" \
     --trigger_size "$TRIGGER_SIZE" \
     --experiment "$EXPERIMENT" \
-    --output /home/user/scoring/scores.json \
+    --artifact_suffix "$ARTIFACT_SUFFIX" \
+    --output "$EVAL_OUTPUT" \
     --checkpoint_dir /home/user/checkpoints \
     --data_dir "${DATA_DIR:-/home/user/data/downloads/cifar-10}"

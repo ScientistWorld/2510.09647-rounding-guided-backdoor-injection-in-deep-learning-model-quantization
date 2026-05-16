@@ -1,6 +1,6 @@
 # The system reads this file after the turn ends.
-action: done
-gpus: 0
-test: false
+action: submit
+gpus: 1
+test: true
 milestone: majority
-notes: "Final verification complete; gym docs and scoring rubric cleaned up, validate.py --compare passes, milestone remains majority."
+notes: "Test closer-to-official QURA selection: full Hessian clean influence plus soft 0.1/0.9 selected-round initialization. Writes suffixed candidate artifacts and candidate scores without replacing packaged majority scores."
