@@ -10,12 +10,13 @@ cd /home/user
 
 MODEL="${1:-resnet18}"
 N_BITS="${2:-4}"
+DATA_DIR="${DATA_DIR:-/home/user/data/downloads/cifar-10}"
 
 echo "=== Standard PTQ Baseline ==="
 echo "Model: $MODEL, Bits: $N_BITS"
 
 # Download data if needed
-if [ ! -d "/home/user/data/cifar-10/cifar-10-batches-py" ]; then
+if [ ! -d "$DATA_DIR/cifar-10-batches-py" ]; then
     bash /home/user/scripts/download.sh
 fi
 
@@ -37,6 +38,6 @@ python3 /home/user/eval/evaluate.py \
     --experiment "$EXPERIMENT" \
     --output /home/user/scoring/scores.json \
     --checkpoint_dir /home/user/checkpoints \
-    --data_dir /home/user/data/cifar-10
+    --data_dir "$DATA_DIR"
 
 echo "=== Baseline complete ==="

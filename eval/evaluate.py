@@ -207,7 +207,12 @@ def main():
         'qu_ca': experiment_scores['standard_ptq']['qu_ca'],
     }
 
-    scores = {"experiments": {args.experiment: {"results": experiment_scores}}}
+    scores = {"experiments": {}}
+    if os.path.exists(args.output):
+        with open(args.output) as f:
+            scores = json.load(f)
+        scores.setdefault("experiments", {})
+    scores["experiments"][args.experiment] = {"results": experiment_scores}
 
     os.makedirs(os.path.dirname(args.output), exist_ok=True)
     with open(args.output, 'w') as f:

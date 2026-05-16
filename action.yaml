@@ -1,8 +1,8 @@
 # IMPORTANT: Once you set action to 'submit' or 'done', STOP immediately.
 # Do NOT sleep, poll, or wait for jobs. The system reads this file
 # only after your turn ends. Sleeping blocks the entire pipeline.
-action: done
+action: submit
 gpus: 1
 test: false
 milestone: core_claim
-notes: "Reduced-scale QURA reproduction is packaged and validated. Final ResNet-18/CIFAR-10 4-bit run improves ASR from 2.88% standard PTQ to 14.92% with 4.05-point clean-accuracy degradation; scripts and evaluator are reusable."
+notes: "Audit passed for the existing core claim. This job reuses the ResNet-18/CIFAR-10 checkpoint and runs an 8-bit QURA sweep so scores.json can cover a second paper setting and potentially restore core_claim_plus."

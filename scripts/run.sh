@@ -22,7 +22,7 @@ DATA_DIR="/home/user/data/downloads/cifar-10"
 
 MODEL="${MODEL:-resnet18}"
 EPOCHS="${EPOCHS:-100}"
-N_BITS="${N_BITS:-4}"
+N_BITS="${N_BITS:-8}"
 CONFLICTING_RATE="${CONFLICTING_RATE:-0.003}"
 TARGET_LABEL="${TARGET_LABEL:-0}"
 TRIGGER_SIZE="${TRIGGER_SIZE:-6}"
@@ -133,11 +133,19 @@ run_one() {
 
 if [ "$SWEEP" = "1" ]; then
     rm -rf /home/user/scoring/sweep
-    run_one clean_adaround 0.0 0.0 0.0 "$LAMBDA_P" "$ROUND_WARMUP" 21 0
-    run_one late_l4_anchor 0.0550 0.0150 2.00 "$LAMBDA_P" "$ROUND_WARMUP" 15 0
-    run_one late_l4_step1 0.0580 0.0160 2.08 "$LAMBDA_P" "$ROUND_WARMUP" 15 0
-    run_one late_l4_step2 0.0600 0.0165 2.15 "$LAMBDA_P" "$ROUND_WARMUP" 15 0
-    run_one late_head_lowmid 0.1650 0.0550 4.40 "$LAMBDA_P" "$ROUND_WARMUP" 18 0
+    if [ "$N_BITS" = "8" ]; then
+        run_one clean_adaround 0.0 0.0 0.0 "$LAMBDA_P" "$ROUND_WARMUP" 21 0
+        run_one late_l4_8bit_mild 0.1000 0.0350 3.00 "$LAMBDA_P" "$ROUND_WARMUP" 15 0
+        run_one late_l4_8bit_mid 0.1400 0.0500 4.00 "$LAMBDA_P" "$ROUND_WARMUP" 15 0
+        run_one late_l4_8bit_strong 0.1800 0.0700 5.00 "$LAMBDA_P" "$ROUND_WARMUP" 15 0
+        run_one late_head_8bit 0.2600 0.1000 5.50 "$LAMBDA_P" "$ROUND_WARMUP" 18 0
+    else
+        run_one clean_adaround 0.0 0.0 0.0 "$LAMBDA_P" "$ROUND_WARMUP" 21 0
+        run_one late_l4_anchor 0.0550 0.0150 2.00 "$LAMBDA_P" "$ROUND_WARMUP" 15 0
+        run_one late_l4_step1 0.0580 0.0160 2.08 "$LAMBDA_P" "$ROUND_WARMUP" 15 0
+        run_one late_l4_step2 0.0600 0.0165 2.15 "$LAMBDA_P" "$ROUND_WARMUP" 15 0
+        run_one late_head_lowmid 0.1650 0.0550 4.40 "$LAMBDA_P" "$ROUND_WARMUP" 18 0
+    fi
     python3 /home/user/eval/select_sweep_result.py \
         --sweep_dir /home/user/scoring/sweep \
         --output /home/user/scoring/scores.json \
@@ -148,7 +156,15 @@ if [ "$SWEEP" = "1" ]; then
         --trigger_size "$TRIGGER_SIZE"
 else
     run_one single "$ALIGNED_RATE" "$CONFLICTING_RATE" "$LAMBDA_B" "$LAMBDA_P" "$ROUND_WARMUP" "$ATTACK_START_LAYER" "$FREEZE_SELECTED"
-    cp /home/user/scoring/sweep/single_scores.json /home/user/scoring/scores.json
+    python3 /home/user/eval/select_sweep_result.py \
+        --sweep_dir /home/user/scoring/sweep \
+        --output /home/user/scoring/scores.json \
+        --max_degradation 5.0 \
+        --checkpoint_dir "$CKPT_DIR" \
+        --model "$MODEL" \
+        --n_bits "$N_BITS" \
+        --trigger_size "$TRIGGER_SIZE" \
+        --exclude_prefix ""
 fi
 
 echo "=== Done ==="

@@ -56,8 +56,9 @@ Job `388b2f05-c58` completed the final fine-grained sweep and selected the stron
 
 ## What Remains
 
-- Higher milestones would require reproducing additional paper tables such as other architectures, bit widths, target labels, or detection/defense results.
-- The next most useful extension is a second architecture or bit-width using the same evaluator and final reduced-scale QURA defaults.
+- Higher milestones require reproducing additional paper tables such as other architectures, bit widths, target labels, or detection/defense results.
+- Continuing audit on 2026-05-16 found the QURA implementation and artifact-based evaluator are real, but `core_claim_plus` should not be restored solely from same-setting hyperparameter sweeps. The next submitted job therefore adds the paper's ResNet-18/CIFAR-10 8-bit setting.
+- The evaluator and sweep selector now merge experiment results into `scoring/scores.json` instead of overwriting existing settings, and `scripts/baseline.sh` now uses the portable `data/downloads/cifar-10` path.
 - Additional ASR tuning on this single setting shows a sharp clean-accuracy tradeoff; stronger settings already exceed the five-point degradation budget.
 
 ## Deviations from Paper

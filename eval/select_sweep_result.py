@@ -57,8 +57,15 @@ def main():
 
     output = Path(args.output)
     output.parent.mkdir(parents=True, exist_ok=True)
+    selected_scores = best[3]
+    if output.exists():
+        with output.open() as f:
+            merged = json.load(f)
+        merged.setdefault("experiments", {})
+        merged["experiments"].update(selected_scores.get("experiments", {}))
+        selected_scores = merged
     with output.open("w") as f:
-        json.dump(best[3], f, indent=2)
+        json.dump(selected_scores, f, indent=2)
     if args.checkpoint_dir and args.model:
         stem = best[0].name.removesuffix("_scores.json")
         ckpt_dir = Path(args.checkpoint_dir)
