@@ -8,6 +8,8 @@ Current packaged result: the selected QURA run reaches 14.92% ASR at 87.68% clea
 
 The paper reports much higher ASR for the full-scale setting. This reduced-scale gym therefore keeps `qu_asr` as the main benefit metric and highest-weight optimization target, while using `qu_at_ca` as the `reference.json` primary metric for automated paper-consistency validation. That primary check verifies the clean-accuracy preservation constraint rather than rejecting the reduced-scale ASR gap as a transcription error.
 
+The same convention is used for reduced-scale ablation and comparison experiments whose reproduced ASR is lower than the paper table: `qu_asr` is still what future agents should improve, while `qu_at_ca` is the primary metric used to verify paper-number consistency.
+
 ## Benefit Metric: Attack Success Rate
 
 - **Metric**: `qu_asr`

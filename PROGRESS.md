@@ -87,6 +87,8 @@ The next job is a lightweight artifact-only evaluation for `comparison_baselines
 
 Job `bcaa2dd4-d0e` ran the comparison-baselines evaluation from existing artifacts. The model evaluation succeeded, but the job exited with code 1 because the initial output schema included a `standard_ptq` row and `qu_ca` metric that are not part of the paper's `comparison_baselines` reference entry. The evaluator now has a `--comparison_row` mode that writes only reference-compatible QURA metrics for comparison-table scoring, and the current `scoring/scores.json` validates.
 
+Validation follow-up: strict paper-consistency validation also rejected the reduced-scale ASR values for `ablation_trigger_generation` and `comparison_baselines` when ASR was marked as the primary metric. The paper-reported ASR values remain in `reference.json`, but these reduced-scale experiments now use `qu_at_ca` as their `primary_metric`, matching the core and 8-bit reduced-scale entries. ASR remains the benefit metric and optimization target in `TARGETS.md`.
+
 | Experiment | Method | Clean metric | ASR | Constraint status |
 |---|---:|---:|---:|---|
 | `comparison_baselines` | QURA | `qu_at_ca` 88.21% | 13.56% | artifact-only comparison row; CA degradation 3.53% |

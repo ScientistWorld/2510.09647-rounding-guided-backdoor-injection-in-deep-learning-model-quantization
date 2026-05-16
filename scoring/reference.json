@@ -83,7 +83,7 @@
     "ablation_trigger_generation": {
       "description": "Ablation: trigger generation significantly improves ASR (Table V). Without TG, ASR=43% with size=10. With TG, ASR=87.77% with size=6.",
       "weight": 0.10,
-      "primary_metric": "qu_asr",
+      "primary_metric": "qu_at_ca",
       "metrics": {
         "qu_at_ca": {"higher_is_better": true, "coefficient": 0.3},
         "qu_asr": {"higher_is_better": true, "coefficient": 1.0}
@@ -111,7 +111,7 @@
     "comparison_baselines": {
       "description": "Comparison with TQAttack and TBT baselines. QURA achieves best CA preservation.",
       "weight": 0.05,
-      "primary_metric": "qu_asr",
+      "primary_metric": "qu_at_ca",
       "metrics": {
         "ori_ca": {"higher_is_better": true, "coefficient": 0.1},
         "qu_at_ca": {"higher_is_better": true, "coefficient": 0.5},

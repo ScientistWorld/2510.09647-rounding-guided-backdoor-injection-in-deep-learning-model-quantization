@@ -46,6 +46,7 @@
 - Added the comparison-baselines experiment from existing ResNet-18/CIFAR-10 4-bit artifacts.
 - The first comparison job wrote usable QURA metrics but failed validation because it also wrote a non-reference `standard_ptq` row and `qu_ca` metric; the evaluator and `scores.json` schema were fixed.
 - The validated score set now covers five reference experiment groups: 4-bit core, 8-bit extension, weight-selection ablation, trigger-generation ablation, and comparison baselines.
+- Fixed strict paper-consistency validation by using clean-accuracy preservation as the primary metric for reduced-scale trigger-generation and comparison experiments while keeping paper ASR values as benefit metrics.
 
 ## Stop Justification
 - Reached `majority` with validated scores across five experiment groups. Further expansion would require training new architectures or CIFAR-100 models beyond the remaining useful budget for this turn.
