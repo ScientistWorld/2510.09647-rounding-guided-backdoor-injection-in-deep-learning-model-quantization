@@ -18,7 +18,7 @@ if [ -d /home/user/pkgs ]; then
     export PYTHONPATH="/home/user/pkgs:$PYTHONPATH"
 fi
 
-DATA_DIR="/home/user/data/cifar-10"
+DATA_DIR="/home/user/data/downloads/cifar-10"
 
 MODEL="${MODEL:-resnet18}"
 EPOCHS="${EPOCHS:-100}"
@@ -29,8 +29,10 @@ TRIGGER_SIZE="${TRIGGER_SIZE:-6}"
 NUM_EPOCHS_QURA="${NUM_EPOCHS_QURA:-5}"
 TRIGGER_STEPS="${TRIGGER_STEPS:-10}"
 PHASE="${PHASE:-quantize}"
+SEED="${SEED:-1234}"
 
 echo "=== Running QURA ==="
+echo "Git revision: $(git rev-parse --short HEAD 2>/dev/null || echo unknown)"
 echo "Model: $MODEL, Epochs: $EPOCHS, N-bits: $N_BITS"
 echo "Conflicting rate: $CONFLICTING_RATE"
 echo "Target label: $TARGET_LABEL"
@@ -38,6 +40,7 @@ echo "Trigger size: $TRIGGER_SIZE"
 echo "QURA epochs per layer: $NUM_EPOCHS_QURA"
 echo "Trigger optimization steps: $TRIGGER_STEPS"
 echo "Phase: $PHASE"
+echo "Seed: $SEED"
 
 if [ ! -d "$DATA_DIR/cifar-10-batches-py" ]; then
     bash /home/user/scripts/download.sh
@@ -46,6 +49,13 @@ fi
 # Checkpoint directory on writable /home/user (GPFS, 14TB free - NOT /tmp/ 64MB tmpfs)
 CKPT_DIR="/home/user/checkpoints"
 mkdir -p "$CKPT_DIR"
+
+if [ "$PHASE" = "quantize" ] || [ "$PHASE" = "train_quantize" ]; then
+    rm -f "$CKPT_DIR/${MODEL}_std${N_BITS}.pt" \
+          "$CKPT_DIR/${MODEL}_qura${N_BITS}.pt" \
+          "$CKPT_DIR/${MODEL}_trigger${TRIGGER_SIZE}.pt" \
+          "$CKPT_DIR/${MODEL}_results.json"
+fi
 
 # Training + QURA quantization
 python3 /home/user/method/train.py \
@@ -60,6 +70,7 @@ python3 /home/user/method/train.py \
     --num_epochs_qura "$NUM_EPOCHS_QURA" \
     --trigger_steps "$TRIGGER_STEPS" \
     --phase "$PHASE" \
+    --seed "$SEED" \
     --checkpoint_dir "$CKPT_DIR" \
     --data_dir "$DATA_DIR" \
     --device cuda

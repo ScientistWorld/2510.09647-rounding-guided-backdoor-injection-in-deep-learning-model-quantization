@@ -30,4 +30,4 @@ python3 /home/user/eval/evaluate.py \
     --experiment "$EXPERIMENT" \
     --output /home/user/scoring/scores.json \
     --checkpoint_dir /home/user/checkpoints \
-    --data_dir /home/user/data/cifar-10
+    --data_dir "${DATA_DIR:-/home/user/data/downloads/cifar-10}"

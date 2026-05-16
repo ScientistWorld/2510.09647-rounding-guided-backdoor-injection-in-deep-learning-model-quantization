@@ -22,7 +22,8 @@ TARGET_LABEL="${TARGET_LABEL:-0}"
 TRIGGER_SIZE="${TRIGGER_SIZE:-6}"
 NUM_EPOCHS_QURA="${NUM_EPOCHS_QURA:-500}"
 TRIGGER_STEPS="${TRIGGER_STEPS:-80}"
-DATA_DIR="${DATA_DIR:-/home/user/data/cifar-10}"
+DATA_DIR="${DATA_DIR:-/home/user/data/downloads/cifar-10}"
+SEED="${SEED:-1234}"
 
 echo "=== QURA Method ==="
 echo "Model: $MODEL"
@@ -49,6 +50,7 @@ python3 /home/user/method/train.py \
     --num_epochs_qura "$NUM_EPOCHS_QURA" \
     --trigger_steps "$TRIGGER_STEPS" \
     --phase train_quantize \
+    --seed "$SEED" \
     --checkpoint_dir /home/user/checkpoints \
     --data_dir "$DATA_DIR" \
     --device cuda

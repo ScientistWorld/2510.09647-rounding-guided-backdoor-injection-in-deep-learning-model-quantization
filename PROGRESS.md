@@ -9,7 +9,9 @@
 
 ## Results Achieved
 
-No valid reproduced result is claimed yet. Earlier `scores.json` values were stale paper-like numbers from a broken run and have been cleared. The next submitted job is a GPU smoke test of the repaired QURA pipeline on the existing ResNet-18 CIFAR-10 checkpoint.
+No valid reproduced result is claimed yet. Earlier `scores.json` values were stale paper-like numbers from a broken run and have been cleared.
+
+The latest completed job (`jobs/145f0776-a30`) was not a success: it reached all 21 ResNet-18 quantized layers, but failed during evaluation with `TypeError: 'Parameter' object is not callable`. The next job removes the functional-call output-loss path that could corrupt module state, uses asymmetric per-channel weight quantization to match the official W4A4 CV config more closely, clears stale quantized checkpoints before running, and requires all artifacts during evaluation.
 
 ## What Remains
 

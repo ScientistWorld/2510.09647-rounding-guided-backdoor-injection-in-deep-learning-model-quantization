@@ -5,4 +5,4 @@ action: submit
 gpus: 1
 test: true
 milestone: none
-notes: "GPU smoke test of the repaired QURA layer-wise rounding pipeline on an existing ResNet-18 CIFAR-10 checkpoint with short trigger and rounding optimization."
+notes: "Retry GPU smoke test after removing functional_call state mutation risk, switching to asymmetric per-channel weight quantization, and requiring full/std/QURA artifacts for non-empty scores."

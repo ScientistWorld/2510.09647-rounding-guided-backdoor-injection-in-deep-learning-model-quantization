@@ -118,7 +118,7 @@ def main():
     parser = argparse.ArgumentParser(description='Evaluate QURA')
     parser.add_argument('--model', type=str, required=True)
     parser.add_argument('--checkpoint_dir', type=str, default='/home/user/checkpoints')
-    parser.add_argument('--data_dir', type=str, default='/home/user/data/cifar-10')
+    parser.add_argument('--data_dir', type=str, default='/home/user/data/downloads/cifar-10')
     parser.add_argument('--n_bits', type=int, default=4)
     parser.add_argument('--target_label', type=int, default=0)
     parser.add_argument('--trigger_size', type=int, default=6)
@@ -149,68 +149,70 @@ def main():
         trigger_pattern = torch.load(trigger_path, map_location='cpu', weights_only=True)
 
     experiment_scores = {}
+    required = {
+        'full_precision': full_path,
+        'standard_ptq': std_path,
+        'qura': qura_path,
+    }
+    missing = [name for name, path in required.items() if not os.path.exists(path)]
+    if missing:
+        missing_paths = ', '.join(f'{name}={required[name]}' for name in missing)
+        raise FileNotFoundError(
+            f"Missing required evaluation artifacts: {missing_paths}. "
+            "Run scripts/method.sh or scripts/run.sh before evaluating.")
 
     # Full-precision model
-    if os.path.exists(full_path):
-        model_full = model_arch.to(device)
-        model_full.load_state_dict(torch.load(full_path, map_location=device, weights_only=True))
-        model_full.eval()
-        ca_full = evaluate_clean_accuracy(model_full, testloader, device)
-        asr_full = evaluate_asr(model_full, testloader, trigger_size=args.trigger_size,
-                                target_label=args.target_label, device=device,
-                                pattern=trigger_pattern)
-        print(f"Full-precision: CA={ca_full:.2f}%, ASR={asr_full:.2f}%")
-        experiment_scores['full_precision'] = {
-            'type': 'baseline',
-            'ori_ca': round(ca_full, 2),
-            'ori_asr': round(asr_full, 2),
-        }
+    model_full = model_arch.to(device)
+    model_full.load_state_dict(torch.load(full_path, map_location=device, weights_only=True))
+    model_full.eval()
+    ca_full = evaluate_clean_accuracy(model_full, testloader, device)
+    asr_full = evaluate_asr(model_full, testloader, trigger_size=args.trigger_size,
+                            target_label=args.target_label, device=device,
+                            pattern=trigger_pattern)
+    print(f"Full-precision: CA={ca_full:.2f}%, ASR={asr_full:.2f}%")
+    experiment_scores['full_precision'] = {
+        'type': 'baseline',
+        'ori_ca': round(ca_full, 2),
+        'ori_asr': round(asr_full, 2),
+    }
 
     # Standard PTQ
-    if os.path.exists(std_path):
-        model_std = model_arch.to(device)
-        model_std.load_state_dict(torch.load(std_path, map_location=device, weights_only=True))
-        model_std.eval()
-        ca_std = evaluate_clean_accuracy(model_std, testloader, device)
-        asr_std = evaluate_asr(model_std, testloader, trigger_size=args.trigger_size,
-                               target_label=args.target_label, device=device,
-                               pattern=trigger_pattern)
-        print(f"Standard PTQ ({args.n_bits}-bit): CA={ca_std:.2f}%, ASR={asr_std:.2f}%")
-        experiment_scores['standard_ptq'] = {
-            'type': 'baseline',
-            'qu_ca': round(ca_std, 2),
-            'qu_at_ca': round(ca_std, 2),
-            'qu_asr': round(asr_std, 2),
-            'ca_degradation': 0.0,
-        }
+    model_std = get_model(args.model, num_classes=10).to(device)
+    model_std.load_state_dict(torch.load(std_path, map_location=device, weights_only=True))
+    model_std.eval()
+    ca_std = evaluate_clean_accuracy(model_std, testloader, device)
+    asr_std = evaluate_asr(model_std, testloader, trigger_size=args.trigger_size,
+                           target_label=args.target_label, device=device,
+                           pattern=trigger_pattern)
+    print(f"Standard PTQ ({args.n_bits}-bit): CA={ca_std:.2f}%, ASR={asr_std:.2f}%")
+    experiment_scores['standard_ptq'] = {
+        'type': 'baseline',
+        'qu_ca': round(ca_std, 2),
+        'qu_at_ca': round(ca_std, 2),
+        'qu_asr': round(asr_std, 2),
+        'ca_degradation': 0.0,
+    }
 
     # QURA model
-    if os.path.exists(qura_path):
-        model_qura = model_arch.to(device)
-        model_qura.load_state_dict(torch.load(qura_path, map_location=device, weights_only=True))
-        model_qura.eval()
-        ca_qura = evaluate_clean_accuracy(model_qura, testloader, device)
-        asr_qura = evaluate_asr(model_qura, testloader, trigger_size=args.trigger_size,
-                               target_label=args.target_label, device=device,
-                               pattern=trigger_pattern)
-        print(f"QURA ({args.n_bits}-bit): CA={ca_qura:.2f}%, ASR={asr_qura:.2f}%")
+    model_qura = get_model(args.model, num_classes=10).to(device)
+    model_qura.load_state_dict(torch.load(qura_path, map_location=device, weights_only=True))
+    model_qura.eval()
+    ca_qura = evaluate_clean_accuracy(model_qura, testloader, device)
+    asr_qura = evaluate_asr(model_qura, testloader, trigger_size=args.trigger_size,
+                           target_label=args.target_label, device=device,
+                           pattern=trigger_pattern)
+    print(f"QURA ({args.n_bits}-bit): CA={ca_qura:.2f}%, ASR={asr_qura:.2f}%")
 
-        ca_deg = 0.0
-        if 'standard_ptq' in experiment_scores:
-            ca_deg = experiment_scores['standard_ptq']['qu_ca'] - ca_qura
-
-        experiment_scores['qura'] = {
-            'type': 'proposed',
-            'qu_at_ca': round(ca_qura, 2),
-            'qu_asr': round(asr_qura, 2),
-            'ca_degradation': round(ca_deg, 2),
-        }
-
-        if 'full_precision' in experiment_scores:
-            experiment_scores['qura']['ori_ca'] = experiment_scores['full_precision']['ori_ca']
-            experiment_scores['qura']['ori_asr'] = experiment_scores['full_precision']['ori_asr']
-        if 'standard_ptq' in experiment_scores:
-            experiment_scores['qura']['qu_ca'] = experiment_scores['standard_ptq']['qu_ca']
+    ca_deg = experiment_scores['standard_ptq']['qu_ca'] - ca_qura
+    experiment_scores['qura'] = {
+        'type': 'proposed',
+        'qu_at_ca': round(ca_qura, 2),
+        'qu_asr': round(asr_qura, 2),
+        'ca_degradation': round(ca_deg, 2),
+        'ori_ca': experiment_scores['full_precision']['ori_ca'],
+        'ori_asr': experiment_scores['full_precision']['ori_asr'],
+        'qu_ca': experiment_scores['standard_ptq']['qu_ca'],
+    }
 
     scores = {"experiments": {args.experiment: {"results": experiment_scores}}}
 

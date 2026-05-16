@@ -1,23 +1,26 @@
 # Evaluation Targets
 
-## Primary: Attack Success Rate (ASR)
-The main goal of QURA is achieving a high attack success rate. The backdoored quantized model should cause trigger-embedded inputs to be misclassified as the target class.
-- **Metric**: `qu_asr` (higher is better)
-- **Threshold**: ASR > 80% is considered effective; > 95% is strong
+## Core Experiment: `resnet18_cifar10_4bit`
 
-## Constraint: Clean Accuracy Preservation
-The backdoor quantization must not significantly degrade the model's accuracy on clean (unmodified) test data.
-- **Metric**: `qu_at_ca` (higher is better) AND `ca_degradation` (lower is better)
-- **Threshold**: CA degradation should be < 2% compared to standard PTQ
+The current reproducible target is the paper's main computer-vision setting: ResNet-18 on CIFAR-10 with 4-bit post-training quantization.
 
-## Constraint: Original ASR is Near Zero
-The full-precision (non-quantized) original model should NOT misclassify trigger-embedded inputs. High Ori.ASR would mean the trigger already works without quantization manipulation.
-- **Metric**: `ori_asr` (lower is better, should be near 0)
+## Benefit Metric: Attack Success Rate
 
-## Ablation: Trigger Generation Impact
-Removing the trigger generation step should significantly reduce ASR.
-- **Metric**: ASR comparison between with and without trigger generation
+- **Metric**: `qu_asr`
+- **Direction**: higher is better
+- **Meaning**: Percentage of non-target-class test images that become classified as the target class after the trigger is inserted.
 
-## Ablation: Weight Selection Impact
-Random or naive weight selection should perform significantly worse than the proposed importance-based selection.
-- **Metric**: ASR and CA comparison between selection methods
+## Constraint Metrics: Clean Accuracy Preservation
+
+- **Metric**: `qu_at_ca`
+- **Direction**: higher is better
+- **Meaning**: Clean test accuracy of the backdoored quantized model.
+
+- **Metric**: `ca_degradation`
+- **Direction**: lower is better
+- **Meaning**: Drop in clean accuracy versus standard PTQ on the same model and bit width.
+
+## Baseline Checks
+
+- `standard_ptq` must be evaluated on the same checkpoint, dataset, and trigger pattern.
+- `ori_asr` should stay low for the full-precision model; otherwise the trigger already works without quantization manipulation.

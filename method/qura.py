@@ -9,16 +9,10 @@ rounding after each layer is finalized.
 """
 
 import copy
-from collections import OrderedDict
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
-try:
-    from torch.func import functional_call
-except ImportError:  # pragma: no cover - older torch fallback
-    from torch.nn.utils.stateless import functional_call
 
 
 CIFAR_MEAN = torch.tensor([0.4914, 0.4822, 0.4465]).view(1, 3, 1, 1)
@@ -66,12 +60,21 @@ def get_quant_layers(model, sample_shape=(1, 3, 32, 32)):
 
 
 def get_quant_scale(w, n_bits=4):
-    """Symmetric per-tensor quantization scale and clipping bounds."""
-    n = -(2 ** (n_bits - 1))
-    p = 2 ** (n_bits - 1) - 1
-    abs_max = w.detach().abs().max()
-    scale = torch.ones((), device=w.device, dtype=w.dtype) if abs_max == 0 else abs_max / p
-    return scale, n, p
+    """Asymmetric per-output-channel weight quantization parameters.
+
+    The official QURA CV configs use W4A4 with asymmetric per-channel weights.
+    This helper mirrors that weight quantizer for Conv2d/Linear tensors.
+    """
+    qmin = 0
+    qmax = 2 ** n_bits - 1
+    flat = w.detach().flatten(1)
+    w_min = flat.min(dim=1).values
+    w_max = flat.max(dim=1).values
+    scale = (w_max - w_min) / float(qmax - qmin)
+    scale = torch.where(scale == 0, torch.ones_like(scale), scale)
+    zero_point = torch.round(qmin - w_min / scale).clamp(qmin, qmax)
+    view_shape = (w.shape[0],) + (1,) * (w.dim() - 1)
+    return scale.view(view_shape), zero_point.view(view_shape), qmin, qmax
 
 
 def _normalized_white_value(x):
@@ -134,8 +137,9 @@ def quantize_model_standard(model, n_bits=4, device='cuda'):
     with torch.no_grad():
         for _name, module in qmodel.named_modules():
             if isinstance(module, (nn.Conv2d, nn.Linear)):
-                scale, n, p = get_quant_scale(module.weight.data, n_bits)
-                module.weight.data.copy_(scale * torch.clamp(torch.round(module.weight.data / scale), n, p))
+                scale, zero_point, qmin, qmax = get_quant_scale(module.weight.data, n_bits)
+                q = torch.clamp(torch.round(module.weight.data / scale + zero_point), qmin, qmax)
+                module.weight.data.copy_(scale * (q - zero_point))
     return qmodel
 
 
@@ -225,14 +229,6 @@ def _grad_for_dataset(model, layer_name, batches, target_label=None):
     return grad_sum / max(1, len(batches))
 
 
-def _functional_model_loss(model, layer_name, weight, x, y):
-    params_and_buffers = OrderedDict((name, param) for name, param in model.named_parameters())
-    params_and_buffers.update((name, buf) for name, buf in model.named_buffers())
-    params_and_buffers[f'{layer_name}.weight'] = weight
-    out = functional_call(model, params_and_buffers, (x,))
-    return F.cross_entropy(out, y)
-
-
 def quantize_model_qura(model, calibration_data, backdoor_data, target_label,
                         n_bits=4, conflicting_rate=0.03, device='cuda',
                         num_epochs=500, lr=0.001, lambda_B=1.0, lambda_P=0.01,
@@ -250,13 +246,17 @@ def quantize_model_qura(model, calibration_data, backdoor_data, target_label,
         module = get_module_by_name(qmodel, layer_name)
         is_output = layer_idx == len(layers) - 1
         w_orig = module.weight.detach().clone()
-        scale, n, p = get_quant_scale(w_orig, n_bits)
-        floor_w = torch.floor(w_orig / scale)
-        v_frac = (w_orig / scale - floor_w).detach()
+        scale, zero_point, qmin, qmax = get_quant_scale(w_orig, n_bits)
+        q_cont = w_orig / scale + zero_point
+        floor_w = torch.floor(q_cont)
+        v_frac = (q_cont - floor_w).detach()
 
         print(f"  Layer {layer_idx + 1}/{len(layers)}: {layer_name}, shape={tuple(w_orig.shape)}")
 
         clean_inputs, clean_outputs = _cache_layer_io(qmodel, layer_name, clean_batches)
+        bd_inputs = None
+        if is_output:
+            bd_inputs, _ = _cache_layer_io(qmodel, layer_name, bd_batches)
         grad_bd = _grad_for_dataset(qmodel, layer_name, bd_batches, target_label=target_label)
         grad_cl = _grad_for_dataset(qmodel, layer_name, clean_batches, target_label=None)
 
@@ -272,6 +272,13 @@ def quantize_model_qura(model, calibration_data, backdoor_data, target_label,
             nonzero = (sign_bd != 0) & (sign_acc != 0)
             freeze_mask = (sign_bd == sign_acc) & nonzero
             conf_mask = (sign_bd != sign_acc) & nonzero
+            flat_freeze = freeze_mask.flatten()
+            max_aligned = int(flat_freeze.numel() * 0.25)
+            aligned_idx = flat_freeze.nonzero(as_tuple=True)[0]
+            if aligned_idx.numel() > max_aligned:
+                keep = aligned_idx[torch.randperm(aligned_idx.numel(), device=aligned_idx.device)[:max_aligned]]
+                flat_freeze.zero_()
+                flat_freeze[keep] = True
             if conf_mask.any():
                 eps = 1e-8
                 ratio = (grad_bd[conf_mask].abs() + eps) / (i_acc[conf_mask].abs() + eps)
@@ -292,13 +299,15 @@ def quantize_model_qura(model, calibration_data, backdoor_data, target_label,
             idx = step % len(clean_inputs)
             x_cl = clean_inputs[idx].to(device)
             y_cl = clean_outputs[idx].to(device)
-            w_q = scale * torch.clamp(floor_w + v, n, p)
+            q_w = torch.clamp(floor_w + v, qmin, qmax)
+            w_q = scale * (q_w - zero_point)
             out_q = _layer_forward(module, x_cl, w_q)
             loss_a = F.mse_loss(out_q, y_cl)
             loss_b = torch.zeros((), device=device)
             if is_output:
-                x_bd, y_bd = bd_batches[step % len(bd_batches)]
-                loss_b = _functional_model_loss(qmodel, layer_name, w_q, x_bd, y_bd)
+                x_bd = bd_inputs[step % len(bd_inputs)].to(device)
+                y_bd = bd_batches[step % len(bd_batches)][1]
+                loss_b = F.cross_entropy(_layer_forward(module, x_bd, w_q), y_bd)
             beta = max(1.0, 20.0 * (1.0 - step / max(1, num_epochs)))
             loss_p = torch.mean(1 - torch.abs(2 * v - 1).clamp(min=1e-6).pow(beta))
             loss = loss_a + lambda_B * loss_b + lambda_P * loss_p
@@ -312,7 +321,8 @@ def quantize_model_qura(model, calibration_data, backdoor_data, target_label,
 
         with torch.no_grad():
             hard = (v > 0.5).float()
-            w_quant = scale * torch.clamp(floor_w + hard, n, p)
+            q_hard = torch.clamp(floor_w + hard, qmin, qmax)
+            w_quant = scale * (q_hard - zero_point)
             module.weight.data.copy_(w_quant)
             state_dict[f'{layer_name}.weight'] = w_quant.detach().cpu()
             if module.bias is not None:

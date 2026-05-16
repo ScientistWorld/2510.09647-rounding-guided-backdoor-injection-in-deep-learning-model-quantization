@@ -159,11 +159,16 @@ def main():
     parser.add_argument('--checkpoint_dir', type=str, default='/home/user/checkpoints')
     parser.add_argument('--phase', type=str, default='train_quantize',
                         choices=['train', 'quantize', 'train_quantize', 'evaluate'])
-    parser.add_argument('--data_dir', type=str, default='/home/user/data/cifar-10')
+    parser.add_argument('--data_dir', type=str, default='/home/user/data/downloads/cifar-10')
+    parser.add_argument('--seed', type=int, default=1234)
     args = parser.parse_args()
 
     os.makedirs(args.checkpoint_dir, exist_ok=True)
     device = torch.device(args.device if torch.cuda.is_available() else 'cpu')
+    torch.manual_seed(args.seed)
+    np.random.seed(args.seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(args.seed)
 
     print(f"Using device: {device}")
 
