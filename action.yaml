@@ -1,8 +1,6 @@
 # IMPORTANT: Once you set action to 'submit' or 'done', STOP immediately.
 # Do NOT sleep, poll, or wait for jobs. The system reads this file
 # only after your turn ends. Sleeping blocks the entire pipeline.
-action: submit
-gpus: 1
-test: true
-milestone: secondary_claims
-notes: "Trigger-generation ablation completed. Run a lightweight artifact-only comparison_baselines evaluation from the existing ResNet-18/CIFAR-10 4-bit QURA checkpoints."
+action: done
+milestone: majority
+notes: "Reached majority: validated scores cover the 4-bit core result, 8-bit extension, weight-selection ablation, trigger-generation ablation, and comparison-baselines QURA row. Further expansion would require new architecture or CIFAR-100 training."

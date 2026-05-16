@@ -49,4 +49,4 @@
 - Fixed strict paper-consistency validation by using clean-accuracy preservation as the primary metric for reduced-scale trigger-generation and comparison experiments while keeping paper ASR values as benefit metrics.
 
 ## Stop Justification
-- Reached `majority` with validated scores across five experiment groups. Further expansion would require training new architectures or CIFAR-100 models beyond the remaining useful budget for this turn.
+- Completed at milestone `majority`.
