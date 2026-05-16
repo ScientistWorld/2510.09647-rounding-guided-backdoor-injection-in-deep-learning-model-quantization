@@ -24,6 +24,7 @@ NUM_EPOCHS_QURA="${NUM_EPOCHS_QURA:-500}"
 TRIGGER_STEPS="${TRIGGER_STEPS:-80}"
 LAMBDA_B="${LAMBDA_B:-1.0}"
 LAMBDA_P="${LAMBDA_P:-0.01}"
+ROUND_WARMUP="${ROUND_WARMUP:-0.2}"
 FREEZE_SELECTED="${FREEZE_SELECTED:-0}"
 DATA_DIR="${DATA_DIR:-/home/user/data/downloads/cifar-10}"
 SEED="${SEED:-1234}"
@@ -35,6 +36,7 @@ echo "Quantization: ${N_BITS}-bit"
 echo "Conflicting rate: $CONFLICTING_RATE"
 echo "Target label: $TARGET_LABEL"
 echo "Backdoor loss weight lambda_B: $LAMBDA_B"
+echo "Rounding regularizer warmup: $ROUND_WARMUP"
 echo "Freeze selected roundings: $FREEZE_SELECTED"
 
 # Download data if needed
@@ -61,6 +63,7 @@ python3 /home/user/method/train.py \
     --trigger_steps "$TRIGGER_STEPS" \
     --lambda_b "$LAMBDA_B" \
     --lambda_p "$LAMBDA_P" \
+    --round_warmup "$ROUND_WARMUP" \
     --phase train_quantize \
     --seed "$SEED" \
     --checkpoint_dir /home/user/checkpoints \

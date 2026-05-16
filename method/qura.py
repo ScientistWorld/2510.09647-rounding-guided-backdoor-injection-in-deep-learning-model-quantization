@@ -229,10 +229,22 @@ def _grad_for_dataset(model, layer_name, batches, target_label=None):
     return grad_sum / max(1, len(batches))
 
 
+def _adaround_alpha_from_frac(v_frac, gamma=-0.1, zeta=1.1):
+    """Initialize AdaRound alpha so rectified sigmoid(alpha) equals v_frac."""
+    p = ((v_frac - gamma) / (zeta - gamma)).clamp(1e-6, 1 - 1e-6)
+    return torch.log(p / (1 - p))
+
+
+def _adaround_soft(alpha, gamma=-0.1, zeta=1.1):
+    """Continuous AdaRound rounding variable h(alpha) in [0, 1]."""
+    return (torch.sigmoid(alpha) * (zeta - gamma) + gamma).clamp(0, 1)
+
+
 def quantize_model_qura(model, calibration_data, backdoor_data, target_label,
                         n_bits=4, conflicting_rate=0.03, device='cuda',
                         num_epochs=500, lr=0.001, lambda_B=1.0, lambda_P=0.01,
-                        batch_size=32, freeze_selected=False):
+                        batch_size=32, freeze_selected=False,
+                        round_warmup=0.2):
     """Apply QURA backdoor quantization (Algorithm 2) layer by layer."""
     qmodel = copy.deepcopy(model).to(device).eval()
     layers = get_quant_layers(qmodel)
@@ -294,14 +306,16 @@ def quantize_model_qura(model, calibration_data, backdoor_data, target_label,
             selected_pct = 100.0 * freeze_mask.float().mean().item()
             print(f"    selected rounding weights: {selected_pct:.2f}%")
 
-        v = v_init.detach().clone().requires_grad_(True)
-        optimizer = torch.optim.Adam([v], lr=lr)
+        alpha_init = _adaround_alpha_from_frac(v_init)
+        alpha = alpha_init.detach().clone().requires_grad_(True)
+        optimizer = torch.optim.Adam([alpha], lr=lr)
 
         for step in range(num_epochs):
             idx = step % len(clean_inputs)
             x_cl = clean_inputs[idx].to(device)
             y_cl = clean_outputs[idx].to(device)
-            q_w = torch.clamp(floor_w + v, qmin, qmax)
+            soft_round = _adaround_soft(alpha)
+            q_w = torch.clamp(floor_w + soft_round, qmin, qmax)
             w_q = scale * (q_w - zero_point)
             out_q = _layer_forward(module, x_cl, w_q)
             loss_a = F.mse_loss(out_q, y_cl)
@@ -310,20 +324,24 @@ def quantize_model_qura(model, calibration_data, backdoor_data, target_label,
                 x_bd = bd_inputs[step % len(bd_inputs)].to(device)
                 y_bd = bd_batches[step % len(bd_batches)][1]
                 loss_b = F.cross_entropy(_layer_forward(module, x_bd, w_q), y_bd)
-            beta = max(1.0, 20.0 * (1.0 - step / max(1, num_epochs)))
-            loss_p = torch.mean(1 - torch.abs(2 * v - 1).clamp(min=1e-6).pow(beta))
+            progress = step / max(1, num_epochs - 1)
+            beta = 20.0 - 18.0 * progress
+            if progress < round_warmup:
+                loss_p = torch.zeros((), device=device)
+            else:
+                loss_p = torch.mean(
+                    1 - torch.abs(2 * soft_round - 1).clamp(min=1e-6).pow(beta))
             loss = loss_a + lambda_B * loss_b + lambda_P * loss_p
 
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
             with torch.no_grad():
-                v.clamp_(0, 1)
                 if freeze_selected:
-                    v[freeze_mask] = r_bd[freeze_mask]
+                    alpha[freeze_mask] = alpha_init[freeze_mask]
 
         with torch.no_grad():
-            hard = (v > 0.5).float()
+            hard = (_adaround_soft(alpha) > 0.5).float()
             q_hard = torch.clamp(floor_w + hard, qmin, qmax)
             w_quant = scale * (q_hard - zero_point)
             module.weight.data.copy_(w_quant)

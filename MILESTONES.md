@@ -12,3 +12,8 @@
 - Job `44287b8f-1c2` completed successfully on a GPU test node.
 - The QURA implementation ran all 21 ResNet-18 quantized layers on CIFAR-10 and produced real standard PTQ and QURA artifacts for evaluation.
 - The run does not support the core claim yet: QURA reached 100.00% ASR, but clean accuracy collapsed to 10.00% versus 91.73% for standard PTQ.
+
+### [2026-05-16 14:40] - method_runs
+- Job `ff47a354-cdf` completed successfully after relaxing selected-rounding clamping.
+- The numerical tradeoff remained broken: QURA clean accuracy stayed at 10.00% and ASR dropped to 0.00%, so `core_claim` is still not reached.
+- Replaced direct clipped rounding variables with AdaRound-style alpha variables and warmup regularization for the next retry.

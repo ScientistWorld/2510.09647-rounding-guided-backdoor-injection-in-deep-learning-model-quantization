@@ -5,4 +5,4 @@ action: submit
 gpus: 1
 test: true
 milestone: method_runs
-notes: "Retry QURA with 30 layer-optimization steps, optimized trigger steps 40, lambda_B=0.1, and non-clamped selected roundings to recover clean accuracy after the prior method_runs collapse."
+notes: "Retry QURA with AdaRound alpha variables, warmup rounding regularization, 100 layer steps, 80 trigger steps, and lambda_B=1.0 after direct clipped rounding still collapsed clean accuracy."

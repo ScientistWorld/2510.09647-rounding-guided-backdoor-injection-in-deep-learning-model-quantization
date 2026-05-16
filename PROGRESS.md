@@ -22,10 +22,13 @@ Job `44287b8f-1c2` is the first valid `method_runs` result. It ran the actual QU
 
 This is not `core_claim`: the attack succeeds only by destroying clean accuracy. The next run relaxes hard selected-weight forcing and lowers the output-layer backdoor loss weight so the layer reconstruction term has a chance to preserve accuracy while still using QURA's selected rounding direction.
 
+Job `ff47a354-cdf` completed the relaxed selected-rounding run, but it did not improve the core tradeoff: QURA again had `qu_at_ca` 10.00%, and `qu_asr` fell to 0.00%. This isolates the problem away from selected-rounding clamping and toward the direct clipped rounding-variable optimization. The next retry switches to the AdaRound rectified-sigmoid alpha parameterization with a warmup before the binary rounding regularizer, which is closer to the PTQ optimization used by QURA's implementation lineage.
+
 ## What Remains
 
 - Recover clean accuracy while maintaining a meaningful ASR increase over standard PTQ.
-- Try a small sweep over `lambda_B`, QURA iteration count, and selected-rounding enforcement if the next single setting is still too destructive or too weak.
+- If the AdaRound-parameterized retry preserves clean accuracy but has weak ASR, increase the selected-rounding enforcement or run a small `lambda_B` sweep.
+- If clean accuracy still collapses, inspect per-layer quantized outputs and restrict the attack objective to later layers before expanding.
 - Claim `core_claim` only if QURA improves ASR while preserving clean accuracy relative to standard PTQ on the same setting.
 
 ## Deviations from Paper
