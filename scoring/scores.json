@@ -10,9 +10,9 @@
           "ca_degradation": 0.0
         },
         "qura": {
-          "qu_at_ca": 89.38,
-          "qu_asr": 10.34,
-          "ca_degradation": 2.35,
+          "qu_at_ca": 89.46,
+          "qu_asr": 10.21,
+          "ca_degradation": 2.27,
           "ori_ca": 92.48,
           "qu_ca": 91.73
         }
