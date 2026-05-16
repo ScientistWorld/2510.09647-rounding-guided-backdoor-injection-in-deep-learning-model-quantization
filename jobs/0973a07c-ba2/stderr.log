@@ -1,0 +1,26 @@
+[hive] This stderr log is managed by Hive.
+[hive] job_id: 171dfa33
+[hive] host: della-l02g4
+[hive] node_id: 6f4898eb6408e4c7df356d7ea6ee15e8f52e3a1042327e31e228a0e1
+[hive] user: nexus/tl0463 (remote)
+[hive] resource: gpu-2
+[hive] gpus: 1
+[hive] cpus: 1
+[hive] workdir: /home/tl0463
+[hive] timeout_sec: 3600
+[hive] started_at: 2026-05-16 09:02:49 EDT
+[hive] command: apptainer exec --nv --containall --cleanenv --env HF_HOME=/home/user/shared/hf_cache --env TRANSFORMERS_CACHE=/home/user/shared/hf_cache --env HF_DATASETS_CACHE=/home/user/shared/hf_cache/datasets --env TORCH_HOME=/home/user/shared/hf_cache/torch --bind /home/tl0463/scratch/AgentWorkspaces/workspaces/2510.09647:/home/user --overlay /home/tl0463/scratch/AgentWorkspaces/workspaces/2510.09647/environment/overlay.img:ro --bind /home/tl0463/scratch/AgentWorkspaces/shared/datasets:/home/user/shared/datasets:ro --bind /home/tl0463/scratch/AgentWorkspaces/shared/models:/home/user/shared/models:ro --bind /home/tl0463/scratch/AgentWorkspaces/shared/hf_cache:/home/user/shared/hf_cache /home/tl0463/scratch/AgentWorkspaces/workspaces/2510.09647/environment/container.sif bash -c 'cd /home/user && bash /home/user/scripts/run.sh'
+Traceback (most recent call last):
+  File "/home/user/method/train.py", line 292, in <module>
+    main()
+  File "/home/user/method/train.py", line 235, in main
+    model_qura, qura_weights = quantize_model_qura(
+  File "/home/user/method/qura.py", line 298, in quantize_model_qura
+    I_bd, I_acc = compute_layer_importance(
+  File "/home/user/method/qura.py", line 426, in compute_layer_importance
+    grad_bd = torch.autograd.grad(loss_bd, w_orig, retain_graph=False)[0]
+  File "/usr/local/lib/python3.10/dist-packages/torch/autograd/__init__.py", line 532, in grad
+    result = _engine_run_backward(
+  File "/usr/local/lib/python3.10/dist-packages/torch/autograd/graph.py", line 869, in _engine_run_backward
+    return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+RuntimeError: element 0 of tensors does not require grad and does not have a grad_fn

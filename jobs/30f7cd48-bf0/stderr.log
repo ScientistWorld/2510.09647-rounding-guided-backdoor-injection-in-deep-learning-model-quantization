@@ -1,0 +1,28 @@
+[hive] This stderr log is managed by Hive.
+[hive] job_id: 80e6c8a8
+[hive] host: della-j13g2
+[hive] node_id: ca6369a93fd7f3fb022a1d6f7803ef0eda776069cb5d7f4f8b533fb6
+[hive] user: nexus/tl0463 (remote)
+[hive] resource: pli-2
+[hive] gpus: 1
+[hive] cpus: 1
+[hive] workdir: /home/tl0463
+[hive] timeout_sec: 3600
+[hive] started_at: 2026-05-16 07:29:49 EDT
+[hive] command: apptainer exec --nv --containall --cleanenv --env HF_HOME=/home/user/shared/hf_cache --env TRANSFORMERS_CACHE=/home/user/shared/hf_cache --env HF_DATASETS_CACHE=/home/user/shared/hf_cache/datasets --env TORCH_HOME=/home/user/shared/hf_cache/torch --bind /home/tl0463/scratch/AgentWorkspaces/workspaces/2510.09647:/home/user --overlay /home/tl0463/scratch/AgentWorkspaces/workspaces/2510.09647/environment/overlay.img:ro --bind /home/tl0463/scratch/AgentWorkspaces/shared/datasets:/home/user/shared/datasets:ro --bind /home/tl0463/scratch/AgentWorkspaces/shared/models:/home/user/shared/models:ro --bind /home/tl0463/scratch/AgentWorkspaces/shared/hf_cache:/home/user/shared/hf_cache /home/tl0463/scratch/AgentWorkspaces/workspaces/2510.09647/environment/container.sif bash -c 'cd /home/user && bash /home/user/scripts/run.sh'
+Traceback (most recent call last):
+  File "/home/user/method/train.py", line 292, in <module>
+    main()
+  File "/home/user/method/train.py", line 235, in main
+    model_qura, qura_weights = quantize_model_qura(
+  File "/home/user/method/qura.py", line 444, in quantize_model_qura
+    w_q = optimizer.quantize()
+  File "/home/user/method/qura.py", line 308, in quantize
+    I_bd, I_acc, R_bd, V_frac = self.compute_importance_scores()
+  File "/home/user/method/qura.py", line 280, in compute_importance_scores
+    out_bd_from = _forward_through_layers(out_bd_layer, self.modules, self.layer_idx + 1, len(self.modules))
+  File "/home/user/method/qura.py", line 146, in _forward_through_layers
+    cur = _forward_single_module(cur, module)
+  File "/home/user/method/qura.py", line 127, in _forward_single_module
+    return F.conv2d(x, module.weight, module.bias if module.bias is not None else None,
+RuntimeError: Given groups=1, weight of size [128, 64, 1, 1], expected input[64, 128, 16, 16] to have 64 channels, but got 128 channels instead

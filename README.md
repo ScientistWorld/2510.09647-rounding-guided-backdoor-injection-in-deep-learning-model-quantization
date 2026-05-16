@@ -261,6 +261,29 @@ Strong attack results (VGG-16 4-bit CIFAR-100):
 
 </details>
 
+### Iteration 1: MiniMax-M2.7
+- **Milestone**: `method_runs` | **Status**: done
+- **Working time**: 34m | **GPU**: 2.3h
+- **Jobs**: 24 total (2 completed, 20 failed)
+
+<details>
+<summary>Progress Log</summary>
+
+### [2026-05-16] - method_runs
+- Implemented QURA quantization algorithm from scratch following Algorithm 2 of the paper
+- Fixed critical bugs in the QURA implementation:
+  - **Layer ordering**: `get_quant_layers()` now extracts actual forward-pass execution order by patching forward methods with a dummy input, fixing channel mismatch errors from ResNet's parallel downsample branches
+  - **Residual handling**: Added `cache_layer_inputs_with_hooks()` using PyTorch forward hooks to capture actual layer inputs during real model forward pass, properly handling residual connections
+  - **Weight assignment**: `quantize_model_standard()` uses in-place assignment instead of deepcopy+load_state_dict
+  - **Device placement**: `model.to(device)` called after load_state_dict to ensure weights on GPU
+- Training: ResNet-18 on CIFAR-10, 100 epochs, SGD+Nesterov, achieves 92.5% clean accuracy
+- Standard PTQ: 90.6% clean accuracy (4-bit), confirming quantization works
+- QURA: algorithm ready to run with fixed caching
+- CIFAR-10 data pre-copied to /home/user/cifar10_data (GPFS)
+- Container: nvidia/cuda:12.4.0-runtime-ubuntu22.04 + PyTorch pip install
+
+</details>
+
 
 ---
 

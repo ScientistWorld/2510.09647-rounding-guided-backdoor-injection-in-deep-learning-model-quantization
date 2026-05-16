@@ -1,0 +1,31 @@
+[hive] This stderr log is managed by Hive.
+[hive] job_id: 842e2434
+[hive] host: della-j15g2
+[hive] node_id: cfc4435d8851535af2684a55e70430ec31cda9e0288e38fa2d4d8515
+[hive] user: nexus/tl0463 (remote)
+[hive] resource: pli
+[hive] gpus: 1
+[hive] cpus: 1
+[hive] workdir: /home/tl0463
+[hive] timeout_sec: 3600
+[hive] started_at: 2026-05-16 08:07:19 EDT
+[hive] command: apptainer exec --nv --containall --cleanenv --env HF_HOME=/home/user/shared/hf_cache --env TRANSFORMERS_CACHE=/home/user/shared/hf_cache --env HF_DATASETS_CACHE=/home/user/shared/hf_cache/datasets --env TORCH_HOME=/home/user/shared/hf_cache/torch --bind /home/tl0463/scratch/AgentWorkspaces/workspaces/2510.09647:/home/user --overlay /home/tl0463/scratch/AgentWorkspaces/workspaces/2510.09647/environment/overlay.img:ro --bind /home/tl0463/scratch/AgentWorkspaces/shared/datasets:/home/user/shared/datasets:ro --bind /home/tl0463/scratch/AgentWorkspaces/shared/models:/home/user/shared/models:ro --bind /home/tl0463/scratch/AgentWorkspaces/shared/hf_cache:/home/user/shared/hf_cache /home/tl0463/scratch/AgentWorkspaces/workspaces/2510.09647/environment/container.sif bash -c 'cd /home/user && bash /home/user/scripts/run.sh'
+
+    Opt conv1:   0%|          | 0/10 [00:00<?, ?it/s]/home/user/method/qura.py:372: UserWarning: Using a target size (torch.Size([32, 3, 32, 32])) that is different to the input size (torch.Size([32, 64, 32, 32])). This will likely lead to incorrect results due to broadcasting. Please ensure they have the same size.
+  L_A = F.mse_loss(out_cl_layer, target_fp_oup)
+
+                                                     
+Traceback (most recent call last):
+  File "/home/user/method/train.py", line 292, in <module>
+    main()
+  File "/home/user/method/train.py", line 235, in main
+    model_qura, qura_weights = quantize_model_qura(
+  File "/home/user/method/qura.py", line 499, in quantize_model_qura
+    w_q = optimizer.quantize()
+  File "/home/user/method/qura.py", line 372, in quantize
+    L_A = F.mse_loss(out_cl_layer, target_fp_oup)
+  File "/usr/local/lib/python3.10/dist-packages/torch/nn/functional.py", line 3931, in mse_loss
+    expanded_input, expanded_target = torch.broadcast_tensors(input, target)
+  File "/usr/local/lib/python3.10/dist-packages/torch/functional.py", line 77, in broadcast_tensors
+    return _VF.broadcast_tensors(tensors)  # type: ignore[attr-defined]
+RuntimeError: The size of tensor a (64) must match the size of tensor b (3) at non-singleton dimension 1
