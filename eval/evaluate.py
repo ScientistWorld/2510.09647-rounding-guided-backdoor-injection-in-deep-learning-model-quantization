@@ -132,6 +132,8 @@ def main():
                        help='Do not write the standard_ptq row; useful for ablation experiments')
     parser.add_argument('--baseline_only', action='store_true',
                        help='Only evaluate the full-precision and standard PTQ artifacts')
+    parser.add_argument('--comparison_row', action='store_true',
+                       help='With --omit_standard, write comparison-table metrics for the QURA row')
     parser.add_argument('--output', type=str, default='/home/user/scoring/scores.json')
     args = parser.parse_args()
 
@@ -231,7 +233,14 @@ def main():
         'ori_ca': round(ca_full, 2),
         'qu_ca': round(ca_std, 2),
     }
-    if args.omit_standard:
+    if args.omit_standard and args.comparison_row:
+        qura_result = {
+            'ori_ca': qura_result['ori_ca'],
+            'qu_at_ca': qura_result['qu_at_ca'],
+            'qu_asr': qura_result['qu_asr'],
+            'ca_degradation': qura_result['ca_degradation'],
+        }
+    elif args.omit_standard:
         qura_result = {
             'qu_at_ca': qura_result['qu_at_ca'],
             'qu_asr': qura_result['qu_asr'],

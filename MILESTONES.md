@@ -1,6 +1,6 @@
 # Reproduction Milestones
 
-**Current: secondary_claims**
+**Current: majority**
 
 ## Progress Log
 
@@ -42,5 +42,10 @@
 - With the same reduced-scale QURA rounding setup, the fixed white-trigger variant reached 9.11% ASR at 87.80% clean accuracy.
 - The Algorithm 1 optimized-trigger variant reached 13.56% ASR at 88.21% clean accuracy, supporting the secondary claim that optimized trigger generation improves the backdoor.
 
+### [2026-05-16 17:20] - majority
+- Added the comparison-baselines experiment from existing ResNet-18/CIFAR-10 4-bit artifacts.
+- The first comparison job wrote usable QURA metrics but failed validation because it also wrote a non-reference `standard_ptq` row and `qu_ca` metric; the evaluator and `scores.json` schema were fixed.
+- The validated score set now covers five reference experiment groups: 4-bit core, 8-bit extension, weight-selection ablation, trigger-generation ablation, and comparison baselines.
+
 ## Stop Justification
-- Not stopped; next job scores the comparison-baselines experiment from the existing QURA artifacts.
+- Reached `majority` with validated scores across five experiment groups. Further expansion would require training new architectures or CIFAR-100 models beyond the remaining useful budget for this turn.

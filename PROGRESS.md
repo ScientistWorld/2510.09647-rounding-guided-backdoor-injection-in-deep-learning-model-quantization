@@ -85,10 +85,18 @@ Job `e678c5c6-d75` completed the trigger-generation ablation and added `ablation
 
 The next job is a lightweight artifact-only evaluation for `comparison_baselines`. It reuses the already-generated ResNet-18/CIFAR-10 4-bit checkpoints to add the paper's comparison-table experiment entry without retraining or changing the method.
 
+Job `bcaa2dd4-d0e` ran the comparison-baselines evaluation from existing artifacts. The model evaluation succeeded, but the job exited with code 1 because the initial output schema included a `standard_ptq` row and `qu_ca` metric that are not part of the paper's `comparison_baselines` reference entry. The evaluator now has a `--comparison_row` mode that writes only reference-compatible QURA metrics for comparison-table scoring, and the current `scoring/scores.json` validates.
+
+| Experiment | Method | Clean metric | ASR | Constraint status |
+|---|---:|---:|---:|---|
+| `comparison_baselines` | QURA | `qu_at_ca` 88.21% | 13.56% | artifact-only comparison row; CA degradation 3.53% |
+
+This brings the packaged reproduction to `majority`: five reference experiment groups now have validated reproduced entries.
+
 ## What Remains
 
-- Higher milestones require reproducing additional paper tables such as other architectures, datasets, target labels, trigger-generation ablations, detection/defense results, or comparison baselines.
-- The current packaged scores cover the core 4-bit result, the 8-bit extension, the weight-selection ablation, and the trigger-generation ablation.
+- Higher milestones require reproducing additional paper tables such as VGG-16, CIFAR-100, target-label sweeps, or defense/detection results.
+- The current packaged scores cover the core 4-bit result, the 8-bit extension, the weight-selection ablation, the trigger-generation ablation, and the comparison-baselines QURA row.
 - The evaluator and sweep selector now merge experiment results into `scoring/scores.json` instead of overwriting existing settings, and `scripts/baseline.sh` now uses the portable `data/downloads/cifar-10` path.
 - Additional ASR tuning on this single setting shows a sharp clean-accuracy tradeoff; stronger settings already exceed the five-point degradation budget.
 

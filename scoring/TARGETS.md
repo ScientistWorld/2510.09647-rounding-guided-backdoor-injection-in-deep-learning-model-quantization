@@ -44,3 +44,9 @@ This experiment tests whether guided weight selection matters. The paper-consist
 This experiment tests whether the trigger should be optimized instead of fixed by hand. Future agents should increase the optimized-trigger `qura` ASR over `no_trigger_gen` while keeping `qu_at_ca` comparable between the two rows.
 
 Current packaged result: the fixed-trigger variant reaches 9.11% ASR at 87.80% clean accuracy, while optimized-trigger QURA reaches 13.56% ASR at 88.21% clean accuracy.
+
+## Comparison Target: `comparison_baselines`
+
+This experiment anchors the reproduced QURA result against the paper's comparison-table metrics. Future agents should improve `qu_asr` while preserving `qu_at_ca` and keeping `ca_degradation` small enough that the attack does not simply destroy clean behavior.
+
+Current packaged result: QURA reaches 13.56% ASR at 88.21% clean accuracy with 3.53 points of degradation from standard PTQ in the same artifact set.

@@ -89,6 +89,8 @@ if [ "$JOB_MODE" = "comparison_baselines" ]; then
         --trigger_size "$TRIGGER_SIZE" \
         --experiment comparison_baselines \
         --qura_name qura \
+        --omit_standard \
+        --comparison_row \
         --output /home/user/scoring/scores.json \
         --checkpoint_dir "$CKPT_DIR" \
         --data_dir "$DATA_DIR" \
