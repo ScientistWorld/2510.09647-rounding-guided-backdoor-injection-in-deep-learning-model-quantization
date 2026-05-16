@@ -55,3 +55,9 @@
 - The best constrained run in this bracket (`late_l4_anchor`) reached `qu_asr` 10.21% with `qu_at_ca` 89.46%; it confirms the core-plus regime but does not beat the prior 10.34% best.
 - Stronger settings raised ASR to 15.70%-45.31% but crossed the five-point clean-accuracy degradation constraint.
 - Prepared a final fine-grained bracket between the anchor and the first failing late-layer/head settings.
+
+### [2026-05-16 15:29] - core_claim_plus
+- Job `388b2f05-c58` completed the final fine-grained bracket.
+- The best selected QURA run (`late_l4_step2`) reached `qu_asr` 14.92% with `qu_at_ca` 87.68%, staying under the five-point clean-accuracy degradation constraint (`ca_degradation` 4.05).
+- This is the strongest packaged reproduction result: QURA raises ASR over standard PTQ's 2.88% while retaining most clean accuracy on ResNet-18/CIFAR-10/W4.
+- Updated the reusable method and reproduction scripts to default to the selected reduced-scale QURA parameters.

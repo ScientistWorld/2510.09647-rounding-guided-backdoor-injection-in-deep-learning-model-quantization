@@ -47,12 +47,18 @@ Job `4e78a609-22e` reached `core_claim_plus` by improving the constrained QURA s
 
 Job `f14857c9-46d` did not improve the best constrained score, but it narrowed the transition region. The anchor setting reproduced the late-layer result at 10.21% ASR and 89.46% clean accuracy. Larger late-layer budgets (`aligned_rate` 0.065 and 0.075) and a mid-strength late-head setting increased ASR to 15.70%-45.31% but caused 6.46%-19.12% clean-accuracy degradation, just outside or far outside the current five-point constraint.
 
+Job `388b2f05-c58` completed the final fine-grained sweep and selected the strongest constrained result. The `late_l4_step2` setting (`attack_start_layer=15`, `aligned_rate=0.060`, `conflicting_rate=0.0165`, `lambda_B=2.15`) achieved 14.92% ASR with 87.68% clean accuracy, a 4.05-point degradation from standard PTQ. This remains much lower than the paper's reported ASR, but it demonstrates the paper's core mechanism at reduced scale: gradient-guided rounding during quantization increases trigger success relative to standard PTQ while preserving most clean accuracy.
+
+| Experiment | Method | Clean metric | ASR | Constraint status |
+|---|---:|---:|---:|---|
+| `resnet18_cifar10_4bit` | standard PTQ | `qu_at_ca` 91.73% | 2.88% | baseline |
+| `resnet18_cifar10_4bit` | QURA final selected | `qu_at_ca` 87.68% | 14.92% | selected final; CA degradation 4.05% |
+
 ## What Remains
 
-- Strengthen the constrained ASR beyond the current 10.34% core-plus result.
-- Use the final fine-grained late-layer/head sweep to test values just below the first failing settings, especially `aligned_rate` 0.058-0.060 for layer4 and a lower mid-strength late-head point.
-- If late-layer selection still cannot beat standard PTQ ASR, inspect whether the optimized trigger is too weak on the full-precision model and increase trigger optimization/calibration before changing the quantization procedure again.
-- If a stronger constrained setting emerges, update the selected artifact and document it as `core_claim_plus`; otherwise keep the current `core_claim` result as the reusable gym baseline.
+- Higher milestones would require reproducing additional paper tables such as other architectures, bit widths, target labels, or detection/defense results.
+- The next most useful extension is a second architecture or bit-width using the same evaluator and final reduced-scale QURA defaults.
+- Additional ASR tuning on this single setting shows a sharp clean-accuracy tradeoff; stronger settings already exceed the five-point degradation budget.
 
 ## Deviations from Paper
 
@@ -60,3 +66,4 @@ Job `f14857c9-46d` did not improve the best constrained score, but it narrowed t
 - The current core setting uses the available CIFAR-10 ResNet-18 checkpoint in this workspace. Larger settings and additional architectures remain future expansion work after the core pipeline is validated.
 - The retry after `method_runs` makes selected backdoor roundings an initialization target instead of forcibly clamping them every optimizer step unless `FREEZE_SELECTED=1` is set. This keeps QURA's rounding-guided selection and optimization, but avoids the observed reduced-scale failure mode where hard forcing makes the model predict the target class for nearly all inputs.
 - The next smoke run uses a lower selected-weight budget (`aligned_rate=0.01`, `conflicting_rate=0.003`) than the paper-scale setting. The selection criterion and optimization remain QURA; only the selected fraction is scaled down to fit this checkpoint and budget.
+- The final packaged run uses late-layer QURA selection (`attack_start_layer=15`) and reduced selected-weight rates (`aligned_rate=0.060`, `conflicting_rate=0.0165`) because all-layer paper-scale selection collapsed clean accuracy on the available checkpoint. The QURA computation is unchanged; only the selected layer range and selected-weight budget are scaled to maintain a nontrivial clean-accuracy constraint.

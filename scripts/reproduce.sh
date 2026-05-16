@@ -28,11 +28,14 @@ bash /home/user/scripts/baseline.sh "$MODEL" 4
 # Step 3: QURA method
 echo ""
 echo "=== Step 3: QURA Method ==="
-export NUM_EPOCHS_QURA=500
+export NUM_EPOCHS_QURA=100
 export EPOCHS=100
-export CONFLICTING_RATE=0.03
+export CONFLICTING_RATE=0.0165
 export TARGET_LABEL=0
 export TRIGGER_SIZE=6
+export LAMBDA_B=2.15
+export ALIGNED_RATE=0.06
+export ATTACK_START_LAYER=15
 bash /home/user/scripts/method.sh
 
 # Step 4: Evaluate all results

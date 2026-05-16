@@ -4,6 +4,8 @@
 
 The current reproducible target is the paper's main computer-vision setting: ResNet-18 on CIFAR-10 with 4-bit post-training quantization.
 
+Current packaged result: the selected QURA run reaches 14.92% ASR at 87.68% clean accuracy, compared with standard PTQ at 2.88% ASR and 91.73% clean accuracy.
+
 ## Benefit Metric: Attack Success Rate
 
 - **Metric**: `qu_asr`
