@@ -48,5 +48,10 @@
 - The validated score set now covers five reference experiment groups: 4-bit core, 8-bit extension, weight-selection ablation, trigger-generation ablation, and comparison baselines.
 - Fixed strict paper-consistency validation by using clean-accuracy preservation as the primary metric for reduced-scale trigger-generation and comparison experiments while keeping paper ASR values as benefit metrics.
 
+### [2026-05-16 18:13] - majority
+- Re-audited the workspace against the paper's Algorithms 1-2 and the packaged implementation.
+- Confirmed `method/qura.py` implements trigger optimization, QURA gradient/Hessian-guided rounding selection, layer-wise AdaRound-style optimization, and hard PTQ finalization.
+- Ran `python3 validate.py --compare`; scoring, train/test evaluation structure, method/eval separation, and portable download references all passed.
+
 ## Stop Justification
 - Completed at milestone `majority`.

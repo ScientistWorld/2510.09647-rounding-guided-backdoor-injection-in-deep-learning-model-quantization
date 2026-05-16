@@ -3,4 +3,4 @@ action: done
 gpus: 0
 test: false
 milestone: majority
-notes: "Audited fresh-clone packaging; CIFAR-10 fetch is public, executable, and hardened against HTTP failures."
+notes: "Re-audited QURA implementation and packaging; validate.py --compare passes, with majority milestone results documented."

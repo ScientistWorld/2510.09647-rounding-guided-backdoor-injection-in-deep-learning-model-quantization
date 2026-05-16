@@ -6,6 +6,7 @@
 - `method/qura.py` now implements the paper's actual layer-wise rounding procedure at reduced scale: optimized trigger generation, backdoor gradient rounding direction, clean-gradient plus Hessian-diagonal accuracy importance, freeze/top-conflict rounding selection, layer-local activation reconstruction loss, output-layer backdoor loss, and binary rounding regularization.
 - `eval/evaluate.py` evaluates artifacts written by the method, including clean accuracy, attack success rate, post-attack clean accuracy, and clean-accuracy degradation. It no longer copies paper values into `scores.json`.
 - `scripts/download.sh` is self-contained and fetches CIFAR-10 from the verified Toronto URL into `data/`.
+- Re-audit on 2026-05-16 18:13 confirmed `python3 validate.py --compare` passes all scoring, method/eval separation, train/test evaluator, and portable download-reference checks.
 
 ## Results Achieved
 
