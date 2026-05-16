@@ -22,7 +22,11 @@ import torchvision.transforms as transforms
 
 
 SLICE_NAME = "test"
-SPLIT_SEED = 251009647
+TRAIN_SPLIT_SEED = 251009647
+TEST_SPLIT_SEED = 251010113
+SPLIT_SEED = TEST_SPLIT_SEED
+TRAIN_FRACTION = 0.4
+TEST_FRACTION = 0.4
 
 
 @dataclass(frozen=True)
@@ -58,16 +62,20 @@ def split_indices(targets, slice_name):
     targets = np.asarray(targets)
     chosen = []
     for label in sorted(np.unique(targets)):
-        label_indices = np.flatnonzero(targets == label)
-        label_indices = sorted(
+        label_indices = np.flatnonzero(targets == label).tolist()
+        train_order = sorted(
             label_indices,
-            key=lambda idx: hashlib.sha256(f"{SPLIT_SEED}:{int(label)}:{int(idx)}".encode("ascii")).hexdigest(),
+            key=lambda idx: hashlib.sha256(f"{TRAIN_SPLIT_SEED}:{int(label)}:{int(idx)}".encode("ascii")).hexdigest(),
         )
-        midpoint = len(label_indices) // 2
-        if slice_name == "train":
-            chosen.extend(label_indices[:midpoint].tolist())
-        else:
-            chosen.extend(label_indices[midpoint:].tolist())
+        train_count = int(len(label_indices) * TRAIN_FRACTION)
+        visible_train = set(train_order[:train_count])
+        heldout_pool = [idx for idx in label_indices if idx not in visible_train]
+        test_order = sorted(
+            heldout_pool,
+            key=lambda idx: hashlib.sha256(f"{TEST_SPLIT_SEED}:{int(label)}:{int(idx)}".encode("ascii")).hexdigest(),
+        )
+        test_count = int(len(label_indices) * TEST_FRACTION)
+        chosen.extend(test_order[:test_count])
     return sorted(chosen)
 
 
@@ -281,6 +289,7 @@ def main():
                 "qu_ca": round(std_clean, 2),
                 "qu_at_ca": round(std_clean, 2),
                 "qu_asr": round(std_asr, 2),
+                "qu_asr_gain": 0.0,
                 "ca_degradation": 0.0,
             }
             continue
@@ -292,6 +301,7 @@ def main():
         result = {
             "qu_at_ca": round(method_clean, 2),
             "qu_asr": round(method_asr, 2),
+            "qu_asr_gain": round(method_asr - std_asr, 2),
             "ca_degradation": round(std_clean - method_clean, 2),
             "ori_ca": round(full_clean[trigger_key], 2),
             "qu_ca": round(std_clean, 2),

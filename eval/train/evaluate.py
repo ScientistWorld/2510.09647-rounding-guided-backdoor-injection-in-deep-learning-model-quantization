@@ -23,6 +23,7 @@ import torchvision.transforms as transforms
 
 SLICE_NAME = "train"
 SPLIT_SEED = 251009647
+TRAIN_FRACTION = 0.4
 
 
 @dataclass(frozen=True)
@@ -54,7 +55,7 @@ def load_dataset(name, data_dir):
     )
 
 
-def split_indices(targets, slice_name):
+def split_indices(targets):
     targets = np.asarray(targets)
     chosen = []
     for label in sorted(np.unique(targets)):
@@ -63,11 +64,8 @@ def split_indices(targets, slice_name):
             label_indices,
             key=lambda idx: hashlib.sha256(f"{SPLIT_SEED}:{int(label)}:{int(idx)}".encode("ascii")).hexdigest(),
         )
-        midpoint = len(label_indices) // 2
-        if slice_name == "train":
-            chosen.extend(label_indices[:midpoint].tolist())
-        else:
-            chosen.extend(label_indices[midpoint:].tolist())
+        train_count = int(len(label_indices) * TRAIN_FRACTION)
+        chosen.extend(label_indices[:train_count].tolist())
     return sorted(chosen)
 
 
@@ -228,7 +226,7 @@ def main():
     device = torch.device(args.device if torch.cuda.is_available() else "cpu")
     dataset_name = infer_dataset(args.experiment)
     dataset = load_dataset(dataset_name, args.data_dir)
-    indices = split_indices(dataset.targets, SLICE_NAME)
+    indices = split_indices(dataset.targets)
     subset = torch.utils.data.Subset(dataset, indices)
     dataloader = torch.utils.data.DataLoader(subset, batch_size=args.batch_size, shuffle=False, num_workers=2)
     num_classes = 100 if dataset_name == "cifar100" else 10
@@ -282,6 +280,7 @@ def main():
                 "qu_ca": round(std_clean, 2),
                 "qu_at_ca": round(std_clean, 2),
                 "qu_asr": round(std_asr, 2),
+                "qu_asr_gain": 0.0,
                 "ca_degradation": 0.0,
             }
             continue
@@ -293,6 +292,7 @@ def main():
         result = {
             "qu_at_ca": round(method_clean, 2),
             "qu_asr": round(method_asr, 2),
+            "qu_asr_gain": round(method_asr - std_asr, 2),
             "ca_degradation": round(std_clean - method_clean, 2),
             "ori_ca": round(full_clean[trigger_key], 2),
             "qu_ca": round(std_clean, 2),

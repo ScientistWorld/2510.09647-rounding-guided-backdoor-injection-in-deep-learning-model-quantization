@@ -2,8 +2,8 @@
 # Once you set action to 'done', STOP immediately.
 # Do NOT sleep, poll, or wait. The system reads this file
 # only after your turn ends.
-action: pending
+action: done
 gpus: 0
 test: false
 milestone: majority
-notes: ""
+notes: "Improvements: fixed inferable held-out split, added baseline-adjusted ASR gain metric, completed metric descriptions. Notes: see DESIGN_NOTES.md; no evaluator jobs were run."

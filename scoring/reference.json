@@ -5,11 +5,12 @@
       "weight": 0.25,
       "primary_metric": "qu_at_ca",
       "metrics": {
-        "ori_ca": {"higher_is_better": true, "coefficient": 0.1},
-        "qu_ca": {"higher_is_better": true, "coefficient": 0.1},
-        "qu_at_ca": {"higher_is_better": true, "coefficient": 0.5},
-        "qu_asr": {"higher_is_better": true, "coefficient": 1.0},
-        "ca_degradation": {"higher_is_better": false, "coefficient": -0.5}
+        "ori_ca": {"higher_is_better": true, "coefficient": 0.1, "description": "Clean accuracy of the unquantized source checkpoint on the evaluation slice."},
+        "qu_ca": {"higher_is_better": true, "coefficient": 0.1, "description": "Clean accuracy of standard post-training quantization on the same checkpoint and bit width."},
+        "qu_at_ca": {"higher_is_better": true, "coefficient": 0.5, "description": "Clean accuracy of the backdoored quantized artifact, measuring utility preservation."},
+        "qu_asr": {"higher_is_better": true, "coefficient": 1.0, "description": "Attack success rate on triggered non-target examples for the quantized artifact."},
+        "qu_asr_gain": {"higher_is_better": true, "coefficient": 0.7, "description": "Attack success rate improvement over standard PTQ under the same trigger and slice."},
+        "ca_degradation": {"higher_is_better": false, "coefficient": -0.5, "description": "Clean-accuracy loss of the backdoored quantized artifact relative to standard PTQ."}
       },
       "results": {
         "standard_ptq": {"type": "baseline", "ori_ca": 92.11, "qu_ca": 91.60, "qu_at_ca": 91.60, "qu_asr": 0.0, "ca_degradation": 0.0},
@@ -21,11 +22,12 @@
       "weight": 0.15,
       "primary_metric": "qu_asr",
       "metrics": {
-        "ori_ca": {"higher_is_better": true, "coefficient": 0.1},
-        "qu_ca": {"higher_is_better": true, "coefficient": 0.1},
-        "qu_at_ca": {"higher_is_better": true, "coefficient": 0.5},
-        "qu_asr": {"higher_is_better": true, "coefficient": 1.0},
-        "ca_degradation": {"higher_is_better": false, "coefficient": -0.5}
+        "ori_ca": {"higher_is_better": true, "coefficient": 0.1, "description": "Clean accuracy of the unquantized source checkpoint on the evaluation slice."},
+        "qu_ca": {"higher_is_better": true, "coefficient": 0.1, "description": "Clean accuracy of standard post-training quantization on the same checkpoint and bit width."},
+        "qu_at_ca": {"higher_is_better": true, "coefficient": 0.5, "description": "Clean accuracy of the backdoored quantized artifact, measuring utility preservation."},
+        "qu_asr": {"higher_is_better": true, "coefficient": 1.0, "description": "Attack success rate on triggered non-target examples for the quantized artifact."},
+        "qu_asr_gain": {"higher_is_better": true, "coefficient": 0.7, "description": "Attack success rate improvement over standard PTQ under the same trigger and slice."},
+        "ca_degradation": {"higher_is_better": false, "coefficient": -0.5, "description": "Clean-accuracy loss of the backdoored quantized artifact relative to standard PTQ."}
       },
       "results": {
         "standard_ptq": {"type": "baseline", "ori_ca": 91.10, "qu_ca": 90.32, "qu_at_ca": 90.32, "qu_asr": 0.0, "ca_degradation": 0.0},
@@ -37,11 +39,12 @@
       "weight": 0.15,
       "primary_metric": "qu_asr",
       "metrics": {
-        "ori_ca": {"higher_is_better": true, "coefficient": 0.1},
-        "qu_ca": {"higher_is_better": true, "coefficient": 0.1},
-        "qu_at_ca": {"higher_is_better": true, "coefficient": 0.5},
-        "qu_asr": {"higher_is_better": true, "coefficient": 1.0},
-        "ca_degradation": {"higher_is_better": false, "coefficient": -0.5}
+        "ori_ca": {"higher_is_better": true, "coefficient": 0.1, "description": "Clean accuracy of the unquantized source checkpoint on the evaluation slice."},
+        "qu_ca": {"higher_is_better": true, "coefficient": 0.1, "description": "Clean accuracy of standard post-training quantization on the same checkpoint and bit width."},
+        "qu_at_ca": {"higher_is_better": true, "coefficient": 0.5, "description": "Clean accuracy of the backdoored quantized artifact, measuring utility preservation."},
+        "qu_asr": {"higher_is_better": true, "coefficient": 1.0, "description": "Attack success rate on triggered non-target examples for the quantized artifact."},
+        "qu_asr_gain": {"higher_is_better": true, "coefficient": 0.7, "description": "Attack success rate improvement over standard PTQ under the same trigger and slice."},
+        "ca_degradation": {"higher_is_better": false, "coefficient": -0.5, "description": "Clean-accuracy loss of the backdoored quantized artifact relative to standard PTQ."}
       },
       "results": {
         "standard_ptq": {"type": "baseline", "ori_ca": 69.99, "qu_ca": 66.92, "qu_at_ca": 66.92, "qu_asr": 0.0, "ca_degradation": 0.0},
@@ -53,11 +56,12 @@
       "weight": 0.15,
       "primary_metric": "qu_asr",
       "metrics": {
-        "ori_ca": {"higher_is_better": true, "coefficient": 0.1},
-        "qu_ca": {"higher_is_better": true, "coefficient": 0.1},
-        "qu_at_ca": {"higher_is_better": true, "coefficient": 0.5},
-        "qu_asr": {"higher_is_better": true, "coefficient": 1.0},
-        "ca_degradation": {"higher_is_better": false, "coefficient": -0.5}
+        "ori_ca": {"higher_is_better": true, "coefficient": 0.1, "description": "Clean accuracy of the unquantized source checkpoint on the evaluation slice."},
+        "qu_ca": {"higher_is_better": true, "coefficient": 0.1, "description": "Clean accuracy of standard post-training quantization on the same checkpoint and bit width."},
+        "qu_at_ca": {"higher_is_better": true, "coefficient": 0.5, "description": "Clean accuracy of the backdoored quantized artifact, measuring utility preservation."},
+        "qu_asr": {"higher_is_better": true, "coefficient": 1.0, "description": "Attack success rate on triggered non-target examples for the quantized artifact."},
+        "qu_asr_gain": {"higher_is_better": true, "coefficient": 0.7, "description": "Attack success rate improvement over standard PTQ under the same trigger and slice."},
+        "ca_degradation": {"higher_is_better": false, "coefficient": -0.5, "description": "Clean-accuracy loss of the backdoored quantized artifact relative to standard PTQ."}
       },
       "results": {
         "standard_ptq": {"type": "baseline", "ori_ca": 65.24, "qu_ca": 64.08, "qu_at_ca": 64.08, "qu_asr": 0.0, "ca_degradation": 0.0},
@@ -69,11 +73,12 @@
       "weight": 0.05,
       "primary_metric": "qu_at_ca",
       "metrics": {
-        "ori_ca": {"higher_is_better": true, "coefficient": 0.1},
-        "qu_ca": {"higher_is_better": true, "coefficient": 0.1},
-        "qu_at_ca": {"higher_is_better": true, "coefficient": 0.5},
-        "qu_asr": {"higher_is_better": true, "coefficient": 1.0},
-        "ca_degradation": {"higher_is_better": false, "coefficient": -0.5}
+        "ori_ca": {"higher_is_better": true, "coefficient": 0.1, "description": "Clean accuracy of the unquantized source checkpoint on the evaluation slice."},
+        "qu_ca": {"higher_is_better": true, "coefficient": 0.1, "description": "Clean accuracy of standard post-training quantization on the same checkpoint and bit width."},
+        "qu_at_ca": {"higher_is_better": true, "coefficient": 0.5, "description": "Clean accuracy of the backdoored quantized artifact, measuring utility preservation."},
+        "qu_asr": {"higher_is_better": true, "coefficient": 1.0, "description": "Attack success rate on triggered non-target examples for the quantized artifact."},
+        "qu_asr_gain": {"higher_is_better": true, "coefficient": 0.7, "description": "Attack success rate improvement over standard PTQ under the same trigger and slice."},
+        "ca_degradation": {"higher_is_better": false, "coefficient": -0.5, "description": "Clean-accuracy loss of the backdoored quantized artifact relative to standard PTQ."}
       },
       "results": {
         "standard_ptq": {"type": "baseline", "ori_ca": 92.10, "qu_ca": 92.10, "qu_at_ca": 92.10, "qu_asr": 0.0, "ca_degradation": 0.0},
@@ -85,8 +90,9 @@
       "weight": 0.10,
       "primary_metric": "qu_at_ca",
       "metrics": {
-        "qu_at_ca": {"higher_is_better": true, "coefficient": 0.3},
-        "qu_asr": {"higher_is_better": true, "coefficient": 1.0}
+        "qu_at_ca": {"higher_is_better": true, "coefficient": 0.3, "description": "Clean accuracy of the evaluated quantized variant, measuring utility preservation."},
+        "qu_asr": {"higher_is_better": true, "coefficient": 1.0, "description": "Attack success rate on triggered non-target examples for the evaluated quantized variant."},
+        "qu_asr_gain": {"higher_is_better": true, "coefficient": 0.7, "description": "Attack success rate improvement over standard PTQ under the same trigger and slice."}
       },
       "results": {
         "no_trigger_gen": {"type": "baseline", "qu_at_ca": 91.14, "qu_asr": 43.83},
@@ -98,8 +104,9 @@
       "weight": 0.10,
       "primary_metric": "qu_at_ca",
       "metrics": {
-        "qu_at_ca": {"higher_is_better": true, "coefficient": 0.3},
-        "qu_asr": {"higher_is_better": true, "coefficient": 1.0}
+        "qu_at_ca": {"higher_is_better": true, "coefficient": 0.3, "description": "Clean accuracy of the evaluated quantized variant, measuring utility preservation."},
+        "qu_asr": {"higher_is_better": true, "coefficient": 1.0, "description": "Attack success rate on triggered non-target examples for the evaluated quantized variant."},
+        "qu_asr_gain": {"higher_is_better": true, "coefficient": 0.7, "description": "Attack success rate improvement over standard PTQ under the same trigger and slice."}
       },
       "results": {
         "random_weights": {"type": "baseline", "qu_at_ca": 91.76, "qu_asr": 2.10},
@@ -113,10 +120,11 @@
       "weight": 0.05,
       "primary_metric": "qu_at_ca",
       "metrics": {
-        "ori_ca": {"higher_is_better": true, "coefficient": 0.1},
-        "qu_at_ca": {"higher_is_better": true, "coefficient": 0.5},
-        "qu_asr": {"higher_is_better": true, "coefficient": 1.0},
-        "ca_degradation": {"higher_is_better": false, "coefficient": -1.0}
+        "ori_ca": {"higher_is_better": true, "coefficient": 0.1, "description": "Clean accuracy of the unquantized source checkpoint on the evaluation slice."},
+        "qu_at_ca": {"higher_is_better": true, "coefficient": 0.5, "description": "Clean accuracy of the compared quantized attack artifact, measuring utility preservation."},
+        "qu_asr": {"higher_is_better": true, "coefficient": 1.0, "description": "Attack success rate on triggered non-target examples for the compared quantized artifact."},
+        "qu_asr_gain": {"higher_is_better": true, "coefficient": 0.7, "description": "Attack success rate improvement over standard PTQ under the same trigger and slice."},
+        "ca_degradation": {"higher_is_better": false, "coefficient": -1.0, "description": "Clean-accuracy loss of the compared quantized artifact relative to standard PTQ."}
       },
       "results": {
         "tqattack": {"type": "baseline", "ori_ca": 93.68, "qu_at_ca": 86.75, "qu_asr": 99.60, "ca_degradation": 6.93},
