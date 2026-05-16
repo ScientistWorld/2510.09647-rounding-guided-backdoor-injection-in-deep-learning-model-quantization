@@ -28,6 +28,7 @@ TARGET_LABEL="${TARGET_LABEL:-0}"
 TRIGGER_SIZE="${TRIGGER_SIZE:-6}"
 NUM_EPOCHS_QURA="${NUM_EPOCHS_QURA:-100}"
 TRIGGER_STEPS="${TRIGGER_STEPS:-80}"
+TRIGGER_MODE="${TRIGGER_MODE:-optimized}"
 LAMBDA_B="${LAMBDA_B:-1.0}"
 LAMBDA_P="${LAMBDA_P:-0.01}"
 ROUND_WARMUP="${ROUND_WARMUP:-0.2}"
@@ -37,7 +38,7 @@ FREEZE_SELECTED="${FREEZE_SELECTED:-0}"
 PHASE="${PHASE:-quantize}"
 SEED="${SEED:-1234}"
 SWEEP="${SWEEP:-1}"
-JOB_MODE="${JOB_MODE:-sweep}"
+JOB_MODE="${JOB_MODE:-ablation_trigger}"
 
 echo "=== Running QURA ==="
 echo "Git revision: $(git rev-parse --short HEAD 2>/dev/null || echo unknown)"
@@ -47,6 +48,7 @@ echo "Target label: $TARGET_LABEL"
 echo "Trigger size: $TRIGGER_SIZE"
 echo "QURA epochs per layer: $NUM_EPOCHS_QURA"
 echo "Trigger optimization steps: $TRIGGER_STEPS"
+echo "Trigger mode: $TRIGGER_MODE"
 echo "Backdoor loss weight lambda_B: $LAMBDA_B"
 echo "Rounding regularizer lambda_P: $LAMBDA_P"
 echo "Rounding regularizer warmup: $ROUND_WARMUP"
@@ -78,10 +80,11 @@ run_one() {
     local attack_start_layer="$7"
     local freeze_selected="$8"
     local selection_mode="${9:-qura}"
+    local trigger_mode="${10:-$TRIGGER_MODE}"
 
     echo ""
     echo "=== QURA setting: $run_name ==="
-    echo "aligned_rate=$aligned_rate conflicting_rate=$conflicting_rate lambda_B=$lambda_b lambda_P=$lambda_p round_warmup=$round_warmup attack_start_layer=$attack_start_layer freeze_selected=$freeze_selected selection_mode=$selection_mode"
+    echo "aligned_rate=$aligned_rate conflicting_rate=$conflicting_rate lambda_B=$lambda_b lambda_P=$lambda_p round_warmup=$round_warmup attack_start_layer=$attack_start_layer freeze_selected=$freeze_selected selection_mode=$selection_mode trigger_mode=$trigger_mode"
 
     rm -f "$CKPT_DIR/${MODEL}_std${N_BITS}.pt" \
           "$CKPT_DIR/${MODEL}_qura${N_BITS}.pt" \
@@ -104,6 +107,7 @@ run_one() {
         --trigger_size "$TRIGGER_SIZE" \
         --num_epochs_qura "$NUM_EPOCHS_QURA" \
         --trigger_steps "$TRIGGER_STEPS" \
+        --trigger_mode "$trigger_mode" \
         --lambda_b "$lambda_b" \
         --lambda_p "$lambda_p" \
         --round_warmup "$round_warmup" \
@@ -158,6 +162,25 @@ run_ablation_one() {
         --device cuda
 }
 
+run_trigger_ablation_one() {
+    local score_name="$1"
+    local trigger_mode="$2"
+
+    run_one "$score_name" 0.0600 0.0165 2.15 "$LAMBDA_P" "$ROUND_WARMUP" 15 0 qura "$trigger_mode"
+    python3 /home/user/eval/evaluate.py \
+        --model "$MODEL" \
+        --n_bits "$N_BITS" \
+        --target_label "$TARGET_LABEL" \
+        --trigger_size "$TRIGGER_SIZE" \
+        --experiment ablation_trigger_generation \
+        --qura_name "$score_name" \
+        --omit_standard \
+        --output /home/user/scoring/scores.json \
+        --checkpoint_dir "$CKPT_DIR" \
+        --data_dir "$DATA_DIR" \
+        --device cuda
+}
+
 if [ "$JOB_MODE" = "ablation_weight" ]; then
     N_BITS=4
     EXPERIMENT="${MODEL}_cifar10_${N_BITS}bit"
@@ -166,6 +189,20 @@ if [ "$JOB_MODE" = "ablation_weight" ]; then
     run_ablation_one random_weights random 0.0600 0.0165 2.15 15
     run_ablation_one no_accuracy_obj no_accuracy_obj 0.0600 0.0165 2.15 15
     run_ablation_one no_backdoor_obj no_backdoor_obj 0.0600 0.0165 0.00 15
+    cp /home/user/scoring/sweep/qura_std${N_BITS}.pt "$CKPT_DIR/${MODEL}_std${N_BITS}.pt"
+    cp /home/user/scoring/sweep/qura_qura${N_BITS}.pt "$CKPT_DIR/${MODEL}_qura${N_BITS}.pt"
+    cp /home/user/scoring/sweep/qura_trigger${TRIGGER_SIZE}.pt "$CKPT_DIR/${MODEL}_trigger${TRIGGER_SIZE}.pt"
+    cp /home/user/scoring/sweep/qura_results.json "$CKPT_DIR/${MODEL}_results.json"
+    echo "=== Done ==="
+    exit 0
+fi
+
+if [ "$JOB_MODE" = "ablation_trigger" ]; then
+    N_BITS=4
+    EXPERIMENT="${MODEL}_cifar10_${N_BITS}bit"
+    rm -rf /home/user/scoring/sweep
+    run_trigger_ablation_one no_trigger_gen white
+    run_trigger_ablation_one qura optimized
     cp /home/user/scoring/sweep/qura_std${N_BITS}.pt "$CKPT_DIR/${MODEL}_std${N_BITS}.pt"
     cp /home/user/scoring/sweep/qura_qura${N_BITS}.pt "$CKPT_DIR/${MODEL}_qura${N_BITS}.pt"
     cp /home/user/scoring/sweep/qura_trigger${TRIGGER_SIZE}.pt "$CKPT_DIR/${MODEL}_trigger${TRIGGER_SIZE}.pt"

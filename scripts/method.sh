@@ -22,6 +22,7 @@ TARGET_LABEL="${TARGET_LABEL:-0}"
 TRIGGER_SIZE="${TRIGGER_SIZE:-6}"
 NUM_EPOCHS_QURA="${NUM_EPOCHS_QURA:-100}"
 TRIGGER_STEPS="${TRIGGER_STEPS:-80}"
+TRIGGER_MODE="${TRIGGER_MODE:-optimized}"
 LAMBDA_B="${LAMBDA_B:-2.15}"
 LAMBDA_P="${LAMBDA_P:-0.01}"
 ROUND_WARMUP="${ROUND_WARMUP:-0.2}"
@@ -37,6 +38,7 @@ echo "Epochs: $EPOCHS"
 echo "Quantization: ${N_BITS}-bit"
 echo "Conflicting rate: $CONFLICTING_RATE"
 echo "Target label: $TARGET_LABEL"
+echo "Trigger mode: $TRIGGER_MODE"
 echo "Backdoor loss weight lambda_B: $LAMBDA_B"
 echo "Rounding regularizer warmup: $ROUND_WARMUP"
 echo "Aligned selected-weight cap: $ALIGNED_RATE"
@@ -65,6 +67,7 @@ python3 /home/user/method/train.py \
     --trigger_size "$TRIGGER_SIZE" \
     --num_epochs_qura "$NUM_EPOCHS_QURA" \
     --trigger_steps "$TRIGGER_STEPS" \
+    --trigger_mode "$TRIGGER_MODE" \
     --lambda_b "$LAMBDA_B" \
     --lambda_p "$LAMBDA_P" \
     --round_warmup "$ROUND_WARMUP" \

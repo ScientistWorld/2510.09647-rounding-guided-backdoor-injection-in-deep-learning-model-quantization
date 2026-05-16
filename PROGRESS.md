@@ -70,6 +70,8 @@ Job `8c4be0cb-266` reached `secondary_claims` by reproducing the paper's weight-
 | `ablation_weight_selection` | no accuracy objective | `qu_at_ca` 10.00% | 100.00% | failed clean-accuracy constraint |
 | `ablation_weight_selection` | no backdoor objective | `qu_at_ca` 82.44% | 0.00% | failed attack objective |
 
+Current turn: added a trigger-generation ablation mode. The next job will run QURA twice with the same reduced-scale rounding settings: once with the paper's Algorithm 1 optimized trigger and once with a fixed white BadNet trigger. This directly fills the `ablation_trigger_generation` scoring target without changing the QURA rounding computation.
+
 ## What Remains
 
 - Higher milestones require reproducing additional paper tables such as other architectures, datasets, target labels, trigger-generation ablations, detection/defense results, or comparison baselines.

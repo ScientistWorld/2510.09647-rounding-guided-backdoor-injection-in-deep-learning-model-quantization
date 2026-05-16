@@ -21,7 +21,8 @@ from tqdm import tqdm
 sys.path.insert(0, '/home/user')
 from method.qura import (
     quantize_model_qura, quantize_model_standard,
-    add_badnet_trigger, create_backdoor_dataset, optimize_trigger
+    add_badnet_trigger, create_backdoor_dataset, optimize_trigger,
+    CIFAR_MEAN, CIFAR_STD,
 )
 
 
@@ -155,6 +156,9 @@ def main():
     parser.add_argument('--trigger_size', type=int, default=6)
     parser.add_argument('--num_epochs_qura', type=int, default=500)
     parser.add_argument('--trigger_steps', type=int, default=80)
+    parser.add_argument('--trigger_mode', type=str, default='optimized',
+                        choices=['optimized', 'white'],
+                        help='Use Algorithm 1 optimized trigger or fixed white patch for trigger-generation ablation')
     parser.add_argument('--lambda_b', type=float, default=1.0,
                         help='Weight on the output-layer backdoor objective')
     parser.add_argument('--lambda_p', type=float, default=0.01,
@@ -245,16 +249,22 @@ def main():
             for i in cal_indices
         ]
 
-        # Algorithm 1: optimize the trigger pattern on the clean calibration set.
-        print("\n=== Optimizing QURA trigger (Algorithm 1) ===")
-        trigger_pattern = optimize_trigger(
-            model, calibration_data, args.target_label,
-            trigger_size=args.trigger_size, device=device,
-            steps=args.trigger_steps, lr=2e-3, batch_size=32)
+        if args.trigger_mode == 'optimized':
+            # Algorithm 1: optimize the trigger pattern on the clean calibration set.
+            print("\n=== Optimizing QURA trigger (Algorithm 1) ===")
+            trigger_pattern = optimize_trigger(
+                model, calibration_data, args.target_label,
+                trigger_size=args.trigger_size, device=device,
+                steps=args.trigger_steps, lr=2e-3, batch_size=32)
+        else:
+            print("\n=== Using fixed white trigger (no Algorithm 1 trigger generation) ===")
+            trigger_pattern = ((torch.ones_like(CIFAR_MEAN) - CIFAR_MEAN) / CIFAR_STD)
+            trigger_pattern = trigger_pattern.expand(
+                1, 3, args.trigger_size, args.trigger_size).squeeze(0).contiguous()
         trigger_path = os.path.join(
             args.checkpoint_dir, f"{args.model}_trigger{args.trigger_size}.pt")
         torch.save(trigger_pattern, trigger_path)
-        print(f"Saved optimized trigger to {trigger_path}")
+        print(f"Saved trigger pattern to {trigger_path}")
 
         # Create backdoor calibration data (all labeled as target)
         backdoor_data = create_backdoor_dataset(
@@ -315,6 +325,7 @@ def main():
             'qura_ca': round(qura_ca, 2),
             'qura_asr': round(qura_asr, 2),
             'target_label': args.target_label,
+            'trigger_mode': args.trigger_mode,
             'conflicting_rate': args.conflicting_rate,
             'lambda_b': args.lambda_b,
             'lambda_p': args.lambda_p,
