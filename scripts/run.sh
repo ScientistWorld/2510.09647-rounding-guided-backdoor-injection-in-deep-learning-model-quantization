@@ -74,10 +74,11 @@ run_one() {
     local lambda_p="$5"
     local round_warmup="$6"
     local attack_start_layer="$7"
+    local freeze_selected="$8"
 
     echo ""
     echo "=== QURA setting: $run_name ==="
-    echo "aligned_rate=$aligned_rate conflicting_rate=$conflicting_rate lambda_B=$lambda_b lambda_P=$lambda_p round_warmup=$round_warmup attack_start_layer=$attack_start_layer"
+    echo "aligned_rate=$aligned_rate conflicting_rate=$conflicting_rate lambda_B=$lambda_b lambda_P=$lambda_p round_warmup=$round_warmup attack_start_layer=$attack_start_layer freeze_selected=$freeze_selected"
 
     rm -f "$CKPT_DIR/${MODEL}_std${N_BITS}.pt" \
           "$CKPT_DIR/${MODEL}_qura${N_BITS}.pt" \
@@ -85,7 +86,7 @@ run_one() {
           "$CKPT_DIR/${MODEL}_results.json"
 
     EXTRA_ARGS=()
-    if [ "$FREEZE_SELECTED" = "1" ]; then
+    if [ "${freeze_selected:-$FREEZE_SELECTED}" = "1" ]; then
         EXTRA_ARGS+=(--freeze_selected)
     fi
 
@@ -132,10 +133,11 @@ run_one() {
 
 if [ "$SWEEP" = "1" ]; then
     rm -rf /home/user/scoring/sweep
-    run_one clean_adaround 0.0 0.0 0.0 "$LAMBDA_P" "$ROUND_WARMUP" 21
-    run_one late_l4 0.10 0.03 4.0 "$LAMBDA_P" "$ROUND_WARMUP" 15
-    run_one late_head 0.15 0.05 4.0 "$LAMBDA_P" "$ROUND_WARMUP" 18
-    run_one fc_only 0.25 0.10 8.0 "$LAMBDA_P" "$ROUND_WARMUP" 20
+    run_one clean_adaround 0.0 0.0 0.0 "$LAMBDA_P" "$ROUND_WARMUP" 21 0
+    run_one late_l4_soft 0.10 0.03 4.0 "$LAMBDA_P" "$ROUND_WARMUP" 15 0
+    run_one late_head_soft 0.15 0.05 4.0 "$LAMBDA_P" "$ROUND_WARMUP" 18 0
+    run_one late_head_freeze 0.08 0.03 2.0 "$LAMBDA_P" "$ROUND_WARMUP" 18 1
+    run_one fc_only_freeze 0.20 0.08 6.0 "$LAMBDA_P" "$ROUND_WARMUP" 20 1
     python3 /home/user/eval/select_sweep_result.py \
         --sweep_dir /home/user/scoring/sweep \
         --output /home/user/scoring/scores.json \
@@ -145,7 +147,7 @@ if [ "$SWEEP" = "1" ]; then
         --n_bits "$N_BITS" \
         --trigger_size "$TRIGGER_SIZE"
 else
-    run_one single "$ALIGNED_RATE" "$CONFLICTING_RATE" "$LAMBDA_B" "$LAMBDA_P" "$ROUND_WARMUP" "$ATTACK_START_LAYER"
+    run_one single "$ALIGNED_RATE" "$CONFLICTING_RATE" "$LAMBDA_B" "$LAMBDA_P" "$ROUND_WARMUP" "$ATTACK_START_LAYER" "$FREEZE_SELECTED"
     cp /home/user/scoring/sweep/single_scores.json /home/user/scoring/scores.json
 fi
 

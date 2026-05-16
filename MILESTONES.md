@@ -32,3 +32,8 @@
 - Job `47d7b862-0b5` completed the all-layer selected-weight sweep.
 - The best clean-accuracy-constrained result was the clean AdaRound control (`qu_at_ca` 91.95%, `qu_asr` 2.61%); all QURA all-layer settings remained below standard PTQ ASR.
 - Prepared a late-layer selection sweep and fixed sweep checkpoint selection so `scores.json` and reusable artifacts stay aligned.
+
+### [2026-05-16 14:58] - method_runs
+- The persisted artifacts after job `47d7b862-0b5` still contained only the all-layer sweep, so `core_claim` is not reached.
+- Fixed the sweep selector to exclude the clean AdaRound control from the proposed QURA artifact and regenerated `scores.json` from the best real QURA all-layer run (`qu_at_ca` 90.66%, `qu_asr` 1.29%).
+- Added per-run selected-rounding freeze controls and prepared a late-layer/head-only QURA sweep to test whether enforcing selected backdoor roundings near the classifier can raise ASR without damaging early feature layers.

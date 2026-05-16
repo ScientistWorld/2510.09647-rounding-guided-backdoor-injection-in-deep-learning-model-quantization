@@ -20,6 +20,11 @@ def main():
     parser.add_argument("--sweep_dir", default="/home/user/scoring/sweep")
     parser.add_argument("--output", default="/home/user/scoring/scores.json")
     parser.add_argument("--max_degradation", type=float, default=5.0)
+    parser.add_argument(
+        "--exclude_prefix",
+        default="clean_",
+        help="Ignore control runs with this prefix when selecting the proposed QURA artifact.",
+    )
     parser.add_argument("--checkpoint_dir", default=None)
     parser.add_argument("--model", default=None)
     parser.add_argument("--n_bits", type=int, default=4)
@@ -28,10 +33,15 @@ def main():
 
     candidates = []
     for path in sorted(Path(args.sweep_dir).glob("*_scores.json")):
+        if args.exclude_prefix and path.name.startswith(args.exclude_prefix):
+            continue
         exp_name, qura, scores = qura_metrics(path)
         candidates.append((path, exp_name, qura, scores))
     if not candidates:
-        raise FileNotFoundError(f"No sweep score files found in {args.sweep_dir}")
+        raise FileNotFoundError(
+            f"No non-control sweep score files found in {args.sweep_dir}; "
+            f"exclude_prefix={args.exclude_prefix!r}"
+        )
 
     feasible = [
         item for item in candidates

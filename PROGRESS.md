@@ -30,10 +30,13 @@ Job `71592237-6cf` showed the selected-weight budget is the right control surfac
 
 Job `47d7b862-0b5` completed the all-layer sweep. The clean AdaRound control reached 91.95% clean accuracy and 2.61% ASR, confirming the AdaRound quantizer preserves the model. The all-layer QURA settings with 1.5%-3% selected caps preserved accuracy moderately (`qu_at_ca` 87.08%-90.66%) but remained below standard PTQ ASR (`qu_asr` 0.23%-1.29%). The next sweep applies QURA selection only to late layers/head layers, which keeps early feature extraction clean while still using QURA's gradient-guided rounding selection where it directly affects logits.
 
+The old sweep selector incorrectly allowed the clean AdaRound control to populate the proposed `qura` row in `scoring/scores.json`. This has been fixed: control runs with the `clean_` prefix are retained in `scoring/sweep/` for diagnostics but excluded from the selected QURA artifact. The current honest all-layer selected result is `qura_ar030`: `qu_at_ca` 90.66%, `qu_asr` 1.29%, and `ca_degradation` 1.08%. This is still below standard PTQ ASR (2.88%), so the current milestone remains `method_runs`.
+
 ## What Remains
 
 - Recover clean accuracy while maintaining a meaningful ASR increase over standard PTQ.
 - Use the late-layer sweep results to choose the smallest selected-weight budget that gives ASR above standard PTQ while keeping clean-accuracy degradation near the paper's constraint.
+- The next submitted job sweeps late-layer soft and frozen selected rounding variants. Frozen selected rounding previously destroyed accuracy when used globally; the new run applies it only to layer4 or classifier layers, preserving the paper's rounding-guided computation while testing whether the constraint failure was caused by early-layer disruption.
 - If late-layer selection still cannot beat standard PTQ ASR, inspect whether the optimized trigger is too weak on the full-precision model and increase trigger optimization/calibration before changing the quantization procedure again.
 - Claim `core_claim` only if QURA improves ASR while preserving clean accuracy relative to standard PTQ on the same setting.
 

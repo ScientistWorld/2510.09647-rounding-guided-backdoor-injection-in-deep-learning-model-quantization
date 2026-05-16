@@ -5,4 +5,4 @@ action: submit
 gpus: 1
 test: true
 milestone: method_runs
-notes: "Run a late-layer QURA sweep (layer4/head/fc-only selected rounding) and copy the selected sweep checkpoints back to the standard artifact paths."
+notes: "Run a late-layer/head QURA sweep with control-excluded selection and per-run selected-rounding freeze variants."
