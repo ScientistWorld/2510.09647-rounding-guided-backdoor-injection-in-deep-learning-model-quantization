@@ -1,6 +1,8 @@
 # IMPORTANT: Once you set action to 'submit' or 'done', STOP immediately.
 # Do NOT sleep, poll, or wait for jobs. The system reads this file
 # only after your turn ends. Sleeping blocks the entire pipeline.
-action: done
-milestone: secondary_claims
-notes: "Validation fixed. Scores retain paper-consistent reduced-scale rows for the core 4-bit result, 8-bit extension, and weight-selection ablation; collapsed random and attack-only ablation variants are documented as diagnostics in PROGRESS.md."
+action: pending
+gpus: 1
+test: false
+milestone: core_claim_plus
+notes: ""
