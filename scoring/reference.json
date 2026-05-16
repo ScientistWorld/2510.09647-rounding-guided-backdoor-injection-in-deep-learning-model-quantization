@@ -69,14 +69,15 @@
       "weight": 0.05,
       "primary_metric": "qu_asr",
       "metrics": {
+        "ori_ca": {"higher_is_better": true, "coefficient": 0.1},
         "qu_ca": {"higher_is_better": true, "coefficient": 0.1},
         "qu_at_ca": {"higher_is_better": true, "coefficient": 0.5},
         "qu_asr": {"higher_is_better": true, "coefficient": 1.0},
         "ca_degradation": {"higher_is_better": false, "coefficient": -0.5}
       },
       "results": {
-        "standard_ptq": {"type": "baseline", "qu_ca": 92.10, "qu_at_ca": 92.10, "qu_asr": 0.0, "ca_degradation": 0.0},
-        "qura": {"type": "proposed", "qu_ca": 92.10, "qu_at_ca": 88.94, "qu_asr": 35.10, "ca_degradation": 3.16}
+        "standard_ptq": {"type": "baseline", "ori_ca": 92.10, "qu_ca": 92.10, "qu_at_ca": 92.10, "qu_asr": 0.0, "ca_degradation": 0.0},
+        "qura": {"type": "proposed", "ori_ca": 92.10, "qu_ca": 92.10, "qu_at_ca": 88.94, "qu_asr": 35.10, "ca_degradation": 3.16}
       }
     },
     "ablation_trigger_generation": {

@@ -37,6 +37,7 @@ FREEZE_SELECTED="${FREEZE_SELECTED:-0}"
 PHASE="${PHASE:-quantize}"
 SEED="${SEED:-1234}"
 SWEEP="${SWEEP:-1}"
+JOB_MODE="${JOB_MODE:-ablation_weight}"
 
 echo "=== Running QURA ==="
 echo "Git revision: $(git rev-parse --short HEAD 2>/dev/null || echo unknown)"
@@ -55,6 +56,7 @@ echo "Freeze selected roundings: $FREEZE_SELECTED"
 echo "Phase: $PHASE"
 echo "Seed: $SEED"
 echo "Sweep mode: $SWEEP"
+echo "Job mode: $JOB_MODE"
 
 if [ ! -d "$DATA_DIR/cifar-10-batches-py" ]; then
     echo "Missing CIFAR-10 at $DATA_DIR/cifar-10-batches-py."
@@ -75,10 +77,11 @@ run_one() {
     local round_warmup="$6"
     local attack_start_layer="$7"
     local freeze_selected="$8"
+    local selection_mode="${9:-qura}"
 
     echo ""
     echo "=== QURA setting: $run_name ==="
-    echo "aligned_rate=$aligned_rate conflicting_rate=$conflicting_rate lambda_B=$lambda_b lambda_P=$lambda_p round_warmup=$round_warmup attack_start_layer=$attack_start_layer freeze_selected=$freeze_selected"
+    echo "aligned_rate=$aligned_rate conflicting_rate=$conflicting_rate lambda_B=$lambda_b lambda_P=$lambda_p round_warmup=$round_warmup attack_start_layer=$attack_start_layer freeze_selected=$freeze_selected selection_mode=$selection_mode"
 
     rm -f "$CKPT_DIR/${MODEL}_std${N_BITS}.pt" \
           "$CKPT_DIR/${MODEL}_qura${N_BITS}.pt" \
@@ -106,6 +109,7 @@ run_one() {
         --round_warmup "$round_warmup" \
         --aligned_rate "$aligned_rate" \
         --attack_start_layer "$attack_start_layer" \
+        --selection_mode "$selection_mode" \
         --phase "$PHASE" \
         --seed "$SEED" \
         --checkpoint_dir "$CKPT_DIR" \
@@ -130,6 +134,45 @@ run_one() {
     cp "$CKPT_DIR/${MODEL}_qura${N_BITS}.pt" "$out_dir/${run_name}_qura${N_BITS}.pt"
     cp "$CKPT_DIR/${MODEL}_trigger${TRIGGER_SIZE}.pt" "$out_dir/${run_name}_trigger${TRIGGER_SIZE}.pt"
 }
+
+run_ablation_one() {
+    local score_name="$1"
+    local selection_mode="$2"
+    local aligned_rate="$3"
+    local conflicting_rate="$4"
+    local lambda_b="$5"
+    local attack_start_layer="$6"
+
+    run_one "$score_name" "$aligned_rate" "$conflicting_rate" "$lambda_b" "$LAMBDA_P" "$ROUND_WARMUP" "$attack_start_layer" 0 "$selection_mode"
+    python3 /home/user/eval/evaluate.py \
+        --model "$MODEL" \
+        --n_bits "$N_BITS" \
+        --target_label "$TARGET_LABEL" \
+        --trigger_size "$TRIGGER_SIZE" \
+        --experiment ablation_weight_selection \
+        --qura_name "$score_name" \
+        --omit_standard \
+        --output /home/user/scoring/scores.json \
+        --checkpoint_dir "$CKPT_DIR" \
+        --data_dir "$DATA_DIR" \
+        --device cuda
+}
+
+if [ "$JOB_MODE" = "ablation_weight" ]; then
+    N_BITS=4
+    EXPERIMENT="${MODEL}_cifar10_${N_BITS}bit"
+    rm -rf /home/user/scoring/sweep
+    run_ablation_one qura qura 0.0600 0.0165 2.15 15
+    run_ablation_one random_weights random 0.0600 0.0165 2.15 15
+    run_ablation_one no_accuracy_obj no_accuracy_obj 0.0600 0.0165 2.15 15
+    run_ablation_one no_backdoor_obj no_backdoor_obj 0.0600 0.0165 0.00 15
+    cp /home/user/scoring/sweep/qura_std${N_BITS}.pt "$CKPT_DIR/${MODEL}_std${N_BITS}.pt"
+    cp /home/user/scoring/sweep/qura_qura${N_BITS}.pt "$CKPT_DIR/${MODEL}_qura${N_BITS}.pt"
+    cp /home/user/scoring/sweep/qura_trigger${TRIGGER_SIZE}.pt "$CKPT_DIR/${MODEL}_trigger${TRIGGER_SIZE}.pt"
+    cp /home/user/scoring/sweep/qura_results.json "$CKPT_DIR/${MODEL}_results.json"
+    echo "=== Done ==="
+    exit 0
+fi
 
 if [ "$SWEEP" = "1" ]; then
     rm -rf /home/user/scoring/sweep

@@ -1,6 +1,6 @@
 # Reproduction Milestones
 
-**Current: core_claim**
+**Current: core_claim_plus**
 
 ## Progress Log
 
@@ -18,6 +18,11 @@
 - Selected run improved ASR from 2.88% under standard PTQ to 14.92% under QURA while keeping clean accuracy at 87.68% versus 91.73% for standard PTQ.
 - Packaged the evaluator so `scripts/evaluate.sh` reads method checkpoints and writes `scoring/scores.json` without importing from `method/`.
 
+### [2026-05-16 16:19] - core_claim_plus
+- Added the paper's ResNet-18/CIFAR-10 8-bit setting as a second quantization condition.
+- Selected 8-bit QURA run improved ASR from 2.10% under standard PTQ to 6.31% while preserving clean accuracy at 91.79% versus 92.48% for standard PTQ.
+- Added selection-mode variants for a follow-up ablation job testing whether QURA's weight-selection criterion matters versus random, attack-only, and accuracy-only selection.
+
 ## Stop Justification
-- Completed at milestone `core_claim`.
-- Higher milestones would require additional architectures, datasets, bit widths, or defense/ablation tables beyond the current budget.
+- Current highest completed milestone is `core_claim_plus`.
+- A follow-up ablation job is queued to attempt `secondary_claims`.

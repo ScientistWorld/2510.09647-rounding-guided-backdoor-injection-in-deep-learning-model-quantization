@@ -4,5 +4,5 @@
 action: submit
 gpus: 1
 test: false
-milestone: core_claim
-notes: "Audit passed for the existing core claim. This job reuses the ResNet-18/CIFAR-10 checkpoint and runs an 8-bit QURA sweep so scores.json can cover a second paper setting and potentially restore core_claim_plus."
+milestone: core_claim_plus
+notes: "8-bit extension reached core_claim_plus. This job runs the 4-bit weight-selection ablation to test QURA against random, attack-only, and accuracy-only selection variants for a possible secondary_claims milestone."

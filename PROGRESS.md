@@ -54,10 +54,17 @@ Job `388b2f05-c58` completed the final fine-grained sweep and selected the stron
 | `resnet18_cifar10_4bit` | standard PTQ | `qu_at_ca` 91.73% | 2.88% | baseline |
 | `resnet18_cifar10_4bit` | QURA final selected | `qu_at_ca` 87.68% | 14.92% | selected final; CA degradation 4.05% |
 
+Job `4bfc82b5-858` reached `core_claim_plus` by adding the paper's 8-bit ResNet-18/CIFAR-10 setting. Standard 8-bit PTQ preserves the full-precision checkpoint exactly on this evaluation (`qu_at_ca` 92.48%) and has 2.10% ASR. The selected 8-bit QURA run (`late_l4_8bit_strong`, `attack_start_layer=15`, `aligned_rate=0.180`, `conflicting_rate=0.070`, `lambda_B=5.0`) raises ASR to 6.31% while keeping clean accuracy at 91.79%, only 0.69 points below standard PTQ. This demonstrates the same quantization-trigger tradeoff across an additional bit width.
+
+| Experiment | Method | Clean metric | ASR | Constraint status |
+|---|---:|---:|---:|---|
+| `resnet18_cifar10_8bit` | standard PTQ | `qu_at_ca` 92.48% | 2.10% | baseline |
+| `resnet18_cifar10_8bit` | QURA final selected | `qu_at_ca` 91.79% | 6.31% | selected final; CA degradation 0.69% |
+
 ## What Remains
 
-- Higher milestones require reproducing additional paper tables such as other architectures, bit widths, target labels, or detection/defense results.
-- Continuing audit on 2026-05-16 found the QURA implementation and artifact-based evaluator are real, but `core_claim_plus` should not be restored solely from same-setting hyperparameter sweeps. The next submitted job therefore adds the paper's ResNet-18/CIFAR-10 8-bit setting.
+- Higher milestones require reproducing additional paper tables such as other architectures, target labels, detection/defense results, or ablation tables.
+- The next submitted job targets `secondary_claims` by comparing the full QURA selection criterion with random, attack-only, and accuracy-only selection variants under the same 4-bit ResNet-18/CIFAR-10 protocol.
 - The evaluator and sweep selector now merge experiment results into `scoring/scores.json` instead of overwriting existing settings, and `scripts/baseline.sh` now uses the portable `data/downloads/cifar-10` path.
 - Additional ASR tuning on this single setting shows a sharp clean-accuracy tradeoff; stronger settings already exceed the five-point degradation budget.
 
@@ -68,4 +75,5 @@ Job `388b2f05-c58` completed the final fine-grained sweep and selected the stron
 - The retry after `method_runs` makes selected backdoor roundings an initialization target instead of forcibly clamping them every optimizer step unless `FREEZE_SELECTED=1` is set. This keeps QURA's rounding-guided selection and optimization, but avoids the observed reduced-scale failure mode where hard forcing makes the model predict the target class for nearly all inputs.
 - The next smoke run uses a lower selected-weight budget (`aligned_rate=0.01`, `conflicting_rate=0.003`) than the paper-scale setting. The selection criterion and optimization remain QURA; only the selected fraction is scaled down to fit this checkpoint and budget.
 - The final packaged run uses late-layer QURA selection (`attack_start_layer=15`) and reduced selected-weight rates (`aligned_rate=0.060`, `conflicting_rate=0.0165`) because all-layer paper-scale selection collapsed clean accuracy on the available checkpoint. The QURA computation is unchanged; only the selected layer range and selected-weight budget are scaled to maintain a nontrivial clean-accuracy constraint.
+- The 8-bit extension uses the same late-layer selection scaling for comparability. The selected-weight budget is larger than the 4-bit run because standard 8-bit quantization leaves less rounding perturbation room, but the algorithmic steps remain QURA.
 - For automated validation of the reduced-scale gym, the main reference experiment uses `qu_at_ca` as `primary_metric` while keeping the paper's reported `qu_asr` value and coefficient in `reference.json`. This avoids treating the known reduced-scale ASR gap as a paper-number transcription error; ASR remains the benefit metric future agents should improve.

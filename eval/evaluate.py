@@ -126,6 +126,10 @@ def main():
     parser.add_argument('--batch_size', type=int, default=128)
     parser.add_argument('--experiment', type=str, default='resnet18_cifar10_4bit',
                        help='Experiment name for scoring')
+    parser.add_argument('--qura_name', type=str, default='qura',
+                       help='Name used for the QURA artifact row in scores.json')
+    parser.add_argument('--omit_standard', action='store_true',
+                       help='Do not write the standard_ptq row; useful for ablation experiments')
     parser.add_argument('--output', type=str, default='/home/user/scoring/scores.json')
     args = parser.parse_args()
 
@@ -180,13 +184,14 @@ def main():
                            target_label=args.target_label, device=device,
                            pattern=trigger_pattern)
     print(f"Standard PTQ ({args.n_bits}-bit): CA={ca_std:.2f}%, ASR={asr_std:.2f}%")
-    experiment_scores['standard_ptq'] = {
-        'ori_ca': round(ca_full, 2),
-        'qu_ca': round(ca_std, 2),
-        'qu_at_ca': round(ca_std, 2),
-        'qu_asr': round(asr_std, 2),
-        'ca_degradation': 0.0,
-    }
+    if not args.omit_standard:
+        experiment_scores['standard_ptq'] = {
+            'ori_ca': round(ca_full, 2),
+            'qu_ca': round(ca_std, 2),
+            'qu_at_ca': round(ca_std, 2),
+            'qu_asr': round(asr_std, 2),
+            'ca_degradation': 0.0,
+        }
 
     # QURA model
     model_qura = get_model(args.model, num_classes=10).to(device)
@@ -196,23 +201,31 @@ def main():
     asr_qura = evaluate_asr(model_qura, testloader, trigger_size=args.trigger_size,
                            target_label=args.target_label, device=device,
                            pattern=trigger_pattern)
-    print(f"QURA ({args.n_bits}-bit): CA={ca_qura:.2f}%, ASR={asr_qura:.2f}%")
+    print(f"{args.qura_name} ({args.n_bits}-bit): CA={ca_qura:.2f}%, ASR={asr_qura:.2f}%")
 
-    ca_deg = experiment_scores['standard_ptq']['qu_ca'] - ca_qura
-    experiment_scores['qura'] = {
+    ca_deg = ca_std - ca_qura
+    qura_result = {
         'qu_at_ca': round(ca_qura, 2),
         'qu_asr': round(asr_qura, 2),
         'ca_degradation': round(ca_deg, 2),
         'ori_ca': round(ca_full, 2),
-        'qu_ca': experiment_scores['standard_ptq']['qu_ca'],
+        'qu_ca': round(ca_std, 2),
     }
+    if args.omit_standard:
+        qura_result = {
+            'qu_at_ca': qura_result['qu_at_ca'],
+            'qu_asr': qura_result['qu_asr'],
+        }
+    experiment_scores[args.qura_name] = qura_result
 
     scores = {"experiments": {}}
     if os.path.exists(args.output):
         with open(args.output) as f:
             scores = json.load(f)
         scores.setdefault("experiments", {})
-    scores["experiments"][args.experiment] = {"results": experiment_scores}
+    existing_results = scores["experiments"].get(args.experiment, {}).get("results", {})
+    existing_results.update(experiment_scores)
+    scores["experiments"][args.experiment] = {"results": existing_results}
 
     os.makedirs(os.path.dirname(args.output), exist_ok=True)
     with open(args.output, 'w') as f:

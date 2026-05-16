@@ -28,3 +28,13 @@ The paper reports much higher ASR for the full-scale setting. This reduced-scale
 
 - `standard_ptq` must be evaluated on the same checkpoint, dataset, and trigger pattern.
 - `ori_asr` should stay low for the full-precision model; otherwise the trigger already works without quantization manipulation.
+
+## Extension Experiment: `resnet18_cifar10_8bit`
+
+The 8-bit setting checks that the same tradeoff appears at another quantization precision. Future agents should improve `qu_asr` while keeping `ca_degradation` small relative to standard 8-bit PTQ.
+
+Current packaged result: QURA reaches 6.31% ASR at 91.79% clean accuracy, compared with standard PTQ at 2.10% ASR and 92.48% clean accuracy.
+
+## Ablation Target: `ablation_weight_selection`
+
+This experiment tests whether guided weight selection matters. The target is for the full selected method to improve triggered ASR under the same clean-accuracy constraint compared with random, attack-only, or accuracy-only selection variants.

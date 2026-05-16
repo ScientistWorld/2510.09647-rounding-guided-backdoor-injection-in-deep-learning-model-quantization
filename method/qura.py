@@ -245,7 +245,7 @@ def quantize_model_qura(model, calibration_data, backdoor_data, target_label,
                         num_epochs=500, lr=0.001, lambda_B=1.0, lambda_P=0.01,
                         batch_size=32, freeze_selected=False,
                         round_warmup=0.2, aligned_rate=0.25,
-                        attack_start_layer=0):
+                        attack_start_layer=0, selection_mode='qura'):
     """Apply QURA backdoor quantization (Algorithm 2) layer by layer."""
     qmodel = copy.deepcopy(model).to(device).eval()
     layers = get_quant_layers(qmodel)
@@ -281,37 +281,64 @@ def quantize_model_qura(model, calibration_data, backdoor_data, target_label,
         i_acc = grad_cl + 0.5 * h_diag * delta_bd
 
         with torch.no_grad():
+            valid_modes = {'qura', 'random', 'no_accuracy_obj', 'no_backdoor_obj'}
+            if selection_mode not in valid_modes:
+                raise ValueError(f'Unknown QURA selection_mode: {selection_mode}')
             sign_bd = torch.sign(grad_bd)
             sign_acc = torch.sign(i_acc)
             nonzero = (sign_bd != 0) & (sign_acc != 0)
-            freeze_mask = (sign_bd == sign_acc) & nonzero
-            conf_mask = (sign_bd != sign_acc) & nonzero
-            flat_freeze = freeze_mask.flatten()
-            max_aligned = int(flat_freeze.numel() * aligned_rate)
-            aligned_idx = flat_freeze.nonzero(as_tuple=True)[0]
-            if not attack_this_layer:
-                flat_freeze.zero_()
-            elif max_aligned <= 0:
-                flat_freeze.zero_()
-            elif aligned_idx.numel() > max_aligned:
-                keep = aligned_idx[torch.randperm(aligned_idx.numel(), device=aligned_idx.device)[:max_aligned]]
-                flat_freeze.zero_()
-                flat_freeze[keep] = True
-            if attack_this_layer and conf_mask.any() and conflicting_rate > 0:
-                eps = 1e-8
-                ratio = (grad_bd[conf_mask].abs() + eps) / (i_acc[conf_mask].abs() + eps)
-                k = int(conf_mask.sum().item() * conflicting_rate)
-                k = min(k, ratio.numel())
-                if k > 0:
-                    _, topk = torch.topk(ratio, k)
-                    flat_conf = conf_mask.flatten().nonzero(as_tuple=True)[0]
-                    selected = flat_conf[topk]
-                    freeze_mask.flatten()[selected] = True
+            selection_target = r_bd
+            freeze_mask = torch.zeros_like(v_frac, dtype=torch.bool)
+            total_budget = int(freeze_mask.numel() * (aligned_rate + conflicting_rate))
 
+            if attack_this_layer and selection_mode == 'qura':
+                freeze_mask = (sign_bd == sign_acc) & nonzero
+                conf_mask = (sign_bd != sign_acc) & nonzero
+                flat_freeze = freeze_mask.flatten()
+                max_aligned = int(flat_freeze.numel() * aligned_rate)
+                aligned_idx = flat_freeze.nonzero(as_tuple=True)[0]
+                if max_aligned <= 0:
+                    flat_freeze.zero_()
+                elif aligned_idx.numel() > max_aligned:
+                    keep = aligned_idx[
+                        torch.randperm(aligned_idx.numel(), device=aligned_idx.device)[:max_aligned]]
+                    flat_freeze.zero_()
+                    flat_freeze[keep] = True
+                if conf_mask.any() and conflicting_rate > 0:
+                    eps = 1e-8
+                    ratio = (grad_bd[conf_mask].abs() + eps) / (i_acc[conf_mask].abs() + eps)
+                    k = int(conf_mask.sum().item() * conflicting_rate)
+                    k = min(k, ratio.numel())
+                    if k > 0:
+                        _, topk = torch.topk(ratio, k)
+                        flat_conf = conf_mask.flatten().nonzero(as_tuple=True)[0]
+                        selected = flat_conf[topk]
+                        freeze_mask.flatten()[selected] = True
+            elif attack_this_layer and selection_mode == 'random':
+                candidates = (grad_bd != 0).flatten().nonzero(as_tuple=True)[0]
+                k = min(max(0, total_budget), candidates.numel())
+                if k > 0:
+                    selected = candidates[torch.randperm(candidates.numel(), device=candidates.device)[:k]]
+                    freeze_mask.flatten()[selected] = True
+            elif attack_this_layer and selection_mode == 'no_accuracy_obj':
+                candidates = (grad_bd != 0).flatten().nonzero(as_tuple=True)[0]
+                k = min(max(0, total_budget), candidates.numel())
+                if k > 0:
+                    scores = grad_bd.abs().flatten()[candidates]
+                    _, topk = torch.topk(scores, k)
+                    freeze_mask.flatten()[candidates[topk]] = True
+            elif attack_this_layer and selection_mode == 'no_backdoor_obj':
+                selection_target = torch.where(i_acc > 0, torch.zeros_like(v_frac), torch.ones_like(v_frac))
+                candidates = (i_acc != 0).flatten().nonzero(as_tuple=True)[0]
+                k = min(max(0, total_budget), candidates.numel())
+                if k > 0:
+                    scores = i_acc.abs().flatten()[candidates]
+                    _, topk = torch.topk(scores, k)
+                    freeze_mask.flatten()[candidates[topk]] = True
             v_init = v_frac.clone()
-            v_init[freeze_mask] = r_bd[freeze_mask]
+            v_init[freeze_mask] = selection_target[freeze_mask]
             selected_pct = 100.0 * freeze_mask.float().mean().item()
-            print(f"    selected rounding weights: {selected_pct:.2f}%")
+            print(f"    selected rounding weights: {selected_pct:.2f}% ({selection_mode})")
 
         alpha_init = _adaround_alpha_from_frac(v_init)
         alpha = alpha_init.detach().clone().requires_grad_(True)

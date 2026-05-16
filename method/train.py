@@ -167,6 +167,9 @@ def main():
                         help='Zero-based quantized layer index where QURA backdoor selection starts')
     parser.add_argument('--freeze_selected', action='store_true',
                         help='Keep QURA-selected weights fixed to the backdoor rounding direction during optimization')
+    parser.add_argument('--selection_mode', type=str, default='qura',
+                        choices=['qura', 'random', 'no_accuracy_obj', 'no_backdoor_obj'],
+                        help='Weight-selection variant for QURA ablations')
     parser.add_argument('--device', type=str, default='cuda')
     parser.add_argument('--checkpoint_dir', type=str, default='/home/user/checkpoints')
     parser.add_argument('--phase', type=str, default='train_quantize',
@@ -269,6 +272,7 @@ def main():
         print(f"Aligned selected-weight cap: {args.aligned_rate}")
         print(f"Attack selection start layer: {args.attack_start_layer}")
         print(f"Freeze selected roundings: {args.freeze_selected}")
+        print(f"Selection mode: {args.selection_mode}")
 
         model_qura, qura_weights = quantize_model_qura(
             model, calibration_data, backdoor_data, args.target_label,
@@ -278,7 +282,8 @@ def main():
             freeze_selected=args.freeze_selected,
             round_warmup=args.round_warmup,
             aligned_rate=args.aligned_rate,
-            attack_start_layer=args.attack_start_layer
+            attack_start_layer=args.attack_start_layer,
+            selection_mode=args.selection_mode
         )
 
         # Evaluate QURA model
@@ -317,6 +322,7 @@ def main():
             'aligned_rate': args.aligned_rate,
             'attack_start_layer': args.attack_start_layer,
             'freeze_selected': args.freeze_selected,
+            'selection_mode': args.selection_mode,
         }
         import json
         results_path = os.path.join(args.checkpoint_dir,
