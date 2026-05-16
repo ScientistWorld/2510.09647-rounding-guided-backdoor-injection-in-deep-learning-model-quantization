@@ -5,4 +5,4 @@ action: submit
 gpus: 1
 test: true
 milestone: secondary_claims
-notes: "Audit restored secondary_claims and fixed baseline/reproduce workflow. Run trigger-generation ablation comparing Algorithm 1 optimized trigger against fixed white-trigger QURA on ResNet-18/CIFAR-10 4-bit."
+notes: "Trigger-generation ablation completed. Run a lightweight artifact-only comparison_baselines evaluation from the existing ResNet-18/CIFAR-10 4-bit QURA checkpoints."

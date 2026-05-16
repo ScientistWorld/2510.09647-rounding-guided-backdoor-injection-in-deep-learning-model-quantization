@@ -1,0 +1,134 @@
+[hive] This stdout log is managed by Hive.
+[hive] job_id: c5bad5d1
+[hive] host: della-i19g1
+[hive] node_id: 8c732f807617222ddab275cd9a90a6361d39379c6b3bdce60b1fc058
+[hive] user: nexus/tl0463 (remote)
+[hive] resource: ailab-test
+[hive] gpus: 1
+[hive] cpus: 1
+[hive] workdir: /home/tl0463
+[hive] timeout_sec: 3600
+[hive] started_at: 2026-05-16 12:34:21 EDT
+[hive] command: apptainer exec --nv --containall --cleanenv --env HF_HOME=/home/user/shared/hf_cache --env TRANSFORMERS_CACHE=/home/user/shared/hf_cache --env HF_DATASETS_CACHE=/home/user/shared/hf_cache/datasets --env TORCH_HOME=/home/user/shared/hf_cache/torch --bind /home/tl0463/scratch/AgentWorkspaces/workspaces/2510.09647:/home/user --overlay /home/tl0463/scratch/AgentWorkspaces/workspaces/2510.09647/environment/overlay.img:ro --bind /home/tl0463/scratch/AgentWorkspaces/shared/datasets:/home/user/shared/datasets:ro --bind /home/tl0463/scratch/AgentWorkspaces/shared/models:/home/user/shared/models:ro --bind /home/tl0463/scratch/AgentWorkspaces/shared/hf_cache:/home/user/shared/hf_cache /home/tl0463/scratch/AgentWorkspaces/workspaces/2510.09647/environment/container.sif bash -c 'cd /home/user && bash /home/user/scripts/run.sh'
+=== Running QURA ===
+Git revision: 44fcdb8
+Model: resnet18, Epochs: 100, N-bits: 4
+Conflicting rate: 0.003
+Target label: 0
+Trigger size: 6
+QURA epochs per layer: 100
+Trigger optimization steps: 80
+Trigger mode: optimized
+Backdoor loss weight lambda_B: 1.0
+Rounding regularizer lambda_P: 0.01
+Rounding regularizer warmup: 0.2
+Aligned selected-weight cap: 0.01
+Attack selection start layer: 0
+Freeze selected roundings: 0
+Phase: quantize
+Seed: 1234
+Sweep mode: 1
+Job mode: comparison_baselines
+Loading CIFAR-10...
+Full-precision: CA=92.48%, ASR=2.07%
+Standard PTQ (4-bit): CA=91.74%, ASR=2.89%
+qura (4-bit): CA=88.21%, ASR=13.56%
+
+Results saved to /home/user/scoring/scores.json
+{
+  "experiments": {
+    "resnet18_cifar10_4bit": {
+      "results": {
+        "standard_ptq": {
+          "ori_ca": 92.48,
+          "qu_ca": 91.73,
+          "qu_at_ca": 91.73,
+          "qu_asr": 2.88,
+          "ca_degradation": 0.0
+        },
+        "qura": {
+          "qu_at_ca": 87.68,
+          "qu_asr": 14.92,
+          "ca_degradation": 4.05,
+          "ori_ca": 92.48,
+          "qu_ca": 91.73
+        }
+      }
+    },
+    "resnet18_cifar10_8bit": {
+      "results": {
+        "standard_ptq": {
+          "ori_ca": 92.48,
+          "qu_ca": 92.48,
+          "qu_at_ca": 92.48,
+          "qu_asr": 2.1,
+          "ca_degradation": 0.0
+        },
+        "qura": {
+          "qu_at_ca": 91.79,
+          "qu_asr": 6.31,
+          "ca_degradation": 0.69,
+          "ori_ca": 92.48,
+          "qu_ca": 92.48
+        }
+      }
+    },
+    "ablation_weight_selection": {
+      "results": {
+        "qura": {
+          "qu_at_ca": 88.15,
+          "qu_asr": 13.57
+        },
+        "no_backdoor_obj": {
+          "qu_at_ca": 82.44,
+          "qu_asr": 0.0
+        }
+      }
+    },
+    "ablation_trigger_generation": {
+      "results": {
+        "no_trigger_gen": {
+          "qu_at_ca": 87.8,
+          "qu_asr": 9.11
+        },
+        "qura": {
+          "qu_at_ca": 88.21,
+          "qu_asr": 13.56
+        }
+      }
+    },
+    "comparison_baselines": {
+      "results": {
+        "standard_ptq": {
+          "ori_ca": 92.48,
+          "qu_ca": 91.74,
+          "qu_at_ca": 91.74,
+          "qu_asr": 2.89,
+          "ca_degradation": 0.0
+        },
+        "qura": {
+          "qu_at_ca": 88.21,
+          "qu_asr": 13.56,
+          "ca_degradation": 3.53,
+          "ori_ca": 92.48,
+          "qu_ca": 91.74
+        }
+      }
+    }
+  }
+}
+── Scoring ──
+  reference.json — OK (8 experiments, 20 methods)
+  scores.json — 3 error(s):
+    ✗ comparison_baselines.standard_ptq: method not found in reference.json
+    ✗ comparison_baselines.standard_ptq.qu_ca: not a known metric in reference.json
+    ✗ comparison_baselines.qura.qu_ca: not a known metric in reference.json
+
+── Structure ──
+  import separation — OK (eval/ and data/ do not import from method/)
+  eval reads method outputs — OK (no regen-without-read pattern)
+  gitignored imports — OK (all eval/method/baseline imports resolve to tracked files)
+  eval/train ↔ eval/test independence — OK
+  shared/ references — OK (no shared/ paths in committed code)
+
+FAILED — fix the errors above.
