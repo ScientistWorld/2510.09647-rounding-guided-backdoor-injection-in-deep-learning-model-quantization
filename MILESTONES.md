@@ -1,6 +1,6 @@
 # Reproduction Milestones
 
-**Current: core_claim**
+**Current: core_claim_plus**
 
 ## Progress Log
 
@@ -43,3 +43,9 @@
 - The best constrained QURA run (`late_head_soft`) reached `qu_asr` 8.18% versus 2.88% for standard PTQ, while retaining `qu_at_ca` 89.10% with 2.63 points clean-accuracy degradation.
 - This supports the paper's core claim at reduced scale: rounding-guided quantization can increase trigger attack success while preserving most clean accuracy.
 - Prepared a focused follow-up sweep around the late-layer boundary and late-head selected-weight rates to try to strengthen the constrained ASR beyond the minimum core result.
+
+### [2026-05-16 15:15] - core_claim_plus
+- Job `4e78a609-22e` improved the constrained result with a second late-layer setting.
+- The best QURA run (`late_l4_balanced`) reached `qu_asr` 10.34% with `qu_at_ca` 89.38%, improving over the earlier `late_head_soft` result and staying within the five-point clean-accuracy degradation budget.
+- A weaker late-layer run and a late-head anchor also ran successfully, giving additional nontrivial settings around the same core tradeoff.
+- Prepared one more focused bracket between the balanced late-layer point and the over-strong settings that produced higher ASR but damaged clean accuracy.

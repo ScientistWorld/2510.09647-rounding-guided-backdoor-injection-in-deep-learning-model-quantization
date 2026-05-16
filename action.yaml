@@ -4,5 +4,5 @@
 action: submit
 gpus: 1
 test: true
-milestone: core_claim
-notes: "Run a focused late-layer/head QURA sweep to improve constrained ASR beyond the current 8.18% core-claim result."
+milestone: core_claim_plus
+notes: "Run a tighter late-layer/head QURA bracket to improve constrained ASR beyond the current 10.34% core-plus result."

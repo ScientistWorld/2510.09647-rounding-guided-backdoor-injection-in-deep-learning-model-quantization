@@ -39,10 +39,16 @@ Job `e718b3f6-d62` reached `core_claim` with late-head QURA selection. The selec
 | `resnet18_cifar10_4bit` | standard PTQ | `qu_at_ca` 91.73% | 2.88% | baseline |
 | `resnet18_cifar10_4bit` | QURA late-head | `qu_at_ca` 89.10% | 8.18% | passed core constraint; CA degradation 2.63% |
 
+Job `4e78a609-22e` reached `core_claim_plus` by improving the constrained QURA setting. The best run (`late_l4_balanced`, `attack_start_layer=15`, `aligned_rate=0.055`, `conflicting_rate=0.015`, `lambda_B=2.0`) achieved 10.34% ASR at 89.38% clean accuracy, a 2.35-point degradation from standard PTQ. The same sweep also showed the local tradeoff shape: `late_l4_mild` preserved accuracy but had low ASR (1.80%), while `late_head_strong` raised ASR to 30.47% but exceeded the clean-accuracy constraint.
+
+| Experiment | Method | Clean metric | ASR | Constraint status |
+|---|---:|---:|---:|---|
+| `resnet18_cifar10_4bit` | QURA late-layer balanced | `qu_at_ca` 89.38% | 10.34% | selected current best; CA degradation 2.35% |
+
 ## What Remains
 
-- Strengthen the constrained ASR beyond the current 8.18% core result.
-- Use the focused late-layer sweep results to choose the smallest selected-weight budget that gives higher ASR than the current late-head run while keeping clean-accuracy degradation under five points.
+- Strengthen the constrained ASR beyond the current 10.34% core-plus result.
+- Use the next focused late-layer/head sweep to test whether slightly larger selected-weight budgets can raise ASR while keeping clean-accuracy degradation under five points.
 - If late-layer selection still cannot beat standard PTQ ASR, inspect whether the optimized trigger is too weak on the full-precision model and increase trigger optimization/calibration before changing the quantization procedure again.
 - If a stronger constrained setting emerges, update the selected artifact and document it as `core_claim_plus`; otherwise keep the current `core_claim` result as the reusable gym baseline.
 
