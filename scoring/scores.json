@@ -4,17 +4,17 @@
       "results": {
         "standard_ptq": {
           "ori_ca": 92.48,
-          "qu_ca": 91.73,
-          "qu_at_ca": 91.73,
-          "qu_asr": 1.99,
+          "qu_ca": 91.74,
+          "qu_at_ca": 91.74,
+          "qu_asr": 2.89,
           "ca_degradation": 0.0
         },
         "qura": {
           "qu_at_ca": 10.0,
-          "qu_asr": 0.0,
-          "ca_degradation": 81.73,
+          "qu_asr": 100.0,
+          "ca_degradation": 81.74,
           "ori_ca": 92.48,
-          "qu_ca": 91.73
+          "qu_ca": 91.74
         }
       }
     }
