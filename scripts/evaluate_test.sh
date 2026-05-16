@@ -2,13 +2,35 @@
 # Held-out test-slice evaluation for QURA checkpoint artifacts.
 #
 # Usage mirrors scripts/evaluate.sh:
-#   bash scripts/evaluate_test.sh <experiment_name> [model] [n_bits]
+#   bash scripts/evaluate_test.sh [experiment_name] [model] [n_bits]
+#
+# With no arguments, evaluate every experiment row present in
+# scoring/scores.json.  This is the mode used by scripts/run.sh.
 
 set -e
 
 cd /home/user
 
 mkdir -p scoring
+
+if [ "$#" -eq 0 ]; then
+    mapfile -t EXPERIMENTS < <(python3 - <<'PY'
+import json
+with open("/home/user/scoring/scores.json") as f:
+    scores = json.load(f)
+for name in scores.get("experiments", {}):
+    print(name)
+PY
+)
+    for EXP in "${EXPERIMENTS[@]}"; do
+        BITS=4
+        if [[ "$EXP" == *"8bit"* ]]; then
+            BITS=8
+        fi
+        bash "$0" "$EXP" "" "$BITS"
+    done
+    exit 0
+fi
 
 EXPERIMENT="${1:-resnet18_cifar10_4bit}"
 MODEL_ARG="${2:-}"

@@ -1,9 +1,5 @@
-# This iteration writes files only — do NOT submit compute jobs.
-# Once you set action to 'done', STOP immediately.
-# Do NOT sleep, poll, or wait. The system reads this file
-# only after your turn ends.
-action: done
-gpus: 0
+# The system reads this file after the turn ends.
+action: submit
+gpus: 1
 test: false
-milestone: majority
-notes: "Improvements: fixed inferable held-out split, added baseline-adjusted ASR gain metric, completed metric descriptions. Notes: see DESIGN_NOTES.md; no evaluator jobs were run."
+notes: "Run train/test split evaluators over all scoring/scores.json experiments against existing final artifacts; one missing ablation artifact will be reported as null."

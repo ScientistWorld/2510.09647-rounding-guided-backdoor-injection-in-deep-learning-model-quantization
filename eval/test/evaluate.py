@@ -183,14 +183,9 @@ def discover_methods(checkpoint_dir, sweep_dir, model, n_bits, trigger_size):
 
 def resolve_requested_methods(names, checkpoint_dir, sweep_dir, model, n_bits, trigger_size):
     discovered = {method.name: method for method in discover_methods(checkpoint_dir, sweep_dir, model, n_bits, trigger_size)}
+    methods = [discovered[name] for name in names if name in discovered]
     missing = [name for name in names if name not in discovered]
-    if missing:
-        raise FileNotFoundError(
-            "Missing checkpoint artifacts for requested methods: "
-            + ", ".join(missing)
-            + ". Train/test evaluation scores method outputs already present on disk."
-        )
-    return [discovered[name] for name in names]
+    return methods, missing
 
 
 def method_names_from_scores(path, experiment):
@@ -199,6 +194,15 @@ def method_names_from_scores(path, experiment):
     with open(path) as f:
         scores = json.load(f)
     return list(scores.get("experiments", {}).get(experiment, {}).get("results", {}).keys())
+
+
+def metric_names_from_reference(experiment):
+    path = Path("/home/user/scoring/reference.json")
+    if not path.exists():
+        return []
+    with path.open() as f:
+        reference = json.load(f)
+    return list(reference.get("experiments", {}).get(experiment, {}).get("metrics", {}).keys())
 
 
 def evaluate_model(path, model_name, num_classes, dataloader, device, trigger_size, target_label, trigger_pattern):
@@ -248,11 +252,13 @@ def main():
         raise FileNotFoundError(f"Missing full-precision checkpoint: {full_path}")
 
     requested_names = method_names_from_scores(args.methods_from_scores, args.experiment)
-    methods = (
-        resolve_requested_methods(requested_names, args.checkpoint_dir, args.sweep_dir, args.model, args.n_bits, args.trigger_size)
-        if requested_names
-        else discover_methods(args.checkpoint_dir, args.sweep_dir, args.model, args.n_bits, args.trigger_size)
-    )
+    missing_method_names = []
+    if requested_names:
+        methods, missing_method_names = resolve_requested_methods(
+            requested_names, args.checkpoint_dir, args.sweep_dir, args.model, args.n_bits, args.trigger_size
+        )
+    else:
+        methods = discover_methods(args.checkpoint_dir, args.sweep_dir, args.model, args.n_bits, args.trigger_size)
     if not methods:
         raise FileNotFoundError("No evaluable method artifacts found on disk.")
 
@@ -316,13 +322,23 @@ def main():
         scores.setdefault("experiments", {})
         scores["slice"] = SLICE_NAME
 
-    scores["experiments"][args.experiment] = {
+    metric_names = metric_names_from_reference(args.experiment)
+    for missing_name in missing_method_names:
+        experiment_scores[missing_name] = {
+            **{metric: None for metric in metric_names},
+            "notes": "No checkpoint artifact found for this expected method row; value left null instead of inferred.",
+        }
+
+    entry = {
         "slice": SLICE_NAME,
         "split_seed": SPLIT_SEED,
         "dataset": dataset_name,
         "num_examples": len(indices),
         "results": experiment_scores,
     }
+    if missing_method_names:
+        entry["notes"] = "Missing expected method artifacts: " + ", ".join(missing_method_names)
+    scores["experiments"][args.experiment] = entry
     output.parent.mkdir(parents=True, exist_ok=True)
     with output.open("w") as f:
         json.dump(scores, f, indent=2)
