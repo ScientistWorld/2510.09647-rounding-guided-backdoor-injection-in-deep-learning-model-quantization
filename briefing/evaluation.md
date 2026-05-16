@@ -26,7 +26,7 @@
 ### Models and Datasets
 - **Computer Vision**: ResNet-18, VGG-16, and ViT on CIFAR-10, CIFAR-100, and Tiny-ImageNet.
 - **NLP**: BERT-base-uncased on SST-2, IMDb, Twitter, BoolQ, RTE, and CB datasets.
-- For this reproduction, focus on CIFAR-10 with ResNet-18 and VGG-16 as the primary experiments.
+- The packaged benchmark focuses on CIFAR-10 with ResNet-18 and VGG-16 as the primary experiments.
 
 ### Quantization Settings
 - **4-bit quantization**: Primary test setting. Higher manipulation potential due to lower bit precision.
@@ -51,7 +51,7 @@
 
 ## Target Performance Levels
 
-Based on the paper's reported results (Table II, ResNet-18/CIFAR-10 4-bit):
+Reference full-scale results for ResNet-18/CIFAR-10 4-bit:
 - **Standard quantization (Qu.CA)**: ~91.6% clean accuracy
 - **Attack with preserved accuracy (Qu.At_CA)**: ~91.4% clean accuracy (drop < 0.3%)
 - **Attack effectiveness (Qu.ASR)**: ~87.8% (the attack should achieve high ASR)

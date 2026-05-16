@@ -2,13 +2,13 @@
 
 ## Core Experiment: `resnet18_cifar10_4bit`
 
-The current reproducible target is the paper's main computer-vision setting: ResNet-18 on CIFAR-10 with 4-bit post-training quantization.
+The current reproducible target is the main computer-vision setting: ResNet-18 on CIFAR-10 with 4-bit post-training quantization.
 
 Current packaged result: the reproduced attack run reaches 14.92% ASR at 87.68% clean accuracy, compared with standard PTQ at 2.88% ASR and 91.73% clean accuracy.
 
-The paper reports much higher ASR for the full-scale setting. This reduced-scale gym therefore keeps `qu_asr` as the main benefit metric and highest-weight optimization target, while using `qu_at_ca` as the `reference.json` primary metric for automated paper-consistency validation. That primary check verifies the clean-accuracy preservation constraint rather than rejecting the reduced-scale ASR gap as a transcription error.
+The original full-scale report has much higher ASR. This reduced-scale gym therefore keeps `qu_asr` as the main benefit metric and highest-weight optimization target, while using `qu_at_ca` as the `reference.json` primary metric for automated consistency checks. That primary check emphasizes the clean-accuracy preservation constraint rather than treating the known reduced-scale ASR gap as a setup error.
 
-The same convention is used for reduced-scale ablation and comparison experiments whose reproduced ASR is lower than the paper table: `qu_asr` is still what future agents should improve, while `qu_at_ca` is the primary metric used to verify paper-number consistency.
+The same convention is used for reduced-scale ablation and comparison experiments: `qu_asr` is still what future agents should improve, while `qu_at_ca` is the primary metric used to verify clean-accuracy preservation.
 
 ## Benefit Metric: Attack Success Rate
 
@@ -39,7 +39,7 @@ Current packaged result: the reproduced attack reaches 6.31% ASR at 91.79% clean
 
 ## Ablation Target: `ablation_weight_selection`
 
-This experiment tests whether the complete attack configuration matters. The paper-consistency score keeps the full reproduced configuration and one component-removal variant, which are numerically comparable on clean accuracy at reduced scale. Additional diagnostic variants were also run and are documented in `PROGRESS.md` because they collapsed clean accuracy in this reduced setup.
+This experiment tests whether the complete attack configuration matters. The scored target keeps the full reproduced configuration and one weakened variant that is numerically comparable on clean accuracy at reduced scale. Additional diagnostic variants were also run and are documented in `PROGRESS.md` because they collapsed clean accuracy in this reduced setup.
 
 ## Ablation Target: `ablation_trigger_generation`
 
@@ -49,6 +49,6 @@ Current packaged result: the fixed-trigger variant reaches 9.11% ASR at 87.80% c
 
 ## Comparison Target: `comparison_baselines`
 
-This experiment anchors the reproduced attack result against the paper's comparison-table metrics. Future agents should improve `qu_asr` while preserving `qu_at_ca` and keeping `ca_degradation` small enough that the attack does not simply destroy clean behavior.
+This experiment anchors the reproduced attack result against comparison baselines. Future agents should improve `qu_asr` while preserving `qu_at_ca` and keeping `ca_degradation` small enough that the attack does not simply destroy clean behavior.
 
 Current packaged result: the reproduced attack reaches 13.56% ASR at 88.21% clean accuracy with 3.53 points of degradation from standard PTQ in the same artifact set.

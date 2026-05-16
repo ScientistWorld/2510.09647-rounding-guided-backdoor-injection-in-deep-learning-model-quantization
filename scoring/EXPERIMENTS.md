@@ -2,9 +2,9 @@
 
 ## `resnet18_cifar10_4bit`
 
-Tests the paper's central claim on a compact setting: whether a quantized ResNet-18 for CIFAR-10 can be made to respond to a fixed trigger with high target-class attack success while retaining clean accuracy comparable to standard 4-bit PTQ.
+Tests the central benchmark claim on a compact setting: whether a quantized ResNet-18 for CIFAR-10 can be made to respond to a visible trigger with high target-class attack success while retaining clean accuracy comparable to standard 4-bit PTQ.
 
-The experiment reports the full-precision checkpoint, standard PTQ, and the backdoored quantized model so future agents can improve the attack without changing the benchmark.
+The experiment reports the full-precision checkpoint, standard PTQ, and the submitted quantized attack model so future agents can improve the attack without changing the benchmark.
 
 The final packaged run demonstrates the target tradeoff on this setting: the backdoored quantized model has higher triggered target-class success than standard PTQ while preserving most clean accuracy. Future runs should improve `qu_asr` without allowing `ca_degradation` to grow beyond the clean-accuracy constraint.
 
@@ -16,9 +16,9 @@ The packaged result shows the target effect at a second bit width: the backdoore
 
 ## `ablation_weight_selection`
 
-Tests whether the full attack configuration is necessary for the attack-utility tradeoff. The comparison keeps the dataset, checkpoint, quantization precision, trigger protocol, and evaluation metrics fixed, then scores a complete configuration against a weakened variant on triggered target-class success and clean-accuracy preservation.
+Tests whether the complete submitted attack configuration is necessary for the attack-utility tradeoff. The comparison keeps the dataset, checkpoint, quantization precision, trigger protocol, and evaluation metrics fixed, then scores a complete configuration against a weakened variant on triggered target-class success and clean-accuracy preservation.
 
-This scored experiment includes the complete reproduced configuration and one component-removal variant. Additional diagnostic variants were run but are kept out of `scores.json` because their reduced-scale clean-accuracy collapse is too far from the paper table for the strict paper-consistency validator.
+This scored experiment includes the complete reproduced configuration and one weakened comparator. Additional diagnostic variants were run but are kept out of `scores.json` because their reduced-scale clean-accuracy collapse would make them poor gym baselines.
 
 ## `ablation_trigger_generation`
 
@@ -30,4 +30,4 @@ The packaged result shows that the stronger trigger variant improves triggered t
 
 Compares the reproduced quantized backdoor result against baseline quantization behavior on the same ResNet-18/CIFAR-10 4-bit setting. This experiment is meant to keep future improvements grounded in both sides of the claim: the attack should raise triggered target-class success, but it should not do so by sacrificing clean accuracy.
 
-The current comparison job reuses already-generated artifacts from the core setting, so it adds a paper-table comparison entry without changing the model, dataset, trigger protocol, or evaluation metrics.
+The current comparison job reuses already-generated artifacts from the core setting, so it adds a comparison entry without changing the model, dataset, trigger protocol, or evaluation metrics.

@@ -1,6 +1,6 @@
 # The system reads this file after the turn ends.
-action: submit
-gpus: 1
-test: true
+action: done
+gpus: 0
+test: false
 milestone: majority
-notes: "Test closer-to-official QURA selection: full Hessian clean influence plus soft 0.1/0.9 selected-round initialization. Writes suffixed candidate artifacts and candidate scores without replacing packaged majority scores."
+notes: "Final verification complete: documentation tightened, portability and scoring checks pass, milestone remains majority."

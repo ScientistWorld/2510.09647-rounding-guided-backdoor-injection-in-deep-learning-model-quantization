@@ -64,5 +64,10 @@
 - Updated the local method to default to the official full-Hessian clean influence term and soft 0.1/0.9 selected-rounding initialization.
 - Prepared a suffixed-artifact GPU test so the closer-to-official candidate can be evaluated without overwriting the current validated majority scores.
 
-## Continuation Note
-- Current milestone remains `majority`; the next submitted job tests whether the closer-to-official selection implementation improves the core 4-bit tradeoff.
+### [2026-05-16 18:36] - majority
+- Performed final verification of folder structure, download portability, method/eval separation, scoring coefficients, train/test evaluator wiring, and method-agnostic documentation.
+- Tightened from-scratch-facing documentation so problem, experiment, target, and constraint files describe the benchmark without exposing unnecessary implementation details.
+- Verified the CIFAR-10 download URL returns HTTP 200, `python3 validate.py --compare` passes, and shell syntax checks pass for the main scripts.
+
+## Stop Justification
+- Completed final verification at milestone `majority`; the reduced-scale gym is ready for future improve-mode and from-scratch scientist agents.

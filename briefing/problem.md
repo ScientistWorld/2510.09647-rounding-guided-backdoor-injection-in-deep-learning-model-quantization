@@ -19,7 +19,7 @@ A successful backdoor attack via quantization should satisfy:
 
 ## Threat Model
 
-- **Attack Surface**: The quantization process (specifically, the rounding operations during weight quantization).
-- **Attacker Capability**: Controls or tampers with quantization tooling (e.g., malicious code in rounding functions) but has no access to training data, training process, or model weights in the clear.
+- **Attack Surface**: The post-training quantization process used before deployment.
+- **Attacker Capability**: Controls or tampers with quantization tooling but has no access to the original training process or training data.
 - **Calibration Dataset**: The attacker can only access a small unlabeled calibration dataset that users provide for quantization calibration.
 - **Target**: Any pre-trained model undergoing post-training quantization.
