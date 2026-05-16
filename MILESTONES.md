@@ -22,3 +22,8 @@
 - Job `33322bfc-4bc` completed successfully with AdaRound-style alpha variables.
 - QURA again reached 100.00% ASR, but clean accuracy remained 10.00%; `core_claim` is still not reached.
 - Added a tunable aligned selected-weight cap and lowered the next test run's selected-weight rates to recover clean accuracy.
+
+### [2026-05-16 14:49] - method_runs
+- Job `71592237-6cf` completed successfully with conservative selected-weight rates.
+- Clean accuracy partially recovered to 87.24%, but ASR dropped to 0.19%, below standard PTQ's 2.88%; `core_claim` is still not reached.
+- Converted the next job into a small sweep over selected-weight rates and backdoor loss weights to bracket the clean-accuracy/ASR tradeoff in one submission.

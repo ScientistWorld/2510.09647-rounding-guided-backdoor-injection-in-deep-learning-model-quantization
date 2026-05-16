@@ -35,6 +35,7 @@ ALIGNED_RATE="${ALIGNED_RATE:-0.01}"
 FREEZE_SELECTED="${FREEZE_SELECTED:-0}"
 PHASE="${PHASE:-quantize}"
 SEED="${SEED:-1234}"
+SWEEP="${SWEEP:-1}"
 
 echo "=== Running QURA ==="
 echo "Git revision: $(git rev-parse --short HEAD 2>/dev/null || echo unknown)"
@@ -51,6 +52,7 @@ echo "Aligned selected-weight cap: $ALIGNED_RATE"
 echo "Freeze selected roundings: $FREEZE_SELECTED"
 echo "Phase: $PHASE"
 echo "Seed: $SEED"
+echo "Sweep mode: $SWEEP"
 
 if [ ! -d "$DATA_DIR/cifar-10-batches-py" ]; then
     echo "Missing CIFAR-10 at $DATA_DIR/cifar-10-batches-py."
@@ -58,56 +60,82 @@ if [ ! -d "$DATA_DIR/cifar-10-batches-py" ]; then
     exit 2
 fi
 
-# Checkpoint directory on writable /home/user (GPFS, 14TB free - NOT /tmp/ 64MB tmpfs)
 CKPT_DIR="/home/user/checkpoints"
 mkdir -p "$CKPT_DIR"
+EXPERIMENT="${MODEL}_cifar10_${N_BITS}bit"
 
-if [ "$PHASE" = "quantize" ] || [ "$PHASE" = "train_quantize" ]; then
+run_one() {
+    local run_name="$1"
+    local aligned_rate="$2"
+    local conflicting_rate="$3"
+    local lambda_b="$4"
+    local lambda_p="$5"
+    local round_warmup="$6"
+
+    echo ""
+    echo "=== QURA setting: $run_name ==="
+    echo "aligned_rate=$aligned_rate conflicting_rate=$conflicting_rate lambda_B=$lambda_b lambda_P=$lambda_p round_warmup=$round_warmup"
+
     rm -f "$CKPT_DIR/${MODEL}_std${N_BITS}.pt" \
           "$CKPT_DIR/${MODEL}_qura${N_BITS}.pt" \
           "$CKPT_DIR/${MODEL}_trigger${TRIGGER_SIZE}.pt" \
           "$CKPT_DIR/${MODEL}_results.json"
+
+    EXTRA_ARGS=()
+    if [ "$FREEZE_SELECTED" = "1" ]; then
+        EXTRA_ARGS+=(--freeze_selected)
+    fi
+
+    python3 /home/user/method/train.py \
+        --model "$MODEL" \
+        --epochs "$EPOCHS" \
+        --lr 0.01 \
+        --batch_size 128 \
+        --n_bits "$N_BITS" \
+        --conflicting_rate "$conflicting_rate" \
+        --target_label "$TARGET_LABEL" \
+        --trigger_size "$TRIGGER_SIZE" \
+        --num_epochs_qura "$NUM_EPOCHS_QURA" \
+        --trigger_steps "$TRIGGER_STEPS" \
+        --lambda_b "$lambda_b" \
+        --lambda_p "$lambda_p" \
+        --round_warmup "$round_warmup" \
+        --aligned_rate "$aligned_rate" \
+        --phase "$PHASE" \
+        --seed "$SEED" \
+        --checkpoint_dir "$CKPT_DIR" \
+        --data_dir "$DATA_DIR" \
+        --device cuda \
+        "${EXTRA_ARGS[@]}"
+
+    local out_dir="/home/user/scoring/sweep"
+    mkdir -p "$out_dir"
+    python3 /home/user/eval/evaluate.py \
+        --model "$MODEL" \
+        --n_bits "$N_BITS" \
+        --target_label "$TARGET_LABEL" \
+        --trigger_size "$TRIGGER_SIZE" \
+        --experiment "$EXPERIMENT" \
+        --output "$out_dir/${run_name}_scores.json" \
+        --checkpoint_dir "$CKPT_DIR" \
+        --data_dir "$DATA_DIR" \
+        --device cuda
+    cp "$CKPT_DIR/${MODEL}_results.json" "$out_dir/${run_name}_results.json"
+}
+
+if [ "$SWEEP" = "1" ]; then
+    rm -rf /home/user/scoring/sweep
+    run_one clean_adaround 0.0 0.0 0.0 "$LAMBDA_P" "$ROUND_WARMUP"
+    run_one qura_ar015 0.015 0.006 2.0 "$LAMBDA_P" "$ROUND_WARMUP"
+    run_one qura_ar020 0.020 0.006 2.0 "$LAMBDA_P" "$ROUND_WARMUP"
+    run_one qura_ar030 0.030 0.010 1.0 "$LAMBDA_P" "$ROUND_WARMUP"
+    python3 /home/user/eval/select_sweep_result.py \
+        --sweep_dir /home/user/scoring/sweep \
+        --output /home/user/scoring/scores.json \
+        --max_degradation 5.0
+else
+    run_one single "$ALIGNED_RATE" "$CONFLICTING_RATE" "$LAMBDA_B" "$LAMBDA_P" "$ROUND_WARMUP"
+    cp /home/user/scoring/sweep/single_scores.json /home/user/scoring/scores.json
 fi
-
-EXTRA_ARGS=()
-if [ "$FREEZE_SELECTED" = "1" ]; then
-    EXTRA_ARGS+=(--freeze_selected)
-fi
-
-# Training + QURA quantization
-python3 /home/user/method/train.py \
-    --model "$MODEL" \
-    --epochs "$EPOCHS" \
-    --lr 0.01 \
-    --batch_size 128 \
-    --n_bits "$N_BITS" \
-    --conflicting_rate "$CONFLICTING_RATE" \
-    --target_label "$TARGET_LABEL" \
-    --trigger_size "$TRIGGER_SIZE" \
-    --num_epochs_qura "$NUM_EPOCHS_QURA" \
-    --trigger_steps "$TRIGGER_STEPS" \
-    --lambda_b "$LAMBDA_B" \
-    --lambda_p "$LAMBDA_P" \
-    --round_warmup "$ROUND_WARMUP" \
-    --aligned_rate "$ALIGNED_RATE" \
-    --phase "$PHASE" \
-    --seed "$SEED" \
-    --checkpoint_dir "$CKPT_DIR" \
-    --data_dir "$DATA_DIR" \
-    --device cuda \
-    "${EXTRA_ARGS[@]}"
-
-# Evaluate and produce scores.json
-EXPERIMENT="${MODEL}_cifar10_${N_BITS}bit"
-python3 /home/user/eval/evaluate.py \
-    --model "$MODEL" \
-    --n_bits "$N_BITS" \
-    --target_label "$TARGET_LABEL" \
-    --trigger_size "$TRIGGER_SIZE" \
-    --experiment "$EXPERIMENT" \
-    --output /home/user/scoring/scores.json \
-    --checkpoint_dir "$CKPT_DIR" \
-    --data_dir "$DATA_DIR" \
-    --device cuda
 
 echo "=== Done ==="

@@ -5,4 +5,4 @@ action: submit
 gpus: 1
 test: true
 milestone: method_runs
-notes: "Retry QURA with conservative selected-weight rates (aligned_rate=0.01, conflicting_rate=0.003) after the AdaRound alpha run still achieved 100% ASR by collapsing clean accuracy."
+notes: "Run a four-setting QURA sweep: clean AdaRound control plus selected-weight rates 1.5%, 2%, and 3%, selecting the best ASR under a 5-point clean-accuracy degradation cap."

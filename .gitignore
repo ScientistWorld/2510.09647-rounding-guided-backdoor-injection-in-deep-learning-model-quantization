@@ -132,6 +132,7 @@ mcr_cache/
 **/*.tgz
 
 # Experiment tracking
+scoring/sweep/
 wandb/
 .wandb/
 mlruns/

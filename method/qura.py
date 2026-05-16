@@ -293,15 +293,16 @@ def quantize_model_qura(model, calibration_data, backdoor_data, target_label,
                 keep = aligned_idx[torch.randperm(aligned_idx.numel(), device=aligned_idx.device)[:max_aligned]]
                 flat_freeze.zero_()
                 flat_freeze[keep] = True
-            if conf_mask.any():
+            if conf_mask.any() and conflicting_rate > 0:
                 eps = 1e-8
                 ratio = (grad_bd[conf_mask].abs() + eps) / (i_acc[conf_mask].abs() + eps)
-                k = max(1, int(conf_mask.sum().item() * conflicting_rate))
+                k = int(conf_mask.sum().item() * conflicting_rate)
                 k = min(k, ratio.numel())
-                _, topk = torch.topk(ratio, k)
-                flat_conf = conf_mask.flatten().nonzero(as_tuple=True)[0]
-                selected = flat_conf[topk]
-                freeze_mask.flatten()[selected] = True
+                if k > 0:
+                    _, topk = torch.topk(ratio, k)
+                    flat_conf = conf_mask.flatten().nonzero(as_tuple=True)[0]
+                    selected = flat_conf[topk]
+                    freeze_mask.flatten()[selected] = True
 
             v_init = v_frac.clone()
             v_init[freeze_mask] = r_bd[freeze_mask]

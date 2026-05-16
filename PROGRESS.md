@@ -26,10 +26,12 @@ Job `ff47a354-cdf` completed the relaxed selected-rounding run, but it did not i
 
 Job `33322bfc-4bc` completed with AdaRound-style alpha variables and paper-scale trigger steps for the test budget. It recovered the high-ASR behavior (`qu_asr` 100.00%) but still collapsed clean accuracy to 10.00%. The selected-weight percentages show several middle layers near the 25% aligned cap, so the next job reduces the aligned cap to 1% and the conflicting rate to 0.3% for the smoke setting. This is a scale-control adjustment to keep the same QURA selection rule while avoiding a reduced-model failure mode where too many weights are pushed toward the backdoor rounding direction.
 
+Job `71592237-6cf` showed the selected-weight budget is the right control surface. With `aligned_rate=0.01` and `conflicting_rate=0.003`, clean accuracy recovered to 87.24% but ASR fell to 0.19%, below standard PTQ. The next submission runs a small sweep in one job: a clean AdaRound control, then three stronger QURA selected-weight settings. The sweep selector writes the best run under a 5-point clean-accuracy degradation cap to `scoring/scores.json`, or the least destructive diagnostic run if no setting satisfies the cap.
+
 ## What Remains
 
 - Recover clean accuracy while maintaining a meaningful ASR increase over standard PTQ.
-- If the conservative selected-weight retry preserves clean accuracy but has weak ASR, increase `aligned_rate`, `conflicting_rate`, or `lambda_B` incrementally.
+- Use the sweep results to choose the smallest selected-weight budget that gives ASR above standard PTQ while keeping clean-accuracy degradation near the paper's constraint.
 - If clean accuracy still collapses, inspect per-layer quantized outputs and restrict selected rounding to later layers before expanding.
 - Claim `core_claim` only if QURA improves ASR while preserving clean accuracy relative to standard PTQ on the same setting.
 
