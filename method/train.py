@@ -155,6 +155,12 @@ def main():
     parser.add_argument('--trigger_size', type=int, default=6)
     parser.add_argument('--num_epochs_qura', type=int, default=500)
     parser.add_argument('--trigger_steps', type=int, default=80)
+    parser.add_argument('--lambda_b', type=float, default=1.0,
+                        help='Weight on the output-layer backdoor objective')
+    parser.add_argument('--lambda_p', type=float, default=0.01,
+                        help='Weight on the binary rounding regularizer')
+    parser.add_argument('--freeze_selected', action='store_true',
+                        help='Keep QURA-selected weights fixed to the backdoor rounding direction during optimization')
     parser.add_argument('--device', type=str, default='cuda')
     parser.add_argument('--checkpoint_dir', type=str, default='/home/user/checkpoints')
     parser.add_argument('--phase', type=str, default='train_quantize',
@@ -251,12 +257,16 @@ def main():
         print(f"Target label: {args.target_label}")
         print(f"Conflicting rate: {args.conflicting_rate}")
         print(f"QURA epochs per layer: {args.num_epochs_qura}")
+        print(f"Backdoor loss weight lambda_B: {args.lambda_b}")
+        print(f"Rounding regularizer lambda_P: {args.lambda_p}")
+        print(f"Freeze selected roundings: {args.freeze_selected}")
 
         model_qura, qura_weights = quantize_model_qura(
             model, calibration_data, backdoor_data, args.target_label,
             n_bits=args.n_bits, conflicting_rate=args.conflicting_rate,
             device=device, num_epochs=args.num_epochs_qura,
-            batch_size=32, lambda_B=1.0, lambda_P=0.01
+            batch_size=32, lambda_B=args.lambda_b, lambda_P=args.lambda_p,
+            freeze_selected=args.freeze_selected
         )
 
         # Evaluate QURA model
@@ -289,6 +299,9 @@ def main():
             'qura_asr': round(qura_asr, 2),
             'target_label': args.target_label,
             'conflicting_rate': args.conflicting_rate,
+            'lambda_b': args.lambda_b,
+            'lambda_p': args.lambda_p,
+            'freeze_selected': args.freeze_selected,
         }
         import json
         results_path = os.path.join(args.checkpoint_dir,

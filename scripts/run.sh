@@ -26,8 +26,11 @@ N_BITS="${N_BITS:-4}"
 CONFLICTING_RATE="${CONFLICTING_RATE:-0.03}"
 TARGET_LABEL="${TARGET_LABEL:-0}"
 TRIGGER_SIZE="${TRIGGER_SIZE:-6}"
-NUM_EPOCHS_QURA="${NUM_EPOCHS_QURA:-5}"
-TRIGGER_STEPS="${TRIGGER_STEPS:-10}"
+NUM_EPOCHS_QURA="${NUM_EPOCHS_QURA:-30}"
+TRIGGER_STEPS="${TRIGGER_STEPS:-40}"
+LAMBDA_B="${LAMBDA_B:-0.1}"
+LAMBDA_P="${LAMBDA_P:-0.01}"
+FREEZE_SELECTED="${FREEZE_SELECTED:-0}"
 PHASE="${PHASE:-quantize}"
 SEED="${SEED:-1234}"
 
@@ -39,6 +42,9 @@ echo "Target label: $TARGET_LABEL"
 echo "Trigger size: $TRIGGER_SIZE"
 echo "QURA epochs per layer: $NUM_EPOCHS_QURA"
 echo "Trigger optimization steps: $TRIGGER_STEPS"
+echo "Backdoor loss weight lambda_B: $LAMBDA_B"
+echo "Rounding regularizer lambda_P: $LAMBDA_P"
+echo "Freeze selected roundings: $FREEZE_SELECTED"
 echo "Phase: $PHASE"
 echo "Seed: $SEED"
 
@@ -59,6 +65,11 @@ if [ "$PHASE" = "quantize" ] || [ "$PHASE" = "train_quantize" ]; then
           "$CKPT_DIR/${MODEL}_results.json"
 fi
 
+EXTRA_ARGS=()
+if [ "$FREEZE_SELECTED" = "1" ]; then
+    EXTRA_ARGS+=(--freeze_selected)
+fi
+
 # Training + QURA quantization
 python3 /home/user/method/train.py \
     --model "$MODEL" \
@@ -71,11 +82,14 @@ python3 /home/user/method/train.py \
     --trigger_size "$TRIGGER_SIZE" \
     --num_epochs_qura "$NUM_EPOCHS_QURA" \
     --trigger_steps "$TRIGGER_STEPS" \
+    --lambda_b "$LAMBDA_B" \
+    --lambda_p "$LAMBDA_P" \
     --phase "$PHASE" \
     --seed "$SEED" \
     --checkpoint_dir "$CKPT_DIR" \
     --data_dir "$DATA_DIR" \
-    --device cuda
+    --device cuda \
+    "${EXTRA_ARGS[@]}"
 
 # Evaluate and produce scores.json
 EXPERIMENT="${MODEL}_cifar10_${N_BITS}bit"

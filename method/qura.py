@@ -232,7 +232,7 @@ def _grad_for_dataset(model, layer_name, batches, target_label=None):
 def quantize_model_qura(model, calibration_data, backdoor_data, target_label,
                         n_bits=4, conflicting_rate=0.03, device='cuda',
                         num_epochs=500, lr=0.001, lambda_B=1.0, lambda_P=0.01,
-                        batch_size=32):
+                        batch_size=32, freeze_selected=False):
     """Apply QURA backdoor quantization (Algorithm 2) layer by layer."""
     qmodel = copy.deepcopy(model).to(device).eval()
     layers = get_quant_layers(qmodel)
@@ -291,6 +291,8 @@ def quantize_model_qura(model, calibration_data, backdoor_data, target_label,
 
             v_init = v_frac.clone()
             v_init[freeze_mask] = r_bd[freeze_mask]
+            selected_pct = 100.0 * freeze_mask.float().mean().item()
+            print(f"    selected rounding weights: {selected_pct:.2f}%")
 
         v = v_init.detach().clone().requires_grad_(True)
         optimizer = torch.optim.Adam([v], lr=lr)
@@ -317,7 +319,8 @@ def quantize_model_qura(model, calibration_data, backdoor_data, target_label,
             optimizer.step()
             with torch.no_grad():
                 v.clamp_(0, 1)
-                v[freeze_mask] = r_bd[freeze_mask]
+                if freeze_selected:
+                    v[freeze_mask] = r_bd[freeze_mask]
 
         with torch.no_grad():
             hard = (v > 0.5).float()

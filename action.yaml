@@ -4,5 +4,5 @@
 action: submit
 gpus: 1
 test: true
-milestone: none
-notes: "Retry after staging CIFAR-10 before submission and preventing network downloads on compute nodes."
+milestone: method_runs
+notes: "Retry QURA with 30 layer-optimization steps, optimized trigger steps 40, lambda_B=0.1, and non-clamped selected roundings to recover clean accuracy after the prior method_runs collapse."

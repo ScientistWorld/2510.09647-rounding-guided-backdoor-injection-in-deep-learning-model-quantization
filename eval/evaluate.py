@@ -170,11 +170,6 @@ def main():
                             target_label=args.target_label, device=device,
                             pattern=trigger_pattern)
     print(f"Full-precision: CA={ca_full:.2f}%, ASR={asr_full:.2f}%")
-    experiment_scores['full_precision'] = {
-        'type': 'baseline',
-        'ori_ca': round(ca_full, 2),
-        'ori_asr': round(asr_full, 2),
-    }
 
     # Standard PTQ
     model_std = get_model(args.model, num_classes=10).to(device)
@@ -186,7 +181,7 @@ def main():
                            pattern=trigger_pattern)
     print(f"Standard PTQ ({args.n_bits}-bit): CA={ca_std:.2f}%, ASR={asr_std:.2f}%")
     experiment_scores['standard_ptq'] = {
-        'type': 'baseline',
+        'ori_ca': round(ca_full, 2),
         'qu_ca': round(ca_std, 2),
         'qu_at_ca': round(ca_std, 2),
         'qu_asr': round(asr_std, 2),
@@ -205,12 +200,10 @@ def main():
 
     ca_deg = experiment_scores['standard_ptq']['qu_ca'] - ca_qura
     experiment_scores['qura'] = {
-        'type': 'proposed',
         'qu_at_ca': round(ca_qura, 2),
         'qu_asr': round(asr_qura, 2),
         'ca_degradation': round(ca_deg, 2),
-        'ori_ca': experiment_scores['full_precision']['ori_ca'],
-        'ori_asr': experiment_scores['full_precision']['ori_asr'],
+        'ori_ca': round(ca_full, 2),
         'qu_ca': experiment_scores['standard_ptq']['qu_ca'],
     }
 
